@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cat and Mouse Game</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
+        canvas { background: #fff; border: 2px solid #333; }
+    </style>
+</head>
+<body>
+<button id="startBtn" style="position:absolute;top:20px;right:20px;z-index:2;font-size: 1em; padding: 0.4em 0.8em; background: #43a047; color: #fff; border: none; border-radius: 8px;">Start Game</button>
+<button id="stopBtn" style="position:absolute;top:20px;left:20px;z-index:2;font-size: 1em; padding: 0.4em 0.8em; background: #e53935; color: #fff; border: none; border-radius: 8px;">Stop Game</button>
+<canvas id="gameCanvas" width="500" height="500"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const size = 40;
+const corners = [
+    {x: 0, y: 0},
+    {x: canvas.width - size, y: 0},
+    {x: 0, y: canvas.height - size},
+    {x: canvas.width - size, y: canvas.height - size}
+];
+let cat = { x: 230, y: 230, speed: 2 };
+let mouse = { x: 100, y: 100 };
+let running = false;
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '36px serif';
+    ctx.fillText('🐱', cat.x, cat.y + size);
+    ctx.fillText('🐭', mouse.x, mouse.y + size);
+}
+
+function moveCatTowardMouse() {
+    let dx = mouse.x - cat.x;
+    let dy = mouse.y - cat.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 1) {
+        cat.x += cat.speed * dx / dist;
+        cat.y += cat.speed * dy / dist;
+    }
+    checkCatch();
+}
+
+function checkCatch() {
+    if (Math.abs(cat.x - mouse.x) < size && Math.abs(cat.y - mouse.y) < size) {
+        // Reset cat to center
+        cat.x = 230;
+        cat.y = 230;
+    }
+}
+
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = Math.max(0, Math.min(canvas.width - size, e.clientX - rect.left));
+    mouse.y = Math.max(0, Math.min(canvas.height - size, e.clientY - rect.top));
+});
+
+function startGame() {
+    if (!running) {
+        running = true;
+        gameLoop();
+    }
+}
+
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('stopBtn').onclick = function() {
+    running = false;
+};
+
+function gameLoop() {
+    if (!running) return;
+    moveCatTowardMouse();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+draw(); // Draw initial state
+</script>
+</body>
+</html>
