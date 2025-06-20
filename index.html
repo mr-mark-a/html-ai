@@ -139,6 +139,10 @@
         <label for="levelTimeInput" style="color:#333; font-size:1em;">Level Time (sec): </label>
         <input id="levelTimeInput" type="number" min="3" max="60" step="1" value="3" style="vertical-align:middle; width:60px;">
     </div>
+    <div style="margin-bottom:12px;">
+        <label for="cheeseCountInput" style="color:#333; font-size:1em;">Max Cheese Pieces: </label>
+        <input id="cheeseCountInput" type="number" min="1" max="10" step="1" value="3" style="vertical-align:middle; width:60px;">
+    </div>
     <div style="color:#333;">(Add your settings here)</div>
 </div>
 <canvas id="gameCanvas"></canvas>
@@ -186,6 +190,12 @@ let showWoodenFloor = true;
 let mouseTransparent = false;
 let mouseTransparentTimer = null;
 let levelTime = 3; // Default level time in seconds
+let cheeses = [];
+let cheeseTimer = null;
+let maxCheeseCount = 3;
+let mouseScale = 1; // For mouse grow/shrink animation
+let mouseScaleTarget = 1;
+let mouseScaleAnimFrame = null;
 
 // Mouse image
 // const mouseImg = new Image();
@@ -210,13 +220,9 @@ function drawTail(x, y, color, direction = 'right') {
 
 function drawMouseWithBody(x, y) {
     ctx.save();
-    ctx.font = `${size}px serif`;
-    if (mouseTransparent) {
-        // Draw angry mouse emoji
-        ctx.fillText('😾', x, y + size);
-    } else {
-        ctx.fillText('🐭', x, y + size);
-    }
+    // Animate font size and vertical alignment
+    ctx.font = `${Math.floor(size * mouseScale)}px serif`;
+    ctx.fillText('🐭', x, y + size * mouseScale);
     ctx.restore();
 }
 
@@ -409,6 +415,15 @@ function draw() {
         ctx.textAlign = 'start';
         ctx.restore();
     }
+    // Draw cheeses
+    for (let cheese of cheeses) {
+        ctx.save();
+        ctx.font = `${Math.floor(size * 0.8)}px serif`;
+        ctx.globalAlpha = 0.95;
+        ctx.fillText('🧀', cheese.x, cheese.y + size * 0.7);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
 }
 
 // Add direction and speed to gray cats and bossCat6
@@ -436,6 +451,7 @@ function moveCatTowardMouse() {
     cat.x = Math.max(0, Math.min(canvas.width - size, cat.x));
     cat.y = Math.max(0, Math.min(canvas.height - size, cat.y));
     checkCatch();
+    checkCheeseEat();
 }
 
 function checkCatch() {
@@ -451,6 +467,51 @@ function checkCatch() {
     }
 }
 
+function animateMouseScale(target, duration = 250) {
+    if (mouseScaleAnimFrame) cancelAnimationFrame(mouseScaleAnimFrame);
+    const start = performance.now();
+    const initial = mouseScale;
+    const delta = target - initial;
+    function step(now) {
+        let t = Math.min(1, (now - start) / duration);
+        // Ease in-out
+        t = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        mouseScale = initial + delta * t;
+        draw();
+        if ((delta > 0 && mouseScale < target) || (delta < 0 && mouseScale > target)) {
+            mouseScaleAnimFrame = requestAnimationFrame(step);
+        } else {
+            mouseScale = target;
+            draw();
+        }
+    }
+    mouseScaleAnimFrame = requestAnimationFrame(step);
+}
+
+function triggerAngryCatMode() {
+    mouseTransparent = true;
+    animateMouseScale(2, 250); // Grow
+    if (mouseTransparentTimer) clearTimeout(mouseTransparentTimer);
+    mouseTransparentTimer = setTimeout(() => {
+        mouseTransparent = false;
+        animateMouseScale(1, 250); // Shrink
+    }, 3000); // 3 seconds
+}
+
+function checkCheeseEat() {
+    let ate = false;
+    cheeses = cheeses.filter(cheese => {
+        const dx = cheese.x - mouse.x;
+        const dy = (cheese.y + size * 0.7) - (mouse.y + size);
+        if (Math.sqrt(dx * dx + dy * dy) <= size * 0.8) {
+            ate = true;
+            return false;
+        }
+        return true;
+    });
+    if (ate) triggerAngryCatMode();
+}
+
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     mouse.x = Math.max(0, Math.min(canvas.width - size, e.clientX - rect.left));
@@ -458,14 +519,8 @@ canvas.addEventListener('mousemove', e => {
     // Clamp mouse position to stay within canvas
     mouse.x = Math.max(0, Math.min(canvas.width - size, mouse.x));
     mouse.y = Math.max(0, Math.min(canvas.height - size, mouse.y));
-});
-
-canvas.addEventListener('click', function() {
-    mouseTransparent = true;
-    if (mouseTransparentTimer) clearTimeout(mouseTransparentTimer);
-    mouseTransparentTimer = setTimeout(() => {
-        mouseTransparent = false;
-    }, 3000); // 3 seconds
+    checkCheeseEat();
+    draw();
 });
 
 function updateLevelDisplay() {
@@ -489,6 +544,28 @@ function startBossCatAddingMinions() {
 function stopBossCatAddingMinions() {
     if (bossCatAddTimer) clearTimeout(bossCatAddTimer);
     bossCatAddTimer = null;
+}
+
+function startCheeseTimer() {
+    if (cheeseTimer) clearInterval(cheeseTimer);
+    cheeseTimer = setInterval(() => {
+        addRandomCheese();
+        draw();
+    }, 10000);
+}
+
+function stopCheeseTimer() {
+    if (cheeseTimer) clearInterval(cheeseTimer);
+    cheeseTimer = null;
+}
+
+function addRandomCheese() {
+    // Place cheese at a random position, not overlapping the edges
+    if (cheeses.length >= maxCheeseCount) return;
+    const margin = size;
+    const x = Math.random() * (canvas.width - margin * 2) + margin;
+    const y = Math.random() * (canvas.height - margin * 2) + margin;
+    cheeses.push({ x, y });
 }
 
 function startLevelTimer() {
@@ -595,6 +672,8 @@ function resetGame(startLvl) {
     // In resetGame, also clear shake effect
     canvas.style.transform = '';
     isShaking = false;
+    cheeses = [];
+    mouseScale = 1;
 }
 
 function startGame() {
@@ -602,6 +681,7 @@ function startGame() {
         running = true;
         resetGame(level === 10 ? 10 : 1);
         startLevelTimer();
+        startCheeseTimer();
         gameLoop();
     }
 }
@@ -610,6 +690,7 @@ document.getElementById('startBtn').onclick = startGame;
 document.getElementById('stopBtn').onclick = function() {
     running = false;
     if (levelTimer) clearInterval(levelTimer);
+    stopCheeseTimer();
 };
 
 function moveEverything() {
@@ -697,6 +778,20 @@ if (levelTimeInput) {
         } else if (val < 3) {
             levelTime = 3;
             this.value = 3;
+        }
+    });
+}
+// Cheese count input logic
+const cheeseCountInput = document.getElementById('cheeseCountInput');
+if (cheeseCountInput) {
+    cheeseCountInput.value = maxCheeseCount;
+    cheeseCountInput.addEventListener('input', function() {
+        let val = parseInt(this.value, 10);
+        if (!isNaN(val) && val >= 1 && val <= 10) {
+            maxCheeseCount = val;
+        } else if (val < 1) {
+            maxCheeseCount = 1;
+            this.value = 1;
         }
     });
 }
