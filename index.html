@@ -27,7 +27,7 @@
             display: block;
         }
         /* Expandable button and panel styles */
-        #expandBtn {
+        #expandBtn, #expandBtnBR {
             position: absolute;
             left: 2vw;
             bottom: 2vw;
@@ -51,7 +51,7 @@
         #expandBtn:hover {
             background: #ffe4b5;
         }
-        #expandPanel {
+        #expandPanel, #expandPanelBR {
             position: absolute;
             left: 2vw;
             bottom: 11vw;
@@ -68,7 +68,7 @@
             transform: translateY(20px) scale(0.98);
             transition: opacity 0.25s, transform 0.25s;
         }
-        #expandPanel.open {
+        #expandPanel.open, #expandPanelBR.open {
             opacity: 1;
             pointer-events: auto;
             transform: translateY(0) scale(1);
@@ -117,7 +117,7 @@
 <button id="startBtn" style="background: #43a047; color: #fff; border: none;">Start Game</button>
 <button id="stopBtn" style="background: #e53935; color: #fff; border: none;">Stop Game</button>
 <div id="levelDisplay">Level: 1</div>
-<!-- Expandable button and panel -->
+<!-- Expandable button and panel (Bottom Left) -->
 <button id="expandBtn" title="Show settings" aria-label="Show settings">
     <svg id="settingsIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3.5"/>
@@ -144,6 +144,25 @@
         <input id="cheeseCountInput" type="number" min="1" max="10" step="1" value="3" style="vertical-align:middle; width:60px;">
     </div>
     <div style="color:#333;">(Add your settings here)</div>
+</div>
+<!-- Expandable button and panel (Bottom Right) -->
+<button id="expandBtnBR" title="Show superpowers" aria-label="Show superpowers" style="right:2vw; left:auto; bottom:2vw; position:absolute; z-index:3; width:8vw; min-width:36px; max-width:56px; height:8vw; min-height:36px; max-height:56px; background:#fff; border:2px solid #1976d2; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s;">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <circle cx="12" cy="16" r="1.2"/>
+    </svg>
+</button>
+<div id="expandPanelBR" style="right:2vw; left:auto; bottom:11vw; position:absolute; z-index:3; min-width:180px; max-width:60vw; background:#e3f2fd; border:2px solid #1976d2; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.10); padding:2vw; opacity:0; pointer-events:none; transform:translateY(20px) scale(0.98); transition:opacity 0.25s, transform 0.25s;">
+    <div style="font-weight:bold; color:#1976d2; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+        Superpower Panel
+        <span title="Boom!" style="font-size:1.5em; vertical-align:middle;">💥</span>
+    </div>
+    <button id="freezeCatBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Frezzer X</button>
+    <button id="transparentMouseBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Sight Suppressor II</button>
+    <button id="addDogBtn" style="background:#ff9800; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Add Dog 🐶</button>
+    <div id="freezeCatStatus" style="color:#1976d2; font-weight:bold; margin-top:6px;"></div>
+    <div id="transparentMouseStatus" style="color:#1976d2; font-weight:bold; margin-top:6px;"></div>
 </div>
 <canvas id="gameCanvas"></canvas>
 </div>
@@ -426,6 +445,35 @@ function draw() {
     }
 }
 
+// --- Dog logic ---
+let dogs = [];
+const addDogBtn = document.getElementById('addDogBtn');
+if (addDogBtn) {
+    addDogBtn.onclick = function() {
+        // Add a dog at a random position with random direction and speed
+        const margin = size;
+        const x = Math.random() * (canvas.width - margin * 2) + margin;
+        const y = Math.random() * (canvas.height - margin * 2) + margin;
+        // Give each dog a random direction and speed (speed between 1 and 2)
+        let angle = Math.random() * 2 * Math.PI;
+        let speed = 1 + Math.random();
+        dogs.push({ x, y, dx: Math.cos(angle) * speed, dy: Math.sin(angle) * speed, speed, bornLevel: level });
+        draw();
+    };
+}
+// Patch draw to render dogs
+const originalDraw = draw;
+draw = function() {
+    originalDraw();
+    // Draw dogs
+    ctx.save();
+    ctx.font = `${Math.floor(size * 0.9)}px serif`;
+    for (let dog of dogs) {
+        ctx.fillText('🐶', dog.x, dog.y + size * 0.9);
+    }
+    ctx.restore();
+}
+
 // Add direction and speed to gray cats and bossCat6
 function randomDirection() {
     let angle = Math.random() * 2 * Math.PI;
@@ -433,16 +481,56 @@ function randomDirection() {
 }
 
 function moveCatTowardMouse() {
-    let dx = mouse.x - cat.x;
-    let dy = mouse.y - cat.y;
-    let dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > 1) {
-        if (mouseTransparent) {
-            // Move away from mouse
+    // If there are dogs, cat runs away from the nearest dog (unless frozen, mouse is transparent, or cat is in angry mode)
+    if (dogs.length > 0 && !freezeCatActive && !mouseTransparent && !transparentMouseActive && !cat.runAwayFromMouse) {
+        // Find the nearest dog
+        let nearestDog = null;
+        let minDist = Infinity;
+        for (let dog of dogs) {
+            let dx = dog.x - cat.x;
+            let dy = dog.y - cat.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < minDist) {
+                minDist = dist;
+                nearestDog = dog;
+            }
+        }
+        if (nearestDog) {
+            // Run away from the nearest dog
+            let dx = cat.x - nearestDog.x;
+            let dy = cat.y - nearestDog.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 1) {
+                cat.x += cat.speed * dx / dist;
+                cat.y += cat.speed * dy / dist;
+            }
+            // Clamp cat position to stay within canvas
+            cat.x = Math.max(0, Math.min(canvas.width - size, cat.x));
+            cat.y = Math.max(0, Math.min(canvas.height - size, cat.y));
+            checkCatch();
+            checkCheeseEat();
+            return;
+        }
+    }
+    // If cat is frozen, do nothing
+    if (freezeCatActive) return;
+    // If mouse is transparent, do nothing
+    if (mouseTransparent || transparentMouseActive) return;
+    // If cat is running away from mouse (after cheese), do that logic
+    if (cat.runAwayFromMouse) {
+        let dx = mouse.x - cat.x;
+        let dy = mouse.y - cat.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1) {
             cat.x -= cat.speed * dx / dist;
             cat.y -= cat.speed * dy / dist;
-        } else {
-            // Move toward mouse
+        }
+    } else {
+        // Normal: move toward mouse
+        let dx = mouse.x - cat.x;
+        let dy = mouse.y - cat.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1) {
             cat.x += cat.speed * dx / dist;
             cat.y += cat.speed * dy / dist;
         }
@@ -489,11 +577,15 @@ function animateMouseScale(target, duration = 250) {
 }
 
 function triggerAngryCatMode() {
-    mouseTransparent = true;
+    // Remove mouse transparency if active
+    mouseTransparent = false;
+    transparentMouseActive = false;
+    // Make cat run away from mouse for 3 seconds
+    cat.runAwayFromMouse = true;
     animateMouseScale(2, 250); // Grow
     if (mouseTransparentTimer) clearTimeout(mouseTransparentTimer);
     mouseTransparentTimer = setTimeout(() => {
-        mouseTransparent = false;
+        cat.runAwayFromMouse = false;
         animateMouseScale(1, 250); // Shrink
     }, 3000); // 3 seconds
 }
@@ -572,6 +664,8 @@ function startLevelTimer() {
     if (levelTimer) clearInterval(levelTimer);
     levelTimer = setInterval(() => {
         if (!running) return;
+        // Remove dogs that have been present for 2 or more levels
+        dogs = dogs.filter(dog => (level - dog.bornLevel) < 2);
         if (level === 6) {
             setTimeout(() => {
                 if (level === 6 && running) {
@@ -720,6 +814,16 @@ function moveEverything() {
         bossCat6.x = Math.max(0, Math.min(canvas.width - size * 5, bossCat6.x));
         bossCat6.y = Math.max(0, Math.min(canvas.height - size * 5, bossCat6.y));
     }
+    // Move dogs
+    for (let dog of dogs) {
+        dog.x += dog.dx;
+        dog.y += dog.dy;
+        // Bounce off edges
+        if (dog.x < 0 || dog.x > canvas.width - size) dog.dx *= -1;
+        if (dog.y < 0 || dog.y > canvas.height - size) dog.dy *= -1;
+        dog.x = Math.max(0, Math.min(canvas.width - size, dog.x));
+        dog.y = Math.max(0, Math.min(canvas.height - size, dog.y));
+    }
 }
 
 function gameLoop() {
@@ -730,7 +834,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Expandable button logic
+// Expandable button logic (Bottom Left)
 const expandBtn = document.getElementById('expandBtn');
 const expandPanel = document.getElementById('expandPanel');
 let panelOpen = false;
@@ -743,6 +847,49 @@ window.addEventListener('mousedown', function(e) {
     if (panelOpen && !expandPanel.contains(e.target) && !expandBtn.contains(e.target)) {
         panelOpen = false;
         expandPanel.classList.remove('open');
+    }
+});
+// Expandable button logic (Bottom Right)
+const expandBtnBR = document.getElementById('expandBtnBR');
+const expandPanelBR = document.getElementById('expandPanelBR');
+let panelOpenBR = false;
+expandBtnBR.onclick = function() {
+    panelOpenBR = !panelOpenBR;
+    expandPanelBR.classList.toggle('open', panelOpenBR);
+    if (panelOpenBR) {
+        expandPanelBR.style.opacity = '1';
+        expandPanelBR.style.pointerEvents = 'auto';
+        expandPanelBR.style.transform = 'translateY(0) scale(1)';
+        // Pause the game when superpower panel is opened
+        if (running) {
+            window._wasRunningBeforeSuperpowerPanel = true;
+            running = false;
+        } else {
+            window._wasRunningBeforeSuperpowerPanel = false;
+        }
+    } else {
+        expandPanelBR.style.opacity = '0';
+        expandPanelBR.style.pointerEvents = 'none';
+        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
+        // Resume the game if it was running before
+        if (window._wasRunningBeforeSuperpowerPanel) {
+            running = true;
+            gameLoop();
+        }
+    }
+};
+window.addEventListener('mousedown', function(e) {
+    if (panelOpenBR && !expandPanelBR.contains(e.target) && !expandBtnBR.contains(e.target)) {
+        panelOpenBR = false;
+        expandPanelBR.classList.remove('open');
+        expandPanelBR.style.opacity = '0';
+        expandPanelBR.style.pointerEvents = 'none';
+        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
+        // Resume the game if it was running before
+        if (window._wasRunningBeforeSuperpowerPanel) {
+            running = true;
+            gameLoop();
+        }
     }
 });
 
@@ -794,6 +941,85 @@ if (cheeseCountInput) {
             this.value = 1;
         }
     });
+}
+
+// Superpower panel logic (single block, no duplicates)
+let freezeCatTimeout = null;
+let freezeCatActive = false;
+let transparentMouseActive = false;
+const freezeCatBtn = document.getElementById('freezeCatBtn');
+const freezeCatStatus = document.getElementById('freezeCatStatus');
+const transparentMouseBtn = document.getElementById('transparentMouseBtn');
+const transparentMouseStatus = document.getElementById('transparentMouseStatus');
+
+if (freezeCatBtn) {
+    freezeCatBtn.onclick = function() {
+        if (freezeCatActive) return;
+        freezeCatActive = true;
+        cat.speed = 0;
+        freezeCatStatus.textContent = 'Cat frozen!';
+        freezeCatBtn.disabled = true;
+        freezeCatBtn.style.opacity = '0.6';
+        freezeCatTimeout = setTimeout(() => {
+            cat.speed = baseSpeed;
+            freezeCatActive = false;
+            freezeCatStatus.textContent = '';
+            freezeCatBtn.disabled = false;
+            freezeCatBtn.style.opacity = '1';
+        }, 10000);
+        // Auto-close superpower panel
+        panelOpenBR = false;
+        expandPanelBR.classList.remove('open');
+        expandPanelBR.style.opacity = '0';
+        expandPanelBR.style.pointerEvents = 'none';
+        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
+        // Resume the game if it was running before
+        if (window._wasRunningBeforeSuperpowerPanel) {
+            running = true;
+            gameLoop();
+        }
+    };
+}
+if (transparentMouseBtn) {
+    transparentMouseBtn.onclick = function() {
+        if (transparentMouseActive) return;
+        transparentMouseActive = true;
+        transparentMouseStatus.textContent = 'Mouse is transparent!';
+        transparentMouseBtn.disabled = true;
+        transparentMouseBtn.style.opacity = '0.6';
+        mouseTransparent = true;
+        setTimeout(() => {
+            mouseTransparent = false;
+            transparentMouseActive = false;
+            transparentMouseStatus.textContent = '';
+            transparentMouseBtn.disabled = false;
+            transparentMouseBtn.style.opacity = '1';
+        }, 10000);
+        // Auto-close superpower panel
+        panelOpenBR = false;
+        expandPanelBR.classList.remove('open');
+        expandPanelBR.style.opacity = '0';
+        expandPanelBR.style.pointerEvents = 'none';
+        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
+        // Resume the game if it was running before
+        if (window._wasRunningBeforeSuperpowerPanel) {
+            running = true;
+            gameLoop();
+        }
+    };
+}
+// Patch drawMouseWithBody to support transparency only once
+if (!window._patchedDrawMouseWithBody) {
+    const originalDrawMouseWithBody = drawMouseWithBody;
+    drawMouseWithBody = function(x, y) {
+        ctx.save();
+        if (mouseTransparent || transparentMouseActive) {
+            ctx.globalAlpha = 0.3;
+        }
+        originalDrawMouseWithBody(x, y);
+        ctx.restore();
+    };
+    window._patchedDrawMouseWithBody = true;
 }
 
 draw();
