@@ -143,6 +143,10 @@
         <label for="cheeseCountInput" style="color:#333; font-size:1em;">Max Cheese Pieces: </label>
         <input id="cheeseCountInput" type="number" min="1" max="10" step="1" value="3" style="vertical-align:middle; width:60px;">
     </div>
+    <div style="margin-bottom:12px;">
+        <label for="pipeCountInput" style="color:#333; font-size:1em;">Number of Pipes: </label>
+        <input id="pipeCountInput" type="number" min="4" max="10" step="2" value="4" style="vertical-align:middle; width:60px;">
+    </div>
     <div style="color:#333;">(Add your settings here)</div>
 </div>
 <!-- Expandable button and panel (Bottom Right) -->
@@ -161,6 +165,7 @@
     <button id="freezeCatBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Frezzer X</button>
     <button id="transparentMouseBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Sight Suppressor II</button>
     <button id="addDogBtn" style="background:#ff9800; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Add Dog 🐶</button>
+    <button id="add20MiceBtn" style="background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; margin-bottom:6px;">Mouse Divider XI 🐭</button>
     <div id="freezeCatStatus" style="color:#1976d2; font-weight:bold; margin-top:6px;"></div>
     <div id="transparentMouseStatus" style="color:#1976d2; font-weight:bold; margin-top:6px;"></div>
 </div>
@@ -215,6 +220,8 @@ let maxCheeseCount = 3;
 let mouseScale = 1; // For mouse grow/shrink animation
 let mouseScaleTarget = 1;
 let mouseScaleAnimFrame = null;
+let pipeCount = 4; // Default number of pipes (must be even, min 4)
+let pipes = [];
 
 // Mouse image
 // const mouseImg = new Image();
@@ -336,6 +343,62 @@ function draw() {
         canvas.style.transform = '';
     }
     ctx.font = '36px serif';
+
+    // --- LEVEL 10: Only cheese and dogs ---
+    if (level === 10) {
+        // Draw cheeses
+        for (let cheese of cheeses) {
+            ctx.save();
+            ctx.font = `${Math.floor(size * 0.8)}px serif`;
+            ctx.globalAlpha = 0.95;
+            ctx.fillText('🧀', cheese.x, cheese.y + size * 0.7);
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+        // Draw dogs
+        ctx.save();
+        ctx.font = `${Math.floor(size * 0.9)}px serif`;
+        for (let dog of dogs) {
+            ctx.fillText('🐶', dog.x, dog.y + size * 0.9);
+        }
+        ctx.restore();
+        // Draw pipes
+        ctx.save();
+        for (let i = 0; i < pipes.length; i++) {
+            const p = pipes[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, size * 0.6, 0, 2 * Math.PI);
+            ctx.fillStyle = '#1976d2';
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#0d47a1';
+            ctx.stroke();
+            ctx.font = 'bold 1em sans-serif';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText(String.fromCharCode(65 + (i % 26)), p.x, p.y + 5);
+        }
+        ctx.restore();
+        // Draw cat with body
+        drawCatWithBody(cat.x, cat.y);
+        // Draw cat emoji
+        ctx.fillStyle = '#000';
+        ctx.font = '36px serif';
+        ctx.fillText('🐱', cat.x, cat.y + size);
+        // Draw mouse with body
+        drawMouseWithBody(mouse.x, mouse.y);
+        // Draw yam-yam if needed
+        if (showYamYam) {
+            ctx.font = 'bold 24px sans-serif';
+            ctx.fillStyle = '#e53935';
+            ctx.fillText('ням-ням', cat.x + size, cat.y + size / 2);
+            ctx.fillStyle = '#000';
+        }
+        return; // Do not draw anything else
+    }
+
     // Draw boss gray cat if level 10
     if (level === 10 && bossGrayCat) {
         ctx.save();
@@ -474,6 +537,37 @@ draw = function() {
     ctx.restore();
 }
 
+// --- Extra mice logic ---
+let extraMice = [];
+const add20MiceBtn = document.getElementById('add20MiceBtn');
+if (add20MiceBtn) {
+    add20MiceBtn.onclick = function() {
+        // Add 20 mice at random positions
+        extraMice = [];
+        for (let i = 0; i < 20; i++) {
+            const margin = size;
+            const x = Math.random() * (canvas.width - margin * 2) + margin;
+            const y = Math.random() * (canvas.height - margin * 2) + margin;
+            extraMice.push({ x, y });
+        }
+        draw();
+    };
+}
+// Patch draw to render extra mice
+const originalDrawExtraMice = draw;
+draw = function() {
+    originalDrawExtraMice();
+    // Draw extra mice
+    if (extraMice && extraMice.length > 0) {
+        ctx.save();
+        ctx.font = `${Math.floor(size * 0.8)}px serif`;
+        for (let m of extraMice) {
+            ctx.fillText('🐭', m.x, m.y + size * 0.8);
+        }
+        ctx.restore();
+    }
+}
+
 // Add direction and speed to gray cats and bossCat6
 function randomDirection() {
     let angle = Math.random() * 2 * Math.PI;
@@ -606,11 +700,24 @@ function checkCheeseEat() {
 
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
-    mouse.x = Math.max(0, Math.min(canvas.width - size, e.clientX - rect.left));
-    mouse.y = Math.max(0, Math.min(canvas.height - size, e.clientY - rect.top));
-    // Clamp mouse position to stay within canvas
-    mouse.x = Math.max(0, Math.min(canvas.width - size, mouse.x));
-    mouse.y = Math.max(0, Math.min(canvas.height - size, mouse.y));
+    let mx = Math.max(0, Math.min(canvas.width - size, e.clientX - rect.left));
+    let my = Math.max(0, Math.min(canvas.height - size, e.clientY - rect.top));
+    // Prevent mouse from entering pipes
+    let blocked = false;
+    for (let i = 0; i < pipes.length; i++) {
+        const p = pipes[i];
+        if (Math.abs(mx + size / 2 - p.x) < size * 0.7 && Math.abs(my + size / 2 - p.y) < size * 0.7) {
+            blocked = true;
+            // Push mouse out to nearest edge
+            const dx = mx + size / 2 - p.x;
+            const dy = my + size / 2 - p.y;
+            const angle = Math.atan2(dy, dx);
+            mx = p.x + Math.cos(angle) * size * 0.7 - size / 2;
+            my = p.y + Math.sin(angle) * size * 0.7 - size / 2;
+        }
+    }
+    mouse.x = Math.max(0, Math.min(canvas.width - size, mx));
+    mouse.y = Math.max(0, Math.min(canvas.height - size, my));
     checkCheeseEat();
     draw();
 });
@@ -828,8 +935,23 @@ function moveEverything() {
 
 function gameLoop() {
     if (!running) return;
+    if (level === 10) {
+        // Only move dogs
+        for (let dog of dogs) {
+            dog.x += dog.dx;
+            dog.y += dog.dy;
+            if (dog.x < 0 || dog.x > canvas.width - size) dog.dx *= -1;
+            if (dog.y < 0 || dog.y > canvas.height - size) dog.dy *= -1;
+            dog.x = Math.max(0, Math.min(canvas.width - size, dog.x));
+            dog.y = Math.max(0, Math.min(canvas.height - size, dog.y));
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
     if (level >= 6 && level < 10) moveEverything();
     moveCatTowardMouse();
+    checkCatPipeTeleport();
     draw();
     requestAnimationFrame(gameLoop);
 }
@@ -942,6 +1064,28 @@ if (cheeseCountInput) {
         }
     });
 }
+// Pipe count input logic
+const pipeCountInput = document.getElementById('pipeCountInput');
+if (pipeCountInput) {
+    pipeCountInput.value = pipeCount;
+    pipeCountInput.addEventListener('input', function() {
+        let val = parseInt(this.value, 10);
+        if (!isNaN(val) && val >= 4 && val <= 10 && val % 2 === 0) {
+            pipeCount = val;
+        } else if (val < 4) {
+            pipeCount = 4;
+            this.value = 4;
+        } else if (val > 10) {
+            pipeCount = 10;
+            this.value = 10;
+        } else if (val % 2 !== 0) {
+            pipeCount = val + 1;
+            this.value = pipeCount;
+        }
+        setupPipes();
+        draw();
+    });
+}
 
 // Superpower panel logic (single block, no duplicates)
 let freezeCatTimeout = null;
@@ -1021,6 +1165,129 @@ if (!window._patchedDrawMouseWithBody) {
     };
     window._patchedDrawMouseWithBody = true;
 }
+
+// --- Pipe logic ---
+function randomPipePositions(count) {
+    const margin = size * 2;
+    const positions = [];
+    for (let i = 0; i < count; i++) {
+        let x, y, tries = 0;
+        do {
+            x = Math.random() * (canvas.width - margin * 2) + margin;
+            y = Math.random() * (canvas.height - margin * 2) + margin;
+            tries++;
+        } while (positions.some(p => Math.abs(p.x - x) < size * 2 && Math.abs(p.y - y) < size * 2) && tries < 20);
+        positions.push({ x, y });
+    }
+    return positions;
+}
+
+function setupPipes() {
+    if (pipeCount < 4) pipeCount = 4;
+    if (pipeCount % 2 !== 0) pipeCount++;
+    pipes = [];
+    const positions = randomPipePositions(pipeCount);
+    for (let i = 0; i < pipeCount; i += 2) {
+        pipes.push({ x: positions[i].x, y: positions[i].y, pair: i + 1 });
+        pipes.push({ x: positions[i + 1].x, y: positions[i + 1].y, pair: i });
+    }
+}
+
+// Draw pipes on canvas
+const originalDraw2 = draw;
+draw = function() {
+    originalDraw2();
+    // Draw pipes
+    ctx.save();
+    for (let i = 0; i < pipes.length; i++) {
+        const p = pipes[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size * 0.6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#1976d2';
+        ctx.globalAlpha = 0.7;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#0d47a1';
+        ctx.stroke();
+        ctx.font = 'bold 1em sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(String.fromCharCode(65 + (i % 26)), p.x, p.y + 5);
+    }
+    ctx.restore();
+}
+
+// Cat teleportation logic
+function checkCatPipeTeleport() {
+    for (let i = 0; i < pipes.length; i++) {
+        const p = pipes[i];
+        if (Math.abs(cat.x + size / 2 - p.x) < size * 0.7 && Math.abs(cat.y + size / 2 - p.y) < size * 0.7) {
+            // Teleport to pair and push cat just outside the exit pipe
+            const pair = pipes[p.pair];
+            if (pair) {
+                // Calculate direction from entry to exit
+                const dx = pair.x - p.x;
+                const dy = pair.y - p.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                // Place cat just outside the exit pipe in the direction of travel
+                cat.x = pair.x + (dx / dist) * (size * 0.8) - size / 2;
+                cat.y = pair.y + (dy / dist) * (size * 0.8) - size / 2;
+                break;
+            }
+        }
+    }
+}
+// Patch gameLoop to skip all logic except dogs movement and cheese for level 10
+const originalGameLoop2 = gameLoop;
+gameLoop = function() {
+    if (!running) return;
+    if (level === 10) {
+        // Only move dogs
+        for (let dog of dogs) {
+            dog.x += dog.dx;
+            dog.y += dog.dy;
+            if (dog.x < 0 || dog.x > canvas.width - size) dog.dx *= -1;
+            if (dog.y < 0 || dog.y > canvas.height - size) dog.dy *= -1;
+            dog.x = Math.max(0, Math.min(canvas.width - size, dog.x));
+            dog.y = Math.max(0, Math.min(canvas.height - size, dog.y));
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    if (level >= 6 && level < 10) moveEverything();
+    moveCatTowardMouse();
+    checkCatPipeTeleport();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+// Reset pipes on game reset
+const originalResetGame2 = resetGame;
+resetGame = function(startLvl) {
+    originalResetGame2(startLvl);
+    if (level === 10) {
+        // Remove all except cheese and dogs
+        cat.x = -1000; cat.y = -1000;
+        mouse.x = -1000; mouse.y = -1000;
+        grayCats = [];
+        bossGrayCat = null;
+        bossCatMinionCats = [];
+        bossCat6 = null;
+        pipes = [];
+        // Remove all superpower effects
+        freezeCatActive = false;
+        transparentMouseActive = false;
+        mouseTransparent = false;
+        showYamYam = false;
+        showBossLevel = false;
+        showBossLevel6 = false;
+        isShaking = false;
+    }
+}
+
+// Initialize pipes on first load
+setupPipes();
 
 draw();
 updateLevelDisplay();
