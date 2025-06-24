@@ -946,7 +946,9 @@ function startLevelTimer() {
             }, 10000);
             return;
         }
-        level++;
+        if (level < 10) {
+            level++;
+        }
         updateLevelDisplay();
         if (level === 10) {
             // Stop the game and show fireworks until stopped by user
@@ -1064,6 +1066,8 @@ document.getElementById('stopBtn').onclick = function() {
     if (levelTimer) clearInterval(levelTimer);
     stopCheeseTimer();
     stopFireworks();
+    resetGame(1); // Reset to level 1
+    draw();
 };
 
 function moveEverything() {
