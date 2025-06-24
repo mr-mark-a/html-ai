@@ -811,23 +811,150 @@ function addRandomCheese() {
     cheeses.push({ x, y });
 }
 
+let showFireworks = false;
+let fireworksParticles = [];
+let congratsMessage = false;
+
+function startFireworks() {
+    showFireworks = true;
+    congratsMessage = true;
+    fireworksParticles = [];
+    animateFireworks();
+}
+
+function stopFireworks() {
+    showFireworks = false;
+    congratsMessage = false;
+    fireworksParticles = [];
+    draw();
+}
+
+function animateFireworks() {
+    if (!showFireworks) return;
+    // Add new fireworks randomly
+    if (fireworksParticles.length < 12) {
+        for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+            createFirework();
+        }
+    }
+    // Update and draw
+    draw();
+    requestAnimationFrame(animateFireworks);
+}
+
+function createFirework() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height * 0.7 + canvas.height * 0.15;
+    const color = `hsl(${Math.floor(Math.random() * 360)}, 90%, 60%)`;
+    const count = 18 + Math.floor(Math.random() * 8);
+    const speed = 2 + Math.random() * 2;
+    let particles = [];
+    for (let i = 0; i < count; i++) {
+        const angle = (2 * Math.PI * i) / count;
+        particles.push({
+            x, y,
+            dx: Math.cos(angle) * speed * (0.7 + Math.random() * 0.6),
+            dy: Math.sin(angle) * speed * (0.7 + Math.random() * 0.6),
+            color,
+            alpha: 1,
+            life: 0
+        });
+    }
+    fireworksParticles.push({ particles });
+}
+
+function updateFireworks() {
+    // Update all particles
+    for (let fw of fireworksParticles) {
+        for (let p of fw.particles) {
+            p.x += p.dx;
+            p.y += p.dy;
+            p.dy += 0.03; // gravity
+            p.life++;
+            p.alpha -= 0.012 + Math.random() * 0.01;
+        }
+    }
+    // Remove faded fireworks
+    fireworksParticles = fireworksParticles.filter(fw => fw.particles.some(p => p.alpha > 0));
+}
+
+// Patch draw to show fireworks and congrats message
+const originalDrawFireworks = draw;
+draw = function() {
+    if (showFireworks) {
+        // Draw background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (showWoodenFloor) {
+            drawWoodenFloor();
+        } else {
+            ctx.save();
+            ctx.fillStyle = '#f0e4d7';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+        updateFireworks();
+        // Draw all fireworks
+        for (let fw of fireworksParticles) {
+            for (let p of fw.particles) {
+                if (p.alpha > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3 + Math.random() * 2, 0, 2 * Math.PI);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 12;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+        // Draw congrats message
+        if (congratsMessage) {
+            ctx.save();
+            ctx.globalAlpha = 0.97;
+            ctx.font = 'bold 64px sans-serif';
+            ctx.fillStyle = '#FFD600';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 6;
+            ctx.strokeText('CONGRATS!', canvas.width / 2, canvas.height / 2);
+            ctx.fillText('CONGRATS!', canvas.width / 2, canvas.height / 2);
+            ctx.restore();
+        }
+        return;
+    }
+    originalDrawFireworks();
+};
+
 function startLevelTimer() {
     if (levelTimer) clearInterval(levelTimer);
     levelTimer = setInterval(() => {
         if (!running) return;
-        // Remove dogs that have been present for 2 or more levels
         dogs = dogs.filter(dog => (level - dog.bornLevel) < 2);
         if (level === 6) {
             setTimeout(() => {
                 if (level === 6 && running) {
                     level++;
-                    // cat.speed is no longer changed by level
+                    grayCats = [];
+                    bossCat6 = null;
+                    showBossLevel6 = false;
+                    isShaking = false;
                     updateLevelDisplay();
                 }
             }, 10000);
             return;
         }
         level++;
+        updateLevelDisplay();
+        if (level === 10) {
+            // Stop the game and show fireworks until stopped by user
+            running = false;
+            showFireworks = true;
+            startFireworks();
+            return;
+        }
         // cat.speed is no longer changed by level
         updateLevelDisplay();
         if (level === 6) {
@@ -936,6 +1063,7 @@ document.getElementById('stopBtn').onclick = function() {
     running = false;
     if (levelTimer) clearInterval(levelTimer);
     stopCheeseTimer();
+    stopFireworks();
 };
 
 function moveEverything() {
