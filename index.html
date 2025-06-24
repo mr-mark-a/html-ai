@@ -620,13 +620,58 @@ function moveCatTowardMouse() {
             cat.y -= cat.speed * dy / dist;
         }
     } else {
-        // Normal: move toward mouse
-        let dx = mouse.x - cat.x;
-        let dy = mouse.y - cat.y;
-        let dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 1) {
-            cat.x += cat.speed * dx / dist;
-            cat.y += cat.speed * dy / dist;
+        // --- Smart pipe navigation logic ---
+        // Find closest pipe to cat
+        let closestPipeToCat = null;
+        let minDistToCat = Infinity;
+        for (let i = 0; i < pipes.length; i++) {
+            const p = pipes[i];
+            const dx = (cat.x + size / 2) - p.x;
+            const dy = (cat.y + size / 2) - p.y;
+            const dist = dx * dx + dy * dy;
+            if (dist < minDistToCat) {
+                minDistToCat = dist;
+                closestPipeToCat = p;
+            }
+        }
+        // Find closest pipe to mouse
+        let closestPipeToMouse = null;
+        let minDistToMouse = Infinity;
+        for (let i = 0; i < pipes.length; i++) {
+            const p = pipes[i];
+            const dx = (mouse.x + size / 2) - p.x;
+            const dy = (mouse.y + size / 2) - p.y;
+            const dist = dx * dx + dy * dy;
+            if (dist < minDistToMouse) {
+                minDistToMouse = dist;
+                closestPipeToMouse = p;
+            }
+        }
+        // Distance if walking directly
+        const dxDirect = mouse.x - cat.x;
+        const dyDirect = mouse.y - cat.y;
+        const distDirect = Math.sqrt(dxDirect * dxDirect + dyDirect * dyDirect);
+        // Distance if using pipes (cat to pipe + pipe to mouse)
+        const distViaPipe = Math.sqrt(minDistToCat) + Math.sqrt(minDistToMouse);
+        // Only use pipe if it is a significant shortcut (e.g., at least 20% shorter)
+        if (closestPipeToCat && closestPipeToMouse && distViaPipe + size < distDirect) {
+            // Move toward the closest pipe to cat
+            let dx = closestPipeToCat.x - (cat.x + size / 2);
+            let dy = closestPipeToCat.y - (cat.y + size / 2);
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 1) {
+                cat.x += cat.speed * dx / dist;
+                cat.y += cat.speed * dy / dist;
+            }
+        } else {
+            // Normal: move toward mouse
+            let dx = mouse.x - cat.x;
+            let dy = mouse.y - cat.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 1) {
+                cat.x += cat.speed * dx / dist;
+                cat.y += cat.speed * dy / dist;
+            }
         }
     }
     // Clamp cat position to stay within canvas
