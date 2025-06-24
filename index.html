@@ -1219,20 +1219,36 @@ draw = function() {
 }
 
 // Cat teleportation logic
+let catPipeCooldownUntil = 0; // Timestamp until which cat cannot teleport
 function checkCatPipeTeleport() {
+    const now = Date.now();
+    if (now < catPipeCooldownUntil) return; // Cooldown active
     for (let i = 0; i < pipes.length; i++) {
         const p = pipes[i];
         if (Math.abs(cat.x + size / 2 - p.x) < size * 0.7 && Math.abs(cat.y + size / 2 - p.y) < size * 0.7) {
-            // Teleport to pair and push cat just outside the exit pipe
-            const pair = pipes[p.pair];
-            if (pair) {
+            // Find the pipe closest to the mouse (excluding the entry pipe)
+            let minDist = Infinity;
+            let closestPipe = null;
+            for (let j = 0; j < pipes.length; j++) {
+                if (j === i) continue;
+                const candidate = pipes[j];
+                const dx = candidate.x - (mouse.x + size / 2);
+                const dy = candidate.y - (mouse.y + size / 2);
+                const dist = dx * dx + dy * dy;
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestPipe = candidate;
+                }
+            }
+            if (closestPipe) {
                 // Calculate direction from entry to exit
-                const dx = pair.x - p.x;
-                const dy = pair.y - p.y;
+                const dx = closestPipe.x - p.x;
+                const dy = closestPipe.y - p.y;
                 const dist = Math.sqrt(dx * dx + dy * dy) || 1;
                 // Place cat just outside the exit pipe in the direction of travel
-                cat.x = pair.x + (dx / dist) * (size * 0.8) - size / 2;
-                cat.y = pair.y + (dy / dist) * (size * 0.8) - size / 2;
+                cat.x = closestPipe.x + (dx / dist) * (size * 0.8) - size / 2;
+                cat.y = closestPipe.y + (dy / dist) * (size * 0.8) - size / 2;
+                catPipeCooldownUntil = Date.now() + 2000; // 2 seconds cooldown
                 break;
             }
         }
