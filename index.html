@@ -109,6 +109,7 @@ document.getElementById('loginBtn').onclick = function() {
 };
 
 document.getElementById('tryFreeBtn').onclick = function() {
+    localStorage.setItem('catMouseTryFree', '1');
     window.location.href = 'cat-and-mouse-game.html';
 };
 </script>

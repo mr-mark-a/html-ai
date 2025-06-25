@@ -1561,6 +1561,46 @@ window.addEventListener('DOMContentLoaded', function() {
 document.getElementById('signOutBtn').onclick = function() {
     window.location.href = 'index.html';
 };
+
+// --- Try for Free Timer Logic ---
+(function() {
+    if (localStorage.getItem('catMouseTryFree') === '1') {
+        localStorage.removeItem('catMouseTryFree');
+        let timerBanner = document.createElement('div');
+        timerBanner.id = 'tryFreeTimerBanner';
+        timerBanner.style.position = 'fixed';
+        timerBanner.style.top = '0';
+        timerBanner.style.left = '0';
+        timerBanner.style.right = '0';
+        timerBanner.style.zIndex = '9999';
+        timerBanner.style.background = 'linear-gradient(90deg, #1976d2 60%, #43a047 100%)';
+        timerBanner.style.color = '#fff';
+        timerBanner.style.fontWeight = 'bold';
+        timerBanner.style.fontSize = '1.3em';
+        timerBanner.style.textAlign = 'center';
+        timerBanner.style.padding = '0.7em 0';
+        timerBanner.textContent = 'Free trial: 1:00 remaining';
+        document.body.appendChild(timerBanner);
+        let seconds = 60;
+        let interval = setInterval(function() {
+            seconds--;
+            let min = Math.floor(seconds/60);
+            let sec = seconds%60;
+            timerBanner.textContent = `Free trial: ${min}:${sec.toString().padStart(2,'0')} remaining`;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                timerBanner.textContent = 'Free trial ended! Logging out...';
+                // Clear all progress
+                localStorage.removeItem('catMouseWinCount');
+                localStorage.removeItem('catMouseLunchCount');
+                // Add any other progress keys here if needed
+                setTimeout(function() {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        }, 1000);
+    }
+})();
 </script>
 </body>
 </html>
