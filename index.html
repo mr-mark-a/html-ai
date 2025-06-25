@@ -512,6 +512,7 @@ let dogs = [];
 const addDogBtn = document.getElementById('addDogBtn');
 if (addDogBtn) {
     addDogBtn.onclick = function() {
+        closeSuperpowerPanel();
         // Add a dog at a random position with random direction and speed
         const margin = size;
         const x = Math.random() * (canvas.width - margin * 2) + margin;
@@ -541,6 +542,7 @@ let extraMice = [];
 const add20MiceBtn = document.getElementById('add20MiceBtn');
 if (add20MiceBtn) {
     add20MiceBtn.onclick = function() {
+        closeSuperpowerPanel();
         // Add 20 mice at random positions
         extraMice = [];
         for (let i = 0; i < 20; i++) {
@@ -770,6 +772,27 @@ function updateLevelDisplay() {
     document.getElementById('levelDisplay').textContent = `Level: ${level}`;
 }
 
+// Add Win counter label under Level label
+const levelDisplay = document.getElementById('levelDisplay');
+let winCounterLabel = document.createElement('div');
+winCounterLabel.id = 'winCounterLabel';
+winCounterLabel.style.fontSize = '1em';
+winCounterLabel.style.fontWeight = 'normal';
+winCounterLabel.style.color = '#1976d2';
+winCounterLabel.style.marginTop = '2px';
+levelDisplay.insertAdjacentElement('afterend', winCounterLabel);
+
+function getWinCount() {
+    return parseInt(localStorage.getItem('catMouseWinCount') || '0', 10);
+}
+function setWinCount(val) {
+    localStorage.setItem('catMouseWinCount', String(val));
+}
+function updateWinCounterLabel() {
+    winCounterLabel.textContent = `Wins: ${getWinCount()}`;
+}
+updateWinCounterLabel();
+
 function startBossCatAddingMinions() {
     if (bossCatAddTimer) clearTimeout(bossCatAddTimer);
     function addMinion() {
@@ -815,11 +838,19 @@ let showFireworks = false;
 let fireworksParticles = [];
 let congratsMessage = false;
 
+// In startFireworks, increment win counter if not already incremented for this win
+let _winJustCounted = false;
 function startFireworks() {
     showFireworks = true;
     congratsMessage = true;
     fireworksParticles = [];
     animateFireworks();
+    if (!_winJustCounted) {
+        let wins = getWinCount();
+        setWinCount(wins + 1);
+        updateWinCounterLabel();
+        _winJustCounted = true;
+    }
 }
 
 function stopFireworks() {
@@ -1057,6 +1088,7 @@ function startGame() {
         startLevelTimer();
         startCheeseTimer();
         gameLoop();
+        resetWinFlag();
     }
 }
 
@@ -1068,6 +1100,7 @@ document.getElementById('stopBtn').onclick = function() {
     stopFireworks();
     resetGame(1); // Reset to level 1
     draw();
+    resetWinFlag();
 };
 
 function moveEverything() {
@@ -1272,8 +1305,17 @@ const freezeCatStatus = document.getElementById('freezeCatStatus');
 const transparentMouseBtn = document.getElementById('transparentMouseBtn');
 const transparentMouseStatus = document.getElementById('transparentMouseStatus');
 
+function closeSuperpowerPanel() {
+    panelOpenBR = false;
+    expandPanelBR.classList.remove('open');
+    expandPanelBR.style.opacity = '0';
+    expandPanelBR.style.pointerEvents = 'none';
+    expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
+}
+
 if (freezeCatBtn) {
     freezeCatBtn.onclick = function() {
+        closeSuperpowerPanel();
         if (freezeCatActive) return;
         freezeCatActive = true;
         cat.speed = 0;
@@ -1287,12 +1329,6 @@ if (freezeCatBtn) {
             freezeCatBtn.disabled = false;
             freezeCatBtn.style.opacity = '1';
         }, 10000);
-        // Auto-close superpower panel
-        panelOpenBR = false;
-        expandPanelBR.classList.remove('open');
-        expandPanelBR.style.opacity = '0';
-        expandPanelBR.style.pointerEvents = 'none';
-        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
         // Resume the game if it was running before
         if (window._wasRunningBeforeSuperpowerPanel) {
             running = true;
@@ -1302,6 +1338,7 @@ if (freezeCatBtn) {
 }
 if (transparentMouseBtn) {
     transparentMouseBtn.onclick = function() {
+        closeSuperpowerPanel();
         if (transparentMouseActive) return;
         transparentMouseActive = true;
         transparentMouseStatus.textContent = 'Mouse is transparent!';
@@ -1315,12 +1352,6 @@ if (transparentMouseBtn) {
             transparentMouseBtn.disabled = false;
             transparentMouseBtn.style.opacity = '1';
         }, 10000);
-        // Auto-close superpower panel
-        panelOpenBR = false;
-        expandPanelBR.classList.remove('open');
-        expandPanelBR.style.opacity = '0';
-        expandPanelBR.style.pointerEvents = 'none';
-        expandPanelBR.style.transform = 'translateY(20px) scale(0.98)';
         // Resume the game if it was running before
         if (window._wasRunningBeforeSuperpowerPanel) {
             running = true;
