@@ -105,7 +105,7 @@
             padding: 0.2em 1em;
             border-radius: 8px;
             text-align: center;
-            min-width: 120px;
+            min-width: 180px;
         }
         #levelText {
             margin: 0;
@@ -116,6 +116,11 @@
         #winDisplay {
             font-size: 0.95em;
             color: #1976d2;
+            margin-top: 2px;
+        }
+        #lunchDisplay {
+            font-size: 0.95em;
+            color: #e53935;
             margin-top: 2px;
         }
         @media (max-width: 600px) {
@@ -131,7 +136,11 @@
 <button id="stopBtn" style="background: #e53935; color: #fff; border: none;">Stop Game</button>
 <div id="levelDisplay">
   <div id="levelText">Level: 1</div>
-  <div id="winDisplay" style="font-size: 0.95em; color: #1976d2; margin-top: 2px;">Wins: 0</div>
+  <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 2px; font-size: 0.95em;">
+    <div id="winDisplay" style="color: #1976d2;">Wins: 0</div>
+    <div style="border-left: 2px solid #bbb; height: 1.2em;"></div>
+    <div id="lunchDisplay" style="color: #e53935;">Lunch: 0</div>
+  </div>
 </div>
 <!-- Expandable button and panel (Bottom Left) -->
 <button id="expandBtn" title="Show settings" aria-label="Show settings">
@@ -700,6 +709,10 @@ function moveCatTowardMouse() {
 
 function checkCatch() {
     if (Math.abs(cat.x - mouse.x) < size && Math.abs(cat.y - mouse.y) < size) {
+        // Increment lunch counter and save
+        lunchCount++;
+        saveLunchCount();
+        updateLunchDisplay();
         showYamYam = true;
         if (yamYamTimer) clearTimeout(yamYamTimer);
         running = false;
@@ -1037,6 +1050,7 @@ function resetGame(startLvl) {
     // cat.speed is no longer changed by level
     updateLevelDisplay();
     updateWinDisplay();
+    updateLunchDisplay();
     if (level === 6) {
         // Add 9 gray cats at random positions
         grayCats = [];
@@ -1516,9 +1530,24 @@ function updateWinDisplay() {
     document.getElementById('winDisplay').textContent = `Wins: ${winCount}`;
 }
 
-// Load win count on page load
+// Lunch counter logic
+let lunchCount = 0;
+function loadLunchCount() {
+    lunchCount = parseInt(localStorage.getItem('catMouseLunchCount') || '0', 10);
+    if (isNaN(lunchCount)) lunchCount = 0;
+    updateLunchDisplay();
+}
+function saveLunchCount() {
+    localStorage.setItem('catMouseLunchCount', lunchCount);
+}
+function updateLunchDisplay() {
+    document.getElementById('lunchDisplay').textContent = `Lunch: ${lunchCount}`;
+}
+
+// Load win and lunch count on page load
 window.addEventListener('DOMContentLoaded', function() {
     loadWinCount();
+    loadLunchCount();
 });
 </script>
 </body>
