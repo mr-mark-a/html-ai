@@ -1509,7 +1509,7 @@ resetGame = function(startLvl) {
         bossGrayCat = null;
         bossCatMinionCats = [];
         bossCat6 = null;
-        pipes = [];
+        pipes = []; // Only remove pipes for level 10, not for normal Stop Game
         // Remove all superpower effects
         freezeCatActive = false;
         transparentMouseActive = false;
@@ -1519,6 +1519,7 @@ resetGame = function(startLvl) {
         showBossLevel6 = false;
         isShaking = false;
     }
+    // Do NOT remove pipes for normal Stop Game resets
 }
 
 // Initialize pipes on first load
