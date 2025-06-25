@@ -172,6 +172,7 @@
         <label for="pipeCountInput" style="color:#333; font-size:1em;">Number of Pipes: </label>
         <input id="pipeCountInput" type="number" min="4" max="10" step="2" value="4" style="vertical-align:middle; width:60px;">
     </div>
+    <button id="signOutBtn" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
 </div>
 <!-- Expandable button and panel (Bottom Right) -->
 <button id="expandBtnBR" title="Show superpowers" aria-label="Show superpowers" style="right:2vw; left:auto; bottom:2vw; position:absolute; z-index:3; width:8vw; min-width:36px; max-width:56px; height:8vw; min-height:36px; max-height:56px; background:#fff; border:2px solid #1976d2; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.2s;">
@@ -1556,6 +1557,10 @@ window.addEventListener('DOMContentLoaded', function() {
     loadWinCount();
     loadLunchCount();
 });
+
+document.getElementById('signOutBtn').onclick = function() {
+    window.location.href = 'index.html';
+};
 </script>
 </body>
 </html>

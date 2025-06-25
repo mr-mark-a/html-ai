@@ -5,11 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        /* Add your CSS styles here */
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Add a background image of a cat catching a mouse */
+            background: url('https://cdn.pixabay.com/photo/2017/01/06/19/15/cat-1958376_1280.jpg') center center/cover no-repeat, #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .bg-emoji {
+            position: absolute;
+            z-index: 0;
+            font-size: 2.5em;
+            opacity: 0.18;
+            pointer-events: none;
+            user-select: none;
+        }
+        .bg-pipe {
+            position: absolute;
+            z-index: 0;
+            opacity: 0.22;
+            pointer-events: none;
+            user-select: none;
+            transition: filter 0.2s;
+        }
+        #loginContainer {
+            position: relative;
+            top: 0;
+            left: 0;
+            margin: 0 auto;
+            z-index: 10;
+            background: #fffbe8;
+            border: 2px solid #b8860b;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1em 2em;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1em;
+            min-width: 220px;
+        }
     </style>
 </head>
-<body>
-<div id="loginContainer" style="position: absolute; top: 2vw; left: 50%; transform: translateX(-50%); z-index: 10; background: #fffbe8; border: 2px solid #b8860b; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 1em 2em; display: flex; flex-direction: row; align-items: center; gap: 1em; min-width: 220px;">
+<body style="position:relative;">
+<div id="loginContainer">
     <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
     <button id="loginBtn" style="background:#43a047; color:#fff; border:none; border-radius:6px; padding:0.4em 1.2em; font-size:1em; cursor:pointer;">Login</button>
 </div>
@@ -18,7 +60,45 @@
     <!-- Game area content -->
 </div>
 
+<div style="position: fixed; left: 0; right: 0; bottom: 32px; display: flex; justify-content: center; z-index: 20; pointer-events: none;">
+    <button id="tryFreeBtn" style="pointer-events: auto; background: #1976d2; color: #fff; border: none; border-radius: 8px; padding: 0.7em 2.2em; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.10); cursor: pointer; letter-spacing: 1px; transition: background 0.2s;">Try for Free</button>
+</div>
 <script>
+// Add random cats and mice emojis to the background
+(function() {
+    const EMOJIS = ['🐱','🐭','🐱','🐭','🐱','🐭'];
+    const count = 28; // Increased from 12 to 28 for more cats and mice
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'bg-emoji';
+        el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+        el.style.left = Math.random()*90 + '%';
+        el.style.top = Math.random()*90 + '%';
+        el.style.fontSize = (2 + Math.random()*3) + 'em';
+        el.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(el);
+    }
+    // Add random pipe images to the background
+    const PIPE_IMAGES = [
+        'https://cdn.pixabay.com/photo/2013/07/13/12/46/pipe-146367_1280.png', // straight pipe
+        'https://cdn.pixabay.com/photo/2013/07/13/12/46/pipe-146368_1280.png', // curved pipe
+        'https://cdn.pixabay.com/photo/2013/07/13/12/46/pipe-146369_1280.png'  // T-junction pipe
+    ];
+    const pipeCount = 7;
+    for (let i = 0; i < pipeCount; i++) {
+        const img = document.createElement('img');
+        img.src = PIPE_IMAGES[Math.floor(Math.random()*PIPE_IMAGES.length)];
+        img.className = 'bg-emoji pipe-bg-img';
+        img.style.left = Math.random()*90 + '%';
+        img.style.top = Math.random()*90 + '%';
+        img.style.width = (60 + Math.random()*60) + 'px';
+        img.style.height = 'auto';
+        img.style.opacity = 0.18;
+        img.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(img);
+    }
+})();
+
 document.getElementById('loginBtn').onclick = function() {
     var pw = document.getElementById('passwordInput').value;
     if (pw === '000054') {
@@ -26,6 +106,10 @@ document.getElementById('loginBtn').onclick = function() {
     } else {
         alert('Incorrect password');
     }
+};
+
+document.getElementById('tryFreeBtn').onclick = function() {
+    window.location.href = 'cat-and-mouse-game.html';
 };
 </script>
 </body>
