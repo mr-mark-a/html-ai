@@ -48,6 +48,21 @@
             gap: 1em;
             min-width: 220px;
         }
+        #loginContainer.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(4px); }
+            30%, 50%, 70% { transform: translateX(-8px); }
+            40%, 60% { transform: translateX(8px); }
+        }
+        /* Red style for login form while shaking */
+        #loginContainer.shake-red {
+            background: #ffeaea !important;
+            border-color: #e53935 !important;
+            box-shadow: 0 2px 16px rgba(229,57,53,0.18) !important;
+        }
     </style>
 </head>
 <body style="position:relative;">
@@ -100,11 +115,35 @@
 })();
 
 document.getElementById('loginBtn').onclick = function() {
-    var pw = document.getElementById('passwordInput').value;
+    var pwInput = document.getElementById('passwordInput');
+    var pw = pwInput.value;
     if (pw === '000054') {
         window.location.href = 'marks-games.html';
     } else {
-        alert('Incorrect password');
+        pwInput.value = '';
+        var loginContainer = document.getElementById('loginContainer');
+        // Add dark overlay
+        var overlay = document.createElement('div');
+        overlay.id = 'shakeOverlay';
+        overlay.style.position = 'fixed';
+        overlay.style.left = '0';
+        overlay.style.top = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.background = 'rgba(0,0,0,0.45)';
+        overlay.style.zIndex = '9';
+        overlay.style.pointerEvents = 'none';
+        document.body.appendChild(overlay);
+        loginContainer.classList.remove('shake'); // reset if already shaking
+        void loginContainer.offsetWidth; // force reflow
+        loginContainer.classList.add('shake');
+        loginContainer.classList.add('shake-red');
+        setTimeout(function() {
+            loginContainer.classList.remove('shake');
+            loginContainer.classList.remove('shake-red');
+            var ov = document.getElementById('shakeOverlay');
+            if (ov) ov.remove();
+        }, 500);
     }
 };
 
