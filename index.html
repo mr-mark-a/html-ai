@@ -104,6 +104,19 @@
             background: rgba(255,255,255,0.8);
             padding: 0.2em 1em;
             border-radius: 8px;
+            text-align: center;
+            min-width: 120px;
+        }
+        #levelText {
+            margin: 0;
+            padding: 0;
+            font-size: 1em;
+            color: #333;
+        }
+        #winDisplay {
+            font-size: 0.95em;
+            color: #1976d2;
+            margin-top: 2px;
         }
         @media (max-width: 600px) {
             #gameContainer { min-width: 200px; min-height: 200px; }
@@ -116,7 +129,10 @@
 <div id="gameContainer">
 <button id="startBtn" style="background: #43a047; color: #fff; border: none;">Start Game</button>
 <button id="stopBtn" style="background: #e53935; color: #fff; border: none;">Stop Game</button>
-<div id="levelDisplay">Level: 1</div>
+<div id="levelDisplay">
+  <div id="levelText">Level: 1</div>
+  <div id="winDisplay" style="font-size: 0.95em; color: #1976d2; margin-top: 2px;">Wins: 0</div>
+</div>
 <!-- Expandable button and panel (Bottom Left) -->
 <button id="expandBtn" title="Show settings" aria-label="Show settings">
     <svg id="settingsIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -769,29 +785,8 @@ canvas.addEventListener('mousemove', e => {
 });
 
 function updateLevelDisplay() {
-    document.getElementById('levelDisplay').textContent = `Level: ${level}`;
+    document.getElementById('levelText').textContent = `Level: ${level}`;
 }
-
-// Add Win counter label under Level label
-const levelDisplay = document.getElementById('levelDisplay');
-let winCounterLabel = document.createElement('div');
-winCounterLabel.id = 'winCounterLabel';
-winCounterLabel.style.fontSize = '1em';
-winCounterLabel.style.fontWeight = 'normal';
-winCounterLabel.style.color = '#1976d2';
-winCounterLabel.style.marginTop = '2px';
-levelDisplay.insertAdjacentElement('afterend', winCounterLabel);
-
-function getWinCount() {
-    return parseInt(localStorage.getItem('catMouseWinCount') || '0', 10);
-}
-function setWinCount(val) {
-    localStorage.setItem('catMouseWinCount', String(val));
-}
-function updateWinCounterLabel() {
-    winCounterLabel.textContent = `Wins: ${getWinCount()}`;
-}
-updateWinCounterLabel();
 
 function startBossCatAddingMinions() {
     if (bossCatAddTimer) clearTimeout(bossCatAddTimer);
@@ -838,19 +833,15 @@ let showFireworks = false;
 let fireworksParticles = [];
 let congratsMessage = false;
 
-// In startFireworks, increment win counter if not already incremented for this win
-let _winJustCounted = false;
 function startFireworks() {
     showFireworks = true;
     congratsMessage = true;
     fireworksParticles = [];
+    // Increment win counter and save
+    winCount++;
+    saveWinCount();
+    updateWinDisplay();
     animateFireworks();
-    if (!_winJustCounted) {
-        let wins = getWinCount();
-        setWinCount(wins + 1);
-        updateWinCounterLabel();
-        _winJustCounted = true;
-    }
 }
 
 function stopFireworks() {
@@ -1045,6 +1036,7 @@ function resetGame(startLvl) {
     cat.y = 230;
     // cat.speed is no longer changed by level
     updateLevelDisplay();
+    updateWinDisplay();
     if (level === 6) {
         // Add 9 gray cats at random positions
         grayCats = [];
@@ -1088,7 +1080,6 @@ function startGame() {
         startLevelTimer();
         startCheeseTimer();
         gameLoop();
-        resetWinFlag();
     }
 }
 
@@ -1100,7 +1091,6 @@ document.getElementById('stopBtn').onclick = function() {
     stopFireworks();
     resetGame(1); // Reset to level 1
     draw();
-    resetWinFlag();
 };
 
 function moveEverything() {
@@ -1512,8 +1502,24 @@ resetGame = function(startLvl) {
 // Initialize pipes on first load
 setupPipes();
 
-draw();
-updateLevelDisplay();
+// Win counter logic
+let winCount = 0;
+function loadWinCount() {
+    winCount = parseInt(localStorage.getItem('catMouseWinCount') || '0', 10);
+    if (isNaN(winCount)) winCount = 0;
+    updateWinDisplay();
+}
+function saveWinCount() {
+    localStorage.setItem('catMouseWinCount', winCount);
+}
+function updateWinDisplay() {
+    document.getElementById('winDisplay').textContent = `Wins: ${winCount}`;
+}
+
+// Load win count on page load
+window.addEventListener('DOMContentLoaded', function() {
+    loadWinCount();
+});
 </script>
 </body>
 </html>
