@@ -174,7 +174,9 @@ startStopBtn.onclick = function() {
 let carLane = 'right'; // 'left' or 'right'
 const raceCar = document.getElementById('raceCar');
 let carAnimating = false;
+let gameOver = false;
 function updateCarLane(smooth = false) {
+    if (gameOver) return;
     let targetLeft = carLane === 'right' ? '66.5%' : '33.5%';
     if (!smooth) {
         raceCar.style.transition = 'none';
@@ -192,7 +194,7 @@ function updateCarLane(smooth = false) {
 }
 updateCarLane();
 document.addEventListener('keydown', function(e) {
-    if (carAnimating) return;
+    if (carAnimating || gameOver) return;
     if (e.key === 'ArrowLeft' && carLane !== 'left') {
         carLane = 'left';
         updateCarLane(true);
@@ -203,9 +205,11 @@ document.addEventListener('keydown', function(e) {
     }
 });
 // Animate the dashed lane divider to move upward (not downward)
+let laneLinesRunning = true;
 (function animateLaneLines() {
     let offset = 0;
     function step() {
+        if (!laneLinesRunning) return;
         offset -= 0.4; // Negative for upward movement, was 0.8
         const laneGroup = document.getElementById('laneLines');
         if (laneGroup) {
@@ -263,7 +267,9 @@ function spawnTruck() {
     trucks.push({ elem: truckElem, lane, y: -200 });
 }
 let lastTruckTime = 0;
+let trucksRunning = true;
 function trucksLoop(ts) {
+    if (!trucksRunning) return;
     // Spawn truck if enough time passed
     if (!lastTruckTime || ts - lastTruckTime > 5000) {
         spawnTruck();
@@ -274,14 +280,84 @@ function trucksLoop(ts) {
         const truck = trucks[i];
         truck.y += 5.4; // speed (pixels per frame), was 3.6
         truck.elem.style.top = truck.y + 'px';
+        // Collision detection
+        if (!gameOver && truck.lane === carLane) {
+            // Get bounding rects
+            const carRect = raceCar.getBoundingClientRect();
+            const truckRect = truck.elem.firstElementChild.getBoundingClientRect();
+            if (
+                carRect.left < truckRect.right &&
+                carRect.right > truckRect.left &&
+                carRect.top < truckRect.bottom &&
+                carRect.bottom > truckRect.top
+            ) {
+                gameOver = true;
+                laneLinesRunning = false;
+                trucksRunning = false;
+                showCrashEffect(carRect, truckRect);
+                break;
+            }
+        }
         if (truck.y > window.innerHeight) {
             trucksContainer.removeChild(truck.elem);
             trucks.splice(i, 1);
         }
     }
-    requestAnimationFrame(trucksLoop);
+    if (!gameOver) requestAnimationFrame(trucksLoop);
 }
 requestAnimationFrame(trucksLoop);
+
+function showCrashEffect(carRect, truckRect) {
+    // Create smoke SVG
+    const smoke = document.createElement('div');
+    smoke.innerHTML = `<svg width="80" height="80" viewBox="0 0 80 80" style="position:absolute;">
+      <ellipse cx="40" cy="50" rx="18" ry="12" fill="rgba(180,180,180,0.7)">
+        <animate attributeName="rx" values="18;30;18" dur="0.7s" repeatCount="1"/>
+        <animate attributeName="opacity" values="0.7;0.3;0" dur="0.7s" repeatCount="1"/>
+      </ellipse>
+      <ellipse cx="50" cy="40" rx="12" ry="8" fill="rgba(200,200,200,0.5)">
+        <animate attributeName="rx" values="12;20;12" dur="0.7s" repeatCount="1"/>
+        <animate attributeName="opacity" values="0.5;0.2;0" dur="0.7s" repeatCount="1"/>
+      </ellipse>
+    </svg>`;
+    smoke.style.position = 'fixed';
+    smoke.style.left = ((carRect.left + truckRect.left) / 2 + (carRect.right + truckRect.right) / 2) / 2 - 40 + 'px';
+    smoke.style.top = ((carRect.top + truckRect.top) / 2 + (carRect.bottom + truckRect.bottom) / 2) / 2 - 40 + 'px';
+    smoke.style.pointerEvents = 'none';
+    smoke.style.zIndex = 10;
+    document.body.appendChild(smoke);
+    setTimeout(() => smoke.remove(), 800);
+
+    // Create sparks SVG
+    const sparks = document.createElement('div');
+    sparks.innerHTML = `<svg width="80" height="80" viewBox="0 0 80 80" style="position:absolute;">
+      <g>
+        <line x1="40" y1="40" x2="60" y2="30" stroke="#ffd600" stroke-width="3">
+          <animate attributeName="x2" values="60;70;60" dur="0.4s" repeatCount="1"/>
+          <animate attributeName="opacity" values="1;0;0" dur="0.4s" repeatCount="1"/>
+        </line>
+        <line x1="40" y1="40" x2="20" y2="50" stroke="#ffd600" stroke-width="3">
+          <animate attributeName="x2" values="20;10;20" dur="0.4s" repeatCount="1"/>
+          <animate attributeName="opacity" values="1;0;0" dur="0.4s" repeatCount="1"/>
+        </line>
+        <line x1="40" y1="40" x2="50" y2="60" stroke="#ff9800" stroke-width="2">
+          <animate attributeName="y2" values="60;75;60" dur="0.4s" repeatCount="1"/>
+          <animate attributeName="opacity" values="1;0;0" dur="0.4s" repeatCount="1"/>
+        </line>
+        <line x1="40" y1="40" x2="30" y2="20" stroke="#ff9800" stroke-width="2">
+          <animate attributeName="y2" values="20;5;20" dur="0.4s" repeatCount="1"/>
+          <animate attributeName="opacity" values="1;0;0" dur="0.4s" repeatCount="1"/>
+        </line>
+      </g>
+    </svg>`;
+    sparks.style.position = 'fixed';
+    sparks.style.left = ((carRect.left + truckRect.left) / 2 + (carRect.right + truckRect.right) / 2) / 2 - 40 + 'px';
+    sparks.style.top = ((carRect.top + truckRect.top) / 2 + (carRect.bottom + truckRect.bottom) / 2) / 2 - 40 + 'px';
+    sparks.style.pointerEvents = 'none';
+    sparks.style.zIndex = 11;
+    document.body.appendChild(sparks);
+    setTimeout(() => sparks.remove(), 500);
+}
 </script>
 </body>
 </html>
