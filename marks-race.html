@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark's Race</title>
+    <style>
+        body {
+            background: #444;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            position: relative;
+            min-height: 100vh;
+        }
+        .road-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        #settingsBtn {
+            position: absolute;
+            left: 2vw;
+            bottom: 2vw;
+            z-index: 3;
+            width: 48px;
+            height: 48px;
+            background: #fff;
+            border: 2px solid #b8860b;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #settingsBtn:hover { background: #ffe4b5; }
+        #settingsPanel {
+            position: absolute;
+            left: 2vw;
+            bottom: 60px;
+            z-index: 3;
+            min-width: 180px;
+            max-width: 60vw;
+            background: #fffbe8;
+            border: 2px solid #b8860b;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+            padding: 18px 18px 12px 18px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px) scale(0.98);
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        #settingsPanel.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        #goToGamesBtn {
+            background: #43a047;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #signOutBtn {
+            background: #e53935;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #startStopBtn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 4;
+            background: #43a047;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7em 1.5em;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        }
+    </style>
+</head>
+<body>
+<div class="road-bg">
+    <svg id="roadSVG" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:100vw;height:100vh;">
+        <rect x="30" y="0" width="40" height="100" fill="#222"/>
+        <rect x="0" y="0" width="30" height="100" fill="#444"/>
+        <rect x="70" y="0" width="30" height="100" fill="#444"/>
+        <!-- Lane divider: will be animated with JS -->
+        <g id="laneLines" stroke="#fff" stroke-width="2" stroke-dasharray="6,8">
+            <line id="laneLine" x1="50" y1="0" x2="50" y2="100"/>
+        </g>
+    </svg>
+</div>
+<!-- Replace the car image with a vertical, red SVG car -->
+<svg id="raceCar" viewBox="0 0 60 120" width="72" height="144" style="position:absolute; left:66.5%; top:60%; transform:translate(-50%, -50%); z-index:2; pointer-events:none;">
+    <!-- Car body -->
+    <rect x="10" y="20" width="40" height="80" rx="12" fill="#d32f2f" stroke="#b71c1c" stroke-width="3"/>
+    <!-- Windows -->
+    <rect x="18" y="30" width="24" height="22" rx="5" fill="#e3eaf7" stroke="#90caf9" stroke-width="2"/>
+    <!-- Wheels -->
+    <rect x="8" y="25" width="8" height="22" rx="4" fill="#222"/>
+    <rect x="44" y="25" width="8" height="22" rx="4" fill="#222"/>
+    <rect x="8" y="73" width="8" height="22" rx="4" fill="#222"/>
+    <rect x="44" y="73" width="8" height="22" rx="4" fill="#222"/>
+    <!-- Headlights -->
+    <ellipse cx="30" cy="20" rx="7" ry="4" fill="#fffde7" stroke="#ffd600" stroke-width="1"/>
+    <!-- Taillights -->
+    <ellipse cx="30" cy="100" rx="7" ry="4" fill="#ff5252" stroke="#b71c1c" stroke-width="1"/>
+</svg>
+<button id="settingsBtn" title="Show settings" aria-label="Show settings">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3.5"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 9 4.6V4a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+</button>
+<div id="settingsPanel">
+    <div style="font-weight:bold; color:#b8860b; margin-bottom:10px;">Settings</div>
+    <!-- Add settings controls here -->
+    <button id="goToGamesBtn" style="background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Go to Games Menu</button>
+    <button id="signOutBtn" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
+</div>
+<button id="startStopBtn" style="position:absolute; top:24px; right:24px; z-index:4; background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.7em 1.5em; font-size:1.1em; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Start Game</button>
+<script>
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+let panelOpen = false;
+settingsBtn.onclick = function() {
+    panelOpen = !panelOpen;
+    settingsPanel.classList.toggle('open', panelOpen);
+};
+window.addEventListener('mousedown', function(e) {
+    if (panelOpen && !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+        panelOpen = false;
+        settingsPanel.classList.remove('open');
+    }
+});
+document.getElementById('goToGamesBtn').onclick = function() {
+    window.location.href = 'marks-games.html';
+};
+document.getElementById('signOutBtn').onclick = function() {
+    window.location.href = 'index.html';
+};
+let gameRunning = false;
+const startStopBtn = document.getElementById('startStopBtn');
+startStopBtn.onclick = function() {
+    gameRunning = !gameRunning;
+    startStopBtn.textContent = gameRunning ? 'Stop Game' : 'Start Game';
+    // Add your game start/stop logic here
+    // For now, just toggles the button and state
+};
+let carLane = 'right'; // 'left' or 'right'
+const raceCar = document.getElementById('raceCar');
+let carAnimating = false;
+function updateCarLane(smooth = false) {
+    let targetLeft = carLane === 'right' ? '66.5%' : '33.5%';
+    if (!smooth) {
+        raceCar.style.transition = 'none';
+        raceCar.style.left = targetLeft;
+        // Force reflow to reset transition
+        void raceCar.offsetWidth;
+        raceCar.style.transition = 'left 0.5s cubic-bezier(0.4,0,0.2,1)';
+        return;
+    }
+    if (carAnimating) return;
+    carAnimating = true;
+    raceCar.style.transition = 'left 0.5s cubic-bezier(0.4,0,0.2,1)';
+    raceCar.style.left = targetLeft;
+    setTimeout(() => { carAnimating = false; }, 500);
+}
+updateCarLane();
+document.addEventListener('keydown', function(e) {
+    if (carAnimating) return;
+    if (e.key === 'ArrowLeft' && carLane !== 'left') {
+        carLane = 'left';
+        updateCarLane(true);
+    }
+    if (e.key === 'ArrowRight' && carLane !== 'right') {
+        carLane = 'right';
+        updateCarLane(true);
+    }
+});
+// Animate the dashed lane divider to move upward (not downward)
+(function animateLaneLines() {
+    let offset = 0;
+    function step() {
+        offset -= 0.8; // Negative for upward movement
+        const laneGroup = document.getElementById('laneLines');
+        if (laneGroup) {
+            laneGroup.setAttribute('stroke-dashoffset', offset);
+        }
+        requestAnimationFrame(step);
+    }
+    step();
+})();
+</script>
+</body>
+</html>
