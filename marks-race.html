@@ -158,7 +158,10 @@ window.addEventListener('mousedown', function(e) {
     }
 });
 document.getElementById('goToGamesBtn').onclick = function() {
-    window.location.href = 'marks-games.html';
+    window.location.href = 'loading.html';
+    setTimeout(function() {
+        window.location.href = 'marks-games.html';
+    }, 3000);
 };
 document.getElementById('signOutBtn').onclick = function() {
     window.location.href = 'index.html';
@@ -427,6 +430,48 @@ function showCrashEffect(carRect, truckRect) {
     sparks.style.zIndex = 11;
     document.body.appendChild(sparks);
     setTimeout(() => sparks.remove(), 500);
+
+    // Create many boxes around the crashed truck
+    const numBoxes = 12;
+    for (let i = 0; i < numBoxes; i++) {
+        const box = document.createElement('div');
+        const size = 24 + Math.random() * 16;
+        box.style.width = size + 'px';
+        box.style.height = size + 'px';
+        box.style.background = '#b8860b';
+        box.style.border = '2px solid #7c5a0a';
+        box.style.borderRadius = '4px';
+        box.style.position = 'fixed';
+        // Randomize start position around the truckRect center
+        const centerX = (truckRect.left + truckRect.right) / 2;
+        const centerY = (truckRect.top + truckRect.bottom) / 2;
+        box.style.left = (centerX - size / 2 + Math.random() * 40 - 20) + 'px';
+        box.style.top = (centerY - size / 2 + Math.random() * 40 - 20) + 'px';
+        box.style.zIndex = 15;
+        box.style.pointerEvents = 'none';
+        // Animate boxes flying outward but do not fade away
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = 80 + Math.random() * 60;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+        box.animate([
+            { transform: 'scale(1) translate(0,0)', opacity: 1 },
+            { transform: `scale(1.1) translate(${dx}px,${dy}px)`, opacity: 1 },
+            { transform: `scale(0.8) translate(${dx * 1.2}px,${dy * 1.2}px)`, opacity: 1 }
+        ], {
+            duration: 1200 + Math.random() * 400,
+            easing: 'cubic-bezier(0.4,0,0.2,1)',
+            fill: 'forwards'
+        });
+        // Do not remove the box after animation
+        document.body.appendChild(box);
+    }
+
+    // Show restart button on crash
+    let restartBtn = document.getElementById('restartBtn');
+    if (restartBtn) {
+        restartBtn.remove();
+    }
 }
 </script>
 </body>

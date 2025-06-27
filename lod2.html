@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading...</title>
+  <style>
+    body {
+      background: #222;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .loading-sign {
+      font-size: 5em;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      text-shadow: 0 4px 32px #43a047, 0 1px 0 #000;
+      animation: pulse 1.2s infinite alternate;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0.7; transform: scale(1.08); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-sign">LOADING...</div>
+</body>
+<script>
+setTimeout(function() {
+  window.location.href = 'cat-and-mouse-game.html';
+}, 2000);
+</script>
+</html>
