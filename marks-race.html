@@ -156,21 +156,7 @@
     </svg>
 </div>
 <!-- Replace the car image with a vertical, red SVG car -->
-<svg id="raceCar" viewBox="0 0 60 120" width="72" height="144" style="position:absolute; left:66.5%; bottom:6%; transform:translate(-50%, 0); z-index:2; pointer-events:none;">
-    <!-- Car body -->
-    <rect x="10" y="20" width="40" height="80" rx="12" fill="#d32f2f" stroke="#b71c1c" stroke-width="3"/>
-    <!-- Windows -->
-    <rect x="18" y="30" width="24" height="22" rx="5" fill="#e3eaf7" stroke="#90caf9" stroke-width="2"/>
-    <!-- Wheels -->
-    <rect x="8" y="25" width="8" height="22" rx="4" fill="#222"/>
-    <rect x="44" y="25" width="8" height="22" rx="4" fill="#222"/>
-    <rect x="8" y="73" width="8" height="22" rx="4" fill="#222"/>
-    <rect x="44" y="73" width="8" height="22" rx="4" fill="#222"/>
-    <!-- Headlights -->
-    <ellipse cx="30" cy="20" rx="7" ry="4" fill="#fffde7" stroke="#ffd600" stroke-width="1"/>
-    <!-- Taillights -->
-    <ellipse cx="30" cy="100" rx="7" ry="4" fill="#ff5252" stroke="#b71c1c" stroke-width="1"/>
-</svg>
+<img id="raceCar" src="race-images/race.png" alt="Race Car" style="position:absolute; left:66.5%; bottom:6%; transform:translate(-50%, 0); z-index:2; pointer-events:none; height:192px; transition:left 0.5s cubic-bezier(0.4,0,0.2,1);" />
 <div id="trucksContainer"></div>
 <button id="settingsBtn" title="Show settings" aria-label="Show settings">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -231,6 +217,7 @@ let gameRunning = false;
 const startStopBtn = document.getElementById('startStopBtn');
 startStopBtn.onclick = function() {
     hideCongratsAndFireworks();
+    document.getElementById('raceCar').src = 'race-images/race.png';
     // Refresh the page when Start Game is clicked
     window.location.reload();
 };
@@ -328,18 +315,18 @@ function spawnTruck() {
     const img = document.createElement('img');
     img.src = 'race-images/truck.png';
     img.alt = 'Truck';
-    img.style.width = '60px';
-    img.style.height = '200px';
+    img.style.width = '120px'; // doubled from 60px
+    img.style.height = '400px'; // doubled from 200px
     img.style.display = 'block';
     img.style.objectFit = 'contain';
     truckElem.appendChild(img);
     truckElem.style.position = 'absolute';
     truckElem.style.left = getLaneLeft(lane);
-    truckElem.style.top = '-200px';
+    truckElem.style.top = '-400px'; // changed from -200px to -400px
     truckElem.style.transform = 'translate(-50%, 0)';
     truckElem.style.transition = 'top 0.01s linear';
     trucksContainer.appendChild(truckElem);
-    trucks.push({ elem: truckElem, lane, y: -200 });
+    trucks.push({ elem: truckElem, lane, y: -400 }); // changed from -200 to -400
 }
 let lastTruckTime = 0;
 let trucksRunning = true;
@@ -368,6 +355,8 @@ function trucksLoop(ts) {
             ) {
                 // Change truck image to crashed version
                 truck.elem.firstElementChild.src = 'race-images/truck-crached.png';
+                // Change race car image to crashed version
+                raceCar.src = 'race-images/race-crashed.png';
                 gameOver = true;
                 laneLinesRunning = false;
                 trucksRunning = false;
