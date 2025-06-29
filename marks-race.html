@@ -319,14 +319,17 @@ function spawnTruck() {
     img.style.height = '400px'; // doubled from 200px
     img.style.display = 'block';
     img.style.objectFit = 'contain';
+    // Random color filter
+    const hue = Math.floor(Math.random() * 360);
+    img.style.filter = `hue-rotate(${hue}deg)`;
     truckElem.appendChild(img);
     truckElem.style.position = 'absolute';
     truckElem.style.left = getLaneLeft(lane);
-    truckElem.style.top = '-400px'; // changed from -200px to -400px
+    truckElem.style.top = '-400px';
     truckElem.style.transform = 'translate(-50%, 0)';
     truckElem.style.transition = 'top 0.01s linear';
     trucksContainer.appendChild(truckElem);
-    trucks.push({ elem: truckElem, lane, y: -400 }); // changed from -200 to -400
+    trucks.push({ elem: truckElem, lane, y: -400 });
 }
 let lastTruckTime = 0;
 let trucksRunning = true;
