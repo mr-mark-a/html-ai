@@ -99,6 +99,48 @@
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.10);
         }
+        /* Award panel styles */
+        #awardPanel {
+            position: fixed;
+            bottom: 2vw;
+            right: 2vw;
+            z-index: 1200;
+            background: rgba(255, 255, 224, 0.98);
+            border: 2px solid #ffd700;
+            border-radius: 18px;
+            box-shadow: 0 4px 18px #ffd70055, 0 0 0 3px #fffbe0;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: width 0.35s, height 0.35s;
+        }
+        #awardContent {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            padding: 18px 12px 12px 12px;
+        }
+        #awardIcon {
+            font-size: 2.2em;
+        }
+        #awardTotals {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        #awardTotals > div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
     </style>
 </head>
 <body>
@@ -143,6 +185,25 @@
     <button id="signOutBtn" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
 </div>
 <button id="startStopBtn" style="position:absolute; top:24px; right:24px; z-index:4; background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.7em 1.5em; font-size:1.1em; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Start Game</button>
+<!-- Add Award Panel (bottom right, expandable) -->
+<div id="awardPanel">
+    <span id="awardIcon">🏅</span>
+    <div id="awardContent">
+        <div style='font-size:1.3em; font-weight:bold; color:#b8860b; margin-bottom:8px;'>Awards</div>
+        <div style='margin-bottom:6px;'><span style='font-size:1.7em;'>🥇</span> Gold Medal: Survive 1 minute!</div>
+        <div style='margin-bottom:6px;'><span style='font-size:1.7em;'>🚗</span> Fast Lane: Switch lanes 10 times!</div>
+        <div style='margin-bottom:6px;'><span style='font-size:1.7em;'>🛑</span> Crashless: No crash in 3 games!</div>
+        <div id="awardTotals" style="margin-top:12px; display:flex; flex-direction:row; align-items:center; justify-content:center; width:100%;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:2em;">🥇</span><span>=</span><span id="awardGold">0</span>
+            <span style="font-size:2em;">🚗</span><span>=</span><span id="awardFast">0</span>
+            <span style="font-size:2em;">🛑</span><span>=</span><span id="awardCrashless">0</span>
+          </div>
+        </div>
+        <div style='font-size:0.95em; color:#888; margin-top:8px;'>More awards coming soon...</div>
+        <button id="goToStoreBtn" style="margin-top:10px; background:#ffd700; color:#222; border:none; border-radius:8px; padding:0.6em 1.4em; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px #ffd70055;">Go to Store</button>
+    </div>
+</div>
 <script>
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsPanel = document.getElementById('settingsPanel');
@@ -169,20 +230,37 @@ document.getElementById('signOutBtn').onclick = function() {
 let gameRunning = false;
 const startStopBtn = document.getElementById('startStopBtn');
 startStopBtn.onclick = function() {
-    gameRunning = !gameRunning;
-    startStopBtn.textContent = gameRunning ? 'Stop Game' : 'Start Game';
-    // Add your game start/stop logic here
-    // For now, just toggles the button and state
+    hideCongratsAndFireworks();
+    // Refresh the page when Start Game is clicked
+    window.location.reload();
 };
 let carLane = 'right'; // 'left' or 'right'
 const raceCar = document.getElementById('raceCar');
 let carAnimating = false;
 let gameOver = false;
+let laneSwitches = 0;
+let lastLane = carLane;
+let consecutiveWins = parseInt(localStorage.getItem('consecutiveWins')||'0',10);
+
+function resetGameStats() {
+    laneSwitches = 0;
+    lastLane = carLane;
+}
+
+// Update car lane and count switches
 function updateCarLane(smooth = false) {
     if (gameOver) return;
     // Add horizontal margin (e.g., 7vw) for each car lane
     const laneMargin = 7; // in vw
     let targetLeft = carLane === 'right' ? (66.5 - laneMargin) + 'vw' : (33.5 + laneMargin) + 'vw';
+    if (carLane !== lastLane) {
+        laneSwitches++;
+        lastLane = carLane;
+        if (laneSwitches === 10) {
+            setAwardCount('awardFast', getAwardCounts().fast + 1);
+            updateAwardPanel();
+        }
+    }
     if (!smooth) {
         raceCar.style.transition = 'none';
         raceCar.style.left = targetLeft;
@@ -478,7 +556,220 @@ function showCrashEffect(carRect, truckRect) {
     if (restartBtn) {
         restartBtn.remove();
     }
+    // Stop and reset congrats timer if crash occurs
+    if (congratsTimeout) {
+        clearTimeout(congratsTimeout);
+        congratsTimeout = null;
+    }
+    hideCongratsAndFireworks();
+    // Reset consecutive wins on crash
+    consecutiveWins = 0;
+    localStorage.setItem('consecutiveWins', 0);
 }
+
+let fireworkInterval = null;
+let congratsDiv = null;
+let fireworkCanvas = null;
+let congratsShown = false;
+
+function showCongratsAndFireworks() {
+    if (congratsShown) return;
+    congratsShown = true;
+    // Stop the game when congrats is shown
+    gameRunning = false;
+    laneLinesRunning = false;
+    trucksRunning = false;
+    // Add gold medal point
+    setAwardCount('awardGold', getAwardCounts().gold + 1);
+    updateAwardPanel();
+    // Update consecutive wins
+    consecutiveWins++;
+    localStorage.setItem('consecutiveWins', consecutiveWins);
+    if (consecutiveWins === 3) {
+        setAwardCount('awardCrashless', getAwardCounts().crashless + 1);
+        updateAwardPanel();
+        consecutiveWins = 0;
+        localStorage.setItem('consecutiveWins', 0);
+    }
+    // Create congrats div
+    congratsDiv = document.createElement('div');
+    congratsDiv.textContent = '🎉 Congratulations! 🎉';
+    congratsDiv.style.position = 'fixed';
+    congratsDiv.style.top = '18%';
+    congratsDiv.style.left = '50%';
+    congratsDiv.style.transform = 'translate(-50%, 0)';
+    congratsDiv.style.fontSize = '3.2em';
+    congratsDiv.style.fontWeight = 'bold';
+    congratsDiv.style.color = '#fff';
+    congratsDiv.style.textShadow = '0 2px 12px #ff9800, 0 0 24px #fff';
+    congratsDiv.style.zIndex = 1000;
+    congratsDiv.style.pointerEvents = 'none';
+    document.body.appendChild(congratsDiv);
+
+    // Add gold medal circle under the congrats sign
+    const medalDiv = document.createElement('div');
+    medalDiv.style.position = 'fixed';
+    medalDiv.style.top = 'calc(18% + 2.7em)';
+    medalDiv.style.left = '50%';
+    medalDiv.style.transform = 'translate(-50%, 0)';
+    medalDiv.style.width = '120px';
+    medalDiv.style.height = '120px';
+    medalDiv.style.background = 'radial-gradient(circle at 40% 35%, #ffe066 80%, #ffd700 100%)';
+    medalDiv.style.borderRadius = '50%';
+    medalDiv.style.boxShadow = '0 4px 24px #ffd70099, 0 0 0 6px #fffbe0';
+    medalDiv.style.display = 'flex';
+    medalDiv.style.alignItems = 'center';
+    medalDiv.style.justifyContent = 'center';
+    medalDiv.style.zIndex = 1000;
+    medalDiv.style.pointerEvents = 'none';
+    medalDiv.style.fontWeight = 'bold';
+    medalDiv.style.fontSize = '1.5em';
+    medalDiv.style.color = '#b8860b';
+    medalDiv.style.letterSpacing = '1px';
+    medalDiv.innerHTML = '<span style="font-family:sans-serif;">GOLD<br>MEDAL!</span>';
+    document.body.appendChild(medalDiv);
+
+    // Create firework canvas
+    fireworkCanvas = document.createElement('canvas');
+    fireworkCanvas.width = window.innerWidth;
+    fireworkCanvas.height = window.innerHeight;
+    fireworkCanvas.style.position = 'fixed';
+    fireworkCanvas.style.left = '0';
+    fireworkCanvas.style.top = '0';
+    fireworkCanvas.style.zIndex = 999;
+    fireworkCanvas.style.pointerEvents = 'none';
+    document.body.appendChild(fireworkCanvas);
+
+    // Simple firework animation
+    const ctx = fireworkCanvas.getContext('2d');
+    let fireworks = [];
+    function randomColor() {
+        const colors = ['#ff5252','#ffd600','#00e676','#2979ff','#ff9800','#fff'];
+        return colors[Math.floor(Math.random()*colors.length)];
+    }
+    function spawnFirework() {
+        const x = Math.random() * fireworkCanvas.width * 0.8 + fireworkCanvas.width * 0.1;
+        const y = Math.random() * fireworkCanvas.height * 0.3 + fireworkCanvas.height * 0.1;
+        const color = randomColor();
+        const particles = [];
+        for (let i = 0; i < 32; i++) {
+            const angle = (i / 32) * 2 * Math.PI;
+            const speed = 2 + Math.random() * 2;
+            particles.push({
+                x, y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                alpha: 1,
+                color
+            });
+        }
+        fireworks.push({particles});
+    }
+    function drawFireworks() {
+        ctx.clearRect(0,0,fireworkCanvas.width,fireworkCanvas.height);
+        for (let f = fireworks.length-1; f >= 0; f--) {
+            const fw = fireworks[f];
+            let allGone = true;
+            for (const p of fw.particles) {
+                if (p.alpha > 0.05) {
+                    allGone = false;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4, 0, 2*Math.PI);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.97;
+                    p.vy *= 0.97;
+                    p.vy += 0.04;
+                    p.alpha *= 0.96;
+                }
+            }
+            if (allGone) fireworks.splice(f,1);
+        }
+        ctx.globalAlpha = 1;
+    }
+    fireworkInterval = setInterval(() => {
+        spawnFirework();
+    }, 700);
+    function animate() {
+        drawFireworks();
+        if (congratsShown) requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// Remove congrats and fireworks
+function hideCongratsAndFireworks() {
+    congratsShown = false;
+    if (congratsDiv) { congratsDiv.remove(); congratsDiv = null; }
+    if (fireworkCanvas) { fireworkCanvas.remove(); fireworkCanvas = null; }
+    if (fireworkInterval) { clearInterval(fireworkInterval); fireworkInterval = null; }
+}
+
+// Show after 1 minute if not started
+let congratsTimeout = setTimeout(() => {
+    if (!gameRunning) showCongratsAndFireworks();
+}, 60000);
+
+// Award panel functionality
+const awardPanel = document.getElementById('awardPanel');
+let awardExpanded = false;
+awardPanel.onclick = function(e) {
+    e.stopPropagation();
+    awardExpanded = !awardExpanded;
+    if (awardExpanded) {
+        awardPanel.style.width = '260px';
+        awardPanel.style.height = '320px';
+        awardPanel.querySelector('#awardContent').style.display = 'flex';
+        awardPanel.querySelector('#awardIcon').style.display = 'none';
+        // Add event listener for Go to Store button if not already
+        const goToStoreBtn = document.getElementById('goToStoreBtn');
+        if (goToStoreBtn && !goToStoreBtn.hasAttribute('data-listener')) {
+            goToStoreBtn.setAttribute('data-listener', 'true');
+            goToStoreBtn.onclick = function(ev) {
+                ev.stopPropagation();
+                window.location.href = 'l3.html';
+            };
+        }
+    } else {
+        awardPanel.style.width = '64px';
+        awardPanel.style.height = '64px';
+        awardPanel.querySelector('#awardContent').style.display = 'none';
+        awardPanel.querySelector('#awardIcon').style.display = 'inline';
+    }
+};
+window.addEventListener('mousedown', function(e) {
+    if (awardExpanded && !awardPanel.contains(e.target)) {
+        awardExpanded = false;
+        awardPanel.style.width = '64px';
+        awardPanel.style.height = '64px';
+        awardPanel.querySelector('#awardContent').style.display = 'none';
+        awardPanel.querySelector('#awardIcon').style.display = 'inline';
+    }
+});
+
+// Award storage and update logic
+function getAwardCounts() {
+    return {
+        gold: parseInt(localStorage.getItem('awardGold')||'0',10),
+        fast: parseInt(localStorage.getItem('awardFast')||'0',10),
+        crashless: parseInt(localStorage.getItem('awardCrashless')||'0',10)
+    };
+}
+function setAwardCount(key, val) {
+    localStorage.setItem(key, val);
+}
+function updateAwardPanel() {
+    const counts = getAwardCounts();
+    document.getElementById('awardGold').textContent = counts.gold;
+    document.getElementById('awardFast').textContent = counts.fast;
+    document.getElementById('awardCrashless').textContent = counts.crashless;
+}
+// Call on load and after any award is earned
+updateAwardPanel();
+// Example: to increment an award, use setAwardCount('awardGold', getAwardCounts().gold+1); updateAwardPanel();
 </script>
 </body>
 </html>
