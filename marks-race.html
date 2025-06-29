@@ -180,7 +180,9 @@ let carAnimating = false;
 let gameOver = false;
 function updateCarLane(smooth = false) {
     if (gameOver) return;
-    let targetLeft = carLane === 'right' ? '66.5%' : '33.5%';
+    // Add horizontal margin (e.g., 7vw) for each car lane
+    const laneMargin = 7; // in vw
+    let targetLeft = carLane === 'right' ? (66.5 - laneMargin) + 'vw' : (33.5 + laneMargin) + 'vw';
     if (!smooth) {
         raceCar.style.transition = 'none';
         raceCar.style.left = targetLeft;
@@ -196,13 +198,15 @@ function updateCarLane(smooth = false) {
     setTimeout(() => { carAnimating = false; }, 500);
 }
 updateCarLane();
-document.addEventListener('keydown', function(e) {
+// Remove keyboard controls and add mouse click controls for lane switching
+document.body.addEventListener('mousedown', function(e) {
     if (carAnimating || gameOver) return;
-    if (e.key === 'ArrowLeft' && carLane !== 'left') {
+    // Get the center of the screen
+    const centerX = window.innerWidth / 2;
+    if (e.clientX < centerX && carLane !== 'left') {
         carLane = 'left';
         updateCarLane(true);
-    }
-    if (e.key === 'ArrowRight' && carLane !== 'right') {
+    } else if (e.clientX >= centerX && carLane !== 'right') {
         carLane = 'right';
         updateCarLane(true);
     }
@@ -234,7 +238,9 @@ trucksContainer.style.pointerEvents = 'none';
 
 const truckLanes = ['left', 'right'];
 function getLaneLeft(lane) {
-    return lane === 'right' ? '66.5%' : '33.5%';
+    // Add horizontal margin (e.g., 7vw) for each truck lane
+    const laneMargin = 7; // in vw
+    return lane === 'right' ? (66.5 - laneMargin) + 'vw' : (33.5 + laneMargin) + 'vw';
 }
 let trucks = [];
 function spawnTruck() {
