@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title data-translate-title="document_title">Cat & Mouse Game</title>
+    <script src="translations.js"></script>
     <style>
         body {
             min-height: 100vh;
@@ -63,9 +64,110 @@
             border-color: #e53935 !important;
             box-shadow: 0 2px 16px rgba(229,57,53,0.18) !important;
         }
+        
+        /* Language selector styles */
+        .language-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .lang-btn {
+            background: #f8f9fa;
+            border: 2px solid #b8860b;
+            border-radius: 8px;
+            padding: 0.5em 1em;
+            font-size: 0.9em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn:hover {
+            background: #e9ecef;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        
+        .lang-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+        
+        .lang-btn.expanded .lang-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #fff;
+            border: 2px solid #b8860b;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            margin-top: 5px;
+            min-width: 120px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .lang-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .lang-option {
+            padding: 0.6em 1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .lang-option:last-child {
+            border-bottom: none;
+        }
+        
+        .lang-option:hover {
+            background: #f8f9fa;
+        }
+        
+        .lang-option.active {
+            background: #e8f5e8;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body style="position:relative;">
+<!-- Language Selector -->
+<div class="language-selector">
+    <button class="lang-btn" id="langBtn">
+        <span id="currentLang">🇺🇸 EN</span>
+        <span class="lang-arrow">▼</span>
+    </button>
+    <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" data-lang="en">🇺🇸 English</div>
+        <div class="lang-option" data-lang="es">🇪🇸 Español</div>
+        <div class="lang-option" data-lang="fr">🇫🇷 Français</div>
+        <div class="lang-option" data-lang="de">🇩🇪 Deutsch</div>
+        <div class="lang-option" data-lang="it">🇮🇹 Italiano</div>
+        <div class="lang-option" data-lang="pt">🇵🇹 Português</div>
+        <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
+        <div class="lang-option" data-lang="zh">🇨🇳 中文</div>
+        <div class="lang-option" data-lang="ja">🇯🇵 日本語</div>
+        <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
+    </div>
+</div>
+
 <div id="loginContainer">
     <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
     <button id="loginBtn" style="background:#43a047; color:#fff; border:none; border-radius:6px; padding:0.4em 1.2em; font-size:1em; cursor:pointer;">Login</button>
@@ -151,6 +253,179 @@ document.getElementById('tryFreeBtn').onclick = function() {
     localStorage.setItem('catMouseTryFree', '1');
     window.location.href = 'cat-and-mouse-game.html';
 };
+
+// Language selector functionality
+(function() {
+    const langBtn = document.getElementById('langBtn');
+    const langDropdown = document.getElementById('langDropdown');
+    const currentLang = document.getElementById('currentLang');
+    const langOptions = document.querySelectorAll('.lang-option');
+    
+    // Language mappings
+    const languages = {
+        'en': '🇺🇸 EN',
+        'es': '🇪🇸 ES',
+        'fr': '🇫🇷 FR',
+        'de': '🇩🇪 DE',
+        'it': '🇮🇹 IT',
+        'pt': '🇵🇹 PT',
+        'ru': '🇷🇺 RU',
+        'zh': '🇨🇳 ZH',
+        'ja': '🇯🇵 JA',
+        'ar': '🇸🇦 AR'
+    };
+    
+    // Translation dictionaries
+    const translations = {
+        'en': {
+            'password': 'Password',
+            'login': 'Login',
+            'tryForFree': 'Try for Free'
+        },
+        'es': {
+            'password': 'Contraseña',
+            'login': 'Iniciar Sesión',
+            'tryForFree': 'Prueba Gratis'
+        },
+        'fr': {
+            'password': 'Mot de passe',
+            'login': 'Connexion',
+            'tryForFree': 'Essai Gratuit'
+        },
+        'de': {
+            'password': 'Passwort',
+            'login': 'Anmelden',
+            'tryForFree': 'Kostenlos Testen'
+        },
+        'it': {
+            'password': 'Password',
+            'login': 'Accedi',
+            'tryForFree': 'Prova Gratuita'
+        },
+        'pt': {
+            'password': 'Senha',
+            'login': 'Entrar',
+            'tryForFree': 'Teste Grátis'
+        },
+        'ru': {
+            'password': 'Пароль',
+            'login': 'Войти',
+            'tryForFree': 'Попробовать Бесплатно'
+        },
+        'zh': {
+            'password': '密码',
+            'login': '登录',
+            'tryForFree': '免费试用'
+        },
+        'ja': {
+            'password': 'パスワード',
+            'login': 'ログイン',
+            'tryForFree': '無料体験'
+        },
+        'ar': {
+            'password': 'كلمة المرور',
+            'login': 'تسجيل الدخول',
+            'tryForFree': 'جرب مجاناً'
+        }
+    };
+    
+    // Function to update interface language
+    function updateLanguage(langCode) {
+        const texts = translations[langCode] || translations['en'];
+        
+        // Update password input placeholder
+        const passwordInput = document.getElementById('passwordInput');
+        if (passwordInput) {
+            passwordInput.placeholder = texts.password;
+        }
+        
+        // Update login button text
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.textContent = texts.login;
+        }
+        
+        // Update try for free button text
+        const tryFreeBtn = document.getElementById('tryFreeBtn');
+        if (tryFreeBtn) {
+            tryFreeBtn.textContent = texts.tryForFree;
+        }
+        
+        // Update document title
+        document.title = texts.tryForFree + ' - Cat & Mouse Game';
+        
+        // Set text direction for RTL languages
+        if (langCode === 'ar') {
+            document.body.style.direction = 'rtl';
+            document.body.style.textAlign = 'right';
+        } else {
+            document.body.style.direction = 'ltr';
+            document.body.style.textAlign = 'left';
+        }
+    }
+    
+    // Toggle dropdown
+    langBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isExpanded = langBtn.classList.contains('expanded');
+        
+        if (isExpanded) {
+            langBtn.classList.remove('expanded');
+            langDropdown.classList.remove('show');
+        } else {
+            langBtn.classList.add('expanded');
+            langDropdown.classList.add('show');
+        }
+    });
+    
+    // Handle language selection
+    langOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const selectedLang = this.getAttribute('data-lang');
+            
+            // Update active state
+            langOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update button text
+            currentLang.textContent = languages[selectedLang];
+            
+            // Close dropdown
+            langBtn.classList.remove('expanded');
+            langDropdown.classList.remove('show');
+            
+            // Store selected language
+            localStorage.setItem('selectedLanguage', selectedLang);
+            
+            // Update interface language
+            updateLanguage(selectedLang);
+            
+            console.log('Language changed to:', selectedLang);
+        });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!langBtn.contains(e.target) && !langDropdown.contains(e.target)) {
+            langBtn.classList.remove('expanded');
+            langDropdown.classList.remove('show');
+        }
+    });
+    
+    // Load saved language preference
+    const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+    if (savedLang && languages[savedLang]) {
+        currentLang.textContent = languages[savedLang];
+        langOptions.forEach(opt => {
+            opt.classList.remove('active');
+            if (opt.getAttribute('data-lang') === savedLang) {
+                opt.classList.add('active');
+            }
+        });
+        // Apply saved language to interface
+        updateLanguage(savedLang);
+    }
+})();
 </script>
 </body>
 </html>

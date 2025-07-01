@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate-title="store_title">Store</title>
+    <script src="translations.js"></script>
+    <style>
+        body { 
+            background: #f0f0f0; 
+            font-family: sans-serif; 
+            margin: 0; 
+            padding: 0; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 40px auto; 
+            background: #fffbe8; 
+            border: 2px solid #b8860b; 
+            border-radius: 14px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            padding: 2em; 
+        }
+        h1 { 
+            color: #b8860b; 
+            text-align: center; 
+            margin-bottom: 1.5em; 
+        }
+        .coming-soon {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            margin: 2em 0;
+        }
+        .back-btn {
+            display: block;
+            background: #43a047;
+            color: #fff;
+            text-decoration: none;
+            padding: 0.8em 1.2em;
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: background 0.2s;
+            text-align: center;
+            margin-top: 2em;
+        }
+        .back-btn:hover {
+            background: #388e3c;
+        }
+    </style>
+</head>
+<body>
+<div id="languageSelectorContainer"></div>
+<div class="container">
+    <h1 data-translate="store_title">Store</h1>
+    <div class="coming-soon" data-translate="coming_soon">Coming Soon...</div>
+    <a href="marks-games.html" class="back-btn" data-translate="back_to_menu">Back to Games Menu</a>
+</div>
+<script>
+// Initialize language selector and translations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create and insert language selector
+    const selectorContainer = document.getElementById('languageSelectorContainer');
+    if (selectorContainer && window.TranslationSystem) {
+        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
+        window.TranslationSystem.initLanguageSelector();
+    }
+});
+</script>
+</body>
+</html>

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mark's Games</title>
+    <title data-translate-title="marks_games">Mark's Games</title>
+    <script src="translations.js"></script>
     <style>
         body { background: #f0f0f0; font-family: sans-serif; margin: 0; padding: 0; }
         .container { max-width: 500px; margin: 40px auto; background: #fffbe8; border: 2px solid #b8860b; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 2em 2em 2em 2em; }
@@ -15,13 +16,25 @@
     </style>
 </head>
 <body>
+<div id="languageSelectorContainer"></div>
 <div class="container">
-    <h1>Mark's Games</h1>
+    <h1 data-translate="marks_games">Mark's Games</h1>
     <ul>
-        <li><a href="lod2.html">Cat and Mouse Game</a></li>
-        <li><a href="marks-race.html">Mark's Race</a></li>
+        <li><a href="lod2.html" data-translate="cat_and_mouse_game">Cat and Mouse Game</a></li>
+        <li><a href="marks-race.html" data-translate="marks_race">Mark's Race</a></li>
         <!-- Add more games here as needed -->
     </ul>
 </div>
+<script>
+// Initialize language selector and translations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create and insert language selector
+    const selectorContainer = document.getElementById('languageSelectorContainer');
+    if (selectorContainer && window.TranslationSystem) {
+        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
+        window.TranslationSystem.initLanguageSelector();
+    }
+});
+</script>
 </body>
 </html>

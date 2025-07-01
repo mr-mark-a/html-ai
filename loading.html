@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading...</title>
+  <title data-translate-title="loading">Loading...</title>
+  <script src="translations.js"></script>
   <style>
     body {
       background: #222;
@@ -30,9 +31,16 @@
   </style>
 </head>
 <body>
-  <div class="loading-sign">LOADING...</div>
+  <div class="loading-sign" data-translate="loading">LOADING...</div>
 </body>
 <script>
+// Initialize translations
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.TranslationSystem) {
+        window.TranslationSystem.updatePageTranslations();
+    }
+});
+
 setTimeout(function() {
   window.location.href = 'marks-games.html';
 }, 2000);

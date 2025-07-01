@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metro</title>
+    <title data-translate-title="metro_title">Metro</title>
+    <script src="translations.js"></script>
     <style>
         body {
             margin: 0;
@@ -201,6 +202,7 @@
     </style>
 </head>
 <body>
+<div id="languageSelectorContainer"></div>
     <div class="from-text-bar" onclick="showInput()">From</div>
     <input type="text" class="from-input" placeholder="Enter station name..." onblur="hideInput()" onkeypress="handleKeyPress(event)" oninput="showSuggestions(this.value)">
     <div class="suggestions" id="suggestions"></div>
@@ -621,5 +623,14 @@
         }
     </script>
     <!-- Your content goes here -->
+// Initialize language selector and translations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create and insert language selector
+    const selectorContainer = document.getElementById('languageSelectorContainer');
+    if (selectorContainer && window.TranslationSystem) {
+        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
+        window.TranslationSystem.initLanguageSelector();
+    }
+});
 </body>
 </html>

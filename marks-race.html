@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mark's Race</title>
+    <title data-translate-title="marks_race_title">Mark's Race</title>
+    <script src="translations.js"></script>
     <style>
         body {
             background: #444;
@@ -144,6 +145,7 @@
     </style>
 </head>
 <body>
+<div id="languageSelectorContainer"></div>
 <div class="road-bg">
     <svg id="roadSVG" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:100vw;height:100vh;">
         <rect x="30" y="0" width="40" height="100" fill="#222"/>
@@ -165,12 +167,12 @@
     </svg>
 </button>
 <div id="settingsPanel">
-    <div style="font-weight:bold; color:#b8860b; margin-bottom:10px;">Settings</div>
+    <div style="font-weight:bold; color:#b8860b; margin-bottom:10px;" data-translate="settings">Settings</div>
     <!-- Add settings controls here -->
-    <button id="goToGamesBtn" style="background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Go to Games Menu</button>
-    <button id="signOutBtn" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
+    <button id="goToGamesBtn" data-translate="back_to_menu" style="background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Go to Games Menu</button>
+    <button id="signOutBtn" data-translate="login" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
 </div>
-<button id="startStopBtn" style="position:absolute; top:24px; right:24px; z-index:4; background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.7em 1.5em; font-size:1.1em; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Start Game</button>
+<button id="startStopBtn" data-translate="start_race" style="position:absolute; top:24px; right:24px; z-index:4; background:#43a047; color:#fff; border:none; border-radius:8px; padding:0.7em 1.5em; font-size:1.1em; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Start Game</button>
 <!-- Add Award Panel (bottom right, expandable) -->
 <div id="awardPanel">
     <span id="awardIcon">🏅</span>
@@ -762,6 +764,16 @@ function updateAwardPanel() {
 // Call on load and after any award is earned
 updateAwardPanel();
 // Example: to increment an award, use setAwardCount('awardGold', getAwardCounts().gold+1); updateAwardPanel();
+
+// Initialize language selector and translations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create and insert language selector
+    const selectorContainer = document.getElementById('languageSelectorContainer');
+    if (selectorContainer && window.TranslationSystem) {
+        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
+        window.TranslationSystem.initLanguageSelector();
+    }
+});
 </script>
 </body>
 </html>
