@@ -199,6 +199,40 @@
         .select-map-button.to-map {
             left: 200px;
         }
+        
+        .back-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(108, 117, 125, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(108, 117, 125, 1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -215,6 +249,10 @@
     
     <button class="select-map-button from-map" id="from-map-btn" onclick="selectOnMap('from')">📍 Select on Map</button>
     <button class="select-map-button to-map" id="to-map-btn" onclick="selectOnMap('to')">📍 Select on Map</button>
+    
+    <a href="nav/marksnav.html" class="back-button">
+        ← Back to Navigation
+    </a>
     
     <script>
         // Sample metro stations - you can replace with your actual station list
@@ -623,14 +661,5 @@
         }
     </script>
     <!-- Your content goes here -->
-// Initialize language selector and translations
-document.addEventListener('DOMContentLoaded', function() {
-    // Create and insert language selector
-    const selectorContainer = document.getElementById('languageSelectorContainer');
-    if (selectorContainer && window.TranslationSystem) {
-        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
-        window.TranslationSystem.initLanguageSelector();
-    }
-});
 </body>
 </html>

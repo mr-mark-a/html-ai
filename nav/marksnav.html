@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate-title="navigation_title">Navigation Center</title>
+    <script src="../translations.js"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 2em; 
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3em;
+        }
+        
+        h1 { 
+            color: #fff; 
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 2em;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5em;
+            margin-bottom: 2em;
+        }
+        
+        .nav-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5em;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+        }
+        
+        .nav-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .nav-icon {
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            display: block;
+        }
+        
+        .nav-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+        
+        .nav-description {
+            font-size: 0.9em;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            margin: 2em 0 1em 0;
+            text-align: center;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+<div id="languageSelectorContainer"></div>
+
+<!-- Back button -->
+<button class="back-btn" onclick="window.location.href='../marks-games.html'" title="Back to Games">
+    ←
+</button>
+
+<div class="container">
+    <div class="header">
+        <h1 data-translate="navigation_center">🧭 Navigation Center</h1>
+        <p class="subtitle" data-translate="navigation_subtitle">Choose your navigation tool</p>
+    </div>
+    
+    <div class="section-title" data-translate="web_navigators">Web Navigators</div>
+    <div class="nav-grid">
+        <a href="https://www.google.com/maps" target="_blank" class="nav-card">
+            <span class="nav-icon">🗺️</span>
+            <div class="nav-title" data-translate="google_maps">Google Maps</div>
+            <div class="nav-description" data-translate="google_maps_desc">World's most popular mapping service</div>
+        </a>
+        
+        <a href="https://www.openstreetmap.org/" target="_blank" class="nav-card">
+            <span class="nav-icon">🌍</span>
+            <div class="nav-title" data-translate="openstreetmap">OpenStreetMap</div>
+            <div class="nav-description" data-translate="openstreetmap_desc">Free and open-source world map</div>
+        </a>
+        
+        <a href="https://www.mapquest.com/" target="_blank" class="nav-card">
+            <span class="nav-icon">🧭</span>
+            <div class="nav-title" data-translate="mapquest">MapQuest</div>
+            <div class="nav-description" data-translate="mapquest_desc">Reliable directions and maps</div>
+        </a>
+        
+        <a href="https://www.bing.com/maps" target="_blank" class="nav-card">
+            <span class="nav-icon">🛰️</span>
+            <div class="nav-title" data-translate="bing_maps">Bing Maps</div>
+            <div class="nav-description" data-translate="bing_maps_desc">Microsoft's mapping platform</div>
+        </a>
+    </div>
+    
+    <div class="section-title" data-translate="mobile_apps">Mobile Navigation Apps</div>
+    <div class="nav-grid">
+        <div class="nav-card" onclick="alert('Install Waze from your app store')">
+            <span class="nav-icon">🚗</span>
+            <div class="nav-title" data-translate="waze">Waze</div>
+            <div class="nav-description" data-translate="waze_desc">Community-driven traffic navigation</div>
+        </div>
+        
+        <div class="nav-card" onclick="alert('Install Apple Maps from your app store')">
+            <span class="nav-icon">🍎</span>
+            <div class="nav-title" data-translate="apple_maps">Apple Maps</div>
+            <div class="nav-description" data-translate="apple_maps_desc">Apple's built-in navigation app</div>
+        </div>
+        
+        <div class="nav-card" onclick="alert('Install Here WeGo from your app store')">
+            <span class="nav-icon">🌐</span>
+            <div class="nav-title" data-translate="here_wego">HERE WeGo</div>
+            <div class="nav-description" data-translate="here_wego_desc">Offline maps and navigation</div>
+        </div>
+        
+        <div class="nav-card" onclick="alert('Install Citymapper from your app store')">
+            <span class="nav-icon">🚇</span>
+            <div class="nav-title" data-translate="citymapper">Citymapper</div>
+            <div class="nav-description" data-translate="citymapper_desc">Urban transit navigation</div>
+        </div>
+    </div>
+    
+    <div class="section-title" data-translate="specialized_navigation">Specialized Navigation</div>
+    <div class="nav-grid">
+        <a href="https://www.marinetraffic.com/" target="_blank" class="nav-card">
+            <span class="nav-icon">🚢</span>
+            <div class="nav-title" data-translate="marine_traffic">Marine Traffic</div>
+            <div class="nav-description" data-translate="marine_traffic_desc">Real-time ship tracking</div>
+        </a>
+        
+        <a href="https://www.flightradar24.com/" target="_blank" class="nav-card">
+            <span class="nav-icon">✈️</span>
+            <div class="nav-title" data-translate="flight_radar">FlightRadar24</div>
+            <div class="nav-description" data-translate="flight_radar_desc">Live flight tracking</div>
+        </a>
+        
+        <a href="https://www.alltrails.com/" target="_blank" class="nav-card">
+            <span class="nav-icon">🥾</span>
+            <div class="nav-title" data-translate="alltrails">AllTrails</div>
+            <div class="nav-description" data-translate="alltrails_desc">Hiking and trail navigation</div>
+        </a>
+        
+        <a href="../metro.html" class="nav-card">
+            <span class="nav-icon">🚊</span>
+            <div class="nav-title" data-translate="metro_navigator">Metro Navigator</div>
+            <div class="nav-description" data-translate="metro_navigator_desc">Local metro system guide</div>
+        </a>
+    </div>
+</div>
+
+<script>
+// Initialize language selector and translations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create and insert language selector
+    const selectorContainer = document.getElementById('languageSelectorContainer');
+    if (selectorContainer && window.TranslationSystem) {
+        selectorContainer.innerHTML = window.TranslationSystem.createLanguageSelector();
+        window.TranslationSystem.initLanguageSelector();
+    }
+});
+</script>
+</body>
+</html>

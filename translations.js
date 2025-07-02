@@ -71,7 +71,40 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Store',
-            'coming_soon': 'Coming Soon...'
+            'coming_soon': 'Coming Soon...',
+            'store_description': 'Exciting items and upgrades will be available here soon!',
+            
+            // Navigation Center
+            'navigation_title': 'Navigation Center',
+            'navigation_center': '🧭 Navigation Center',
+            'navigation_subtitle': 'Choose your navigation tool',
+            'web_navigators': 'Web Navigators',
+            'mobile_apps': 'Mobile Navigation Apps',
+            'specialized_navigation': 'Specialized Navigation',
+            'google_maps': 'Google Maps',
+            'google_maps_desc': "World's most popular mapping service",
+            'openstreetmap': 'OpenStreetMap',
+            'openstreetmap_desc': 'Free and open-source world map',
+            'mapquest': 'MapQuest',
+            'mapquest_desc': 'Reliable directions and maps',
+            'bing_maps': 'Bing Maps',
+            'bing_maps_desc': "Microsoft's mapping platform",
+            'waze': 'Waze',
+            'waze_desc': 'Community-driven traffic navigation',
+            'apple_maps': 'Apple Maps',
+            'apple_maps_desc': "Apple's built-in navigation app",
+            'here_wego': 'HERE WeGo',
+            'here_wego_desc': 'Offline maps and navigation',
+            'citymapper': 'Citymapper',
+            'citymapper_desc': 'Urban transit navigation',
+            'marine_traffic': 'Marine Traffic',
+            'marine_traffic_desc': 'Real-time ship tracking',
+            'flight_radar': 'FlightRadar24',
+            'flight_radar_desc': 'Live flight tracking',
+            'alltrails': 'AllTrails',
+            'alltrails_desc': 'Hiking and trail navigation',
+            'metro_navigator': 'Metro Navigator',
+            'metro_navigator_desc': 'Local metro system guide'
         },
         'es': {
             // Login page

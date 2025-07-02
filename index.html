@@ -145,6 +145,40 @@
             background: #e8f5e8;
             font-weight: bold;
         }
+        
+        .back-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(108, 117, 125, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(108, 117, 125, 1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body style="position:relative;">
@@ -167,6 +201,10 @@
         <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
     </div>
 </div>
+
+<a href="nav/marksnav.html" class="back-button">
+    ← Back to Navigation
+</a>
 
 <div id="loginContainer">
     <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
