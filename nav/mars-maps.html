@@ -178,8 +178,65 @@
     
     <div class="header">
         <div class="mars-icon">🪐</div>
-        <h1>Mars Maps Navigation Helper</h1>
-        <div class="subtitle">Your interplanetary navigation assistant</div>
+        <div class="search-container" style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        ">
+            <input type="text" id="searchBar" placeholder="Enter location or address..." style="
+                flex: 1;
+                max-width: 500px;
+                padding: 12px 20px;
+                font-size: 16px;
+                border: 2px solid rgba(255, 165, 0, 0.5);
+                border-radius: 25px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                outline: none;
+                backdrop-filter: blur(10px);
+                transition: all 0.3s ease;
+            " onkeypress="handleSearch(event)" onfocus="this.style.borderColor='rgba(255, 165, 0, 0.8)'" onblur="this.style.borderColor='rgba(255, 165, 0, 0.5)'">
+            <button id="searchBtn" onclick="performSearch()" style="
+                background: linear-gradient(45deg, #ff6b6b, #ffa500);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(255, 107, 107, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(255, 107, 107, 0.3)'">
+                🔍 Route
+            </button>
+            <button id="navigateBtn" onclick="navigateToLastSearch()" style="
+                background: linear-gradient(45deg, #4CAF50, #45a049);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+                opacity: 0.6;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(76, 175, 80, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(76, 175, 80, 0.3)'">
+                🧭 Navigate
+            </button>
+        </div>
+        <div class="subtitle">Search and navigate across the galaxy</div>
     </div>
     
     <div class="maps-container">
@@ -189,6 +246,7 @@
             <button class="control-btn" onclick="setMapMode('hybrid')">🌍 Hybrid</button>
             <button class="control-btn" onclick="setMapMode('terrain')">🏔️ Terrain</button>
             <button class="control-btn" onclick="findLocation()">📍 Find Me</button>
+            <button class="control-btn" onclick="navigateFromMyLocation()">🧭 Navigate</button>
         </div>
         <iframe id="mapsFrame" class="maps-iframe" 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus"
@@ -260,6 +318,166 @@
             } else {
                 alert('🚀 Geolocation is not supported by this browser.');
             }
+        }
+        
+        // Navigation functionality
+        let lastSearchedLocation = '';
+        
+        function navigateFromMyLocation() {
+            const searchBar = document.getElementById('searchBar');
+            const destination = searchBar.value.trim() || lastSearchedLocation;
+            
+            if (!destination) {
+                alert('🪐 Please search for a destination first, then click Navigate!');
+                return;
+            }
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    const iframe = document.getElementById('mapsFrame');
+                    const encodedDestination = encodeURIComponent(destination);
+                    
+                    // Create navigation URL with directions from current location to destination
+                    const navigationUrl = `https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d50000!2d${userLng}!3d${userLat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m5!1s${userLat},${userLng}!3m2!1d${userLat}!2d${userLng}!4m5!1s${encodedDestination}!3m2!1d0!2d0!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    
+                    iframe.src = navigationUrl;
+                    console.log(`🧭 Navigation started from your location to: ${destination}`);
+                    
+                    // Show success message
+                    alert(`🚀 Navigation initiated! Showing route from your location to ${destination}`);
+                    
+                }, function(error) {
+                    console.error('Geolocation error:', error);
+                    alert('🛰️ Unable to access your location. Please enable location services for navigation.');
+                });
+            } else {
+                alert('🚀 Geolocation is not supported by this browser. Navigation requires location access.');
+            }
+        }
+        
+        // Handle search functionality
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        }
+        
+        function performSearch() {
+            const searchBar = document.getElementById('searchBar');
+            const searchTerm = searchBar.value.trim();
+            if (searchTerm) {
+                // Store the searched location for navigation
+                lastSearchedLocation = searchTerm;
+                
+                // Show loading indicator
+                const searchBtn = document.getElementById('searchBtn');
+                const originalText = searchBtn.innerHTML;
+                searchBtn.innerHTML = '🔄 Finding Route...';
+                searchBtn.disabled = true;
+                
+                // Get directions instead of just searching
+                getDirectionsToDestination(searchTerm);
+                
+                // Enable navigate button
+                const navigateBtn = document.getElementById('navigateBtn');
+                navigateBtn.style.opacity = '1';
+                navigateBtn.style.cursor = 'pointer';
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    searchBtn.innerHTML = originalText;
+                    searchBtn.disabled = false;
+                }, 2000);
+                
+                console.log(`🧭 Getting fastest route to: ${searchTerm}`);
+            } else {
+                alert('🪐 Please enter a location to search for!');
+            }
+        }
+        
+        function navigateToLastSearch() {
+            if (lastSearchedLocation) {
+                const navigateBtn = document.getElementById('navigateBtn');
+                const originalText = navigateBtn.innerHTML;
+                navigateBtn.innerHTML = '🔄 Navigating...';
+                navigateBtn.disabled = true;
+                
+                getDirectionsToDestination(lastSearchedLocation);
+                
+                setTimeout(() => {
+                    navigateBtn.innerHTML = originalText;
+                    navigateBtn.disabled = false;
+                }, 2000);
+                
+                console.log(`🧭 Re-navigating to: ${lastSearchedLocation}`);
+            } else {
+                alert('🪐 Please search for a location first!');
+            }
+        }
+        
+        function searchLocation(location) {
+            const iframe = document.getElementById('mapsFrame');
+            const encodedLocation = encodeURIComponent(location);
+            
+            // First try to get user's current location for proximity search
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Search for closest location using user's position as reference
+                    const searchUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d50000!2d${userLng}!3d${userLat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s${encodedLocation}+near+me!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    iframe.src = searchUrl;
+                    
+                    console.log(`🔍 Searching for closest "${location}" near your location`);
+                }, function() {
+                    // Fallback if geolocation fails
+                    performBasicSearch(iframe, encodedLocation, location);
+                });
+            } else {
+                // Fallback if geolocation not supported
+                performBasicSearch(iframe, encodedLocation, location);
+            }
+        }
+        
+        function getDirectionsToDestination(destination) {
+            const iframe = document.getElementById('mapsFrame');
+            const encodedDestination = encodeURIComponent(destination);
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Show directions from current location to destination using Google Maps Directions API
+                    // This format ensures we get the fastest route with turn-by-turn directions
+                    const directionsUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&origin=${userLat},${userLng}&destination=${encodedDestination}&mode=driving&avoid=tolls`;
+                    
+                    iframe.src = directionsUrl;
+                    
+                    console.log(`🧭 Fastest route from your location (${userLat}, ${userLng}) to: ${destination}`);
+                }, function(error) {
+                    console.log('Geolocation error:', error);
+                    alert('🚨 Unable to get your location. Please enable location services for turn-by-turn navigation.');
+                    // Fallback: just search for the destination
+                    performBasicSearch(iframe, encodedDestination, destination);
+                });
+            } else {
+                alert('🚨 Geolocation not supported by your browser. Showing destination only.');
+                performBasicSearch(iframe, encodedDestination, destination);
+            }
+        }
+        
+        function performBasicSearch(iframe, encodedLocation, location) {
+            // Use Google Maps search with general proximity
+            const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&q=${encodedLocation}`;
+            
+            // Fallback to standard embed with search
+            iframe.src = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d100000!2d0!3d0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s${encodedLocation}!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+            
+            console.log(`🔍 Searching for: ${location} (basic search)`);
         }
         
         // Initialize stars
