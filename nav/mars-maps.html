@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Maps - Navigation Helper</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .maps-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 120px);
+            border: 3px solid rgba(255, 165, 0, 0.5);
+            border-radius: 10px;
+            margin: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .maps-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 7px;
+        }
+        
+        .mars-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+            animation: float 3s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin: 0.5rem 0;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+        }
+        
+        .back-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(108, 117, 125, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(108, 117, 125, 1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .external-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .external-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.4);
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="header">
+        <div class="mars-icon">🪐</div>
+        <h1>Mars Maps Navigation Helper</h1>
+        <div class="subtitle">Your interplanetary navigation assistant</div>
+    </div>
+    
+    <div class="maps-container">
+        <div class="controls">
+            <button class="control-btn" onclick="setMapMode('roadmap')">🗺️ Road</button>
+            <button class="control-btn" onclick="setMapMode('satellite')">🛰️ Satellite</button>
+            <button class="control-btn" onclick="setMapMode('hybrid')">🌍 Hybrid</button>
+            <button class="control-btn" onclick="setMapMode('terrain')">🏔️ Terrain</button>
+            <button class="control-btn" onclick="findLocation()">📍 Find Me</button>
+        </div>
+        <iframe id="mapsFrame" class="maps-iframe" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus"
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+    
+    <a href="marksnav.html" class="back-button">
+        ← Back to Navigation
+    </a>
+    
+    <a href="https://maps.google.com" target="_blank" class="external-link">
+        🚀 Open Full Maps
+    </a>
+    
+    <script>
+        // Create animated stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 30;
+            
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // Map control functions
+        function setMapMode(mode) {
+            const iframe = document.getElementById('mapsFrame');
+            let baseUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e';
+            
+            switch(mode) {
+                case 'satellite':
+                    baseUrl += '1';
+                    break;
+                case 'hybrid':
+                    baseUrl += '2';
+                    break;
+                case 'terrain':
+                    baseUrl += '3';
+                    break;
+                default:
+                    baseUrl += '0';
+            }
+            
+            baseUrl += '!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus';
+            iframe.src = baseUrl;
+        }
+        
+        function findLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const iframe = document.getElementById('mapsFrame');
+                    iframe.src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d12000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                }, function() {
+                    alert('🛰️ Unable to access your location. Please enable location services.');
+                });
+            } else {
+                alert('🚀 Geolocation is not supported by this browser.');
+            }
+        }
+        
+        // Initialize stars
+        createStars();
+        
+        // Add some Mars-themed console messages
+        console.log('🪐 Mars Maps Navigation Helper Activated');
+        console.log('�️ Embedded navigation system ready');
+        console.log('� Use the controls to explore different map modes');
+    </script>
+</body>
+</html>

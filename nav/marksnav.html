@@ -7,36 +7,84 @@
     <script src="../translations.js"></script>
     <style>
         body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #8B4513 70%, #CD853F 100%);
             font-family: 'Segoe UI', Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
             min-height: 100vh;
             color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Mars atmosphere effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(255, 69, 0, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(220, 20, 60, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(139, 69, 19, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Animated stars */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
         
         .container { 
             max-width: 800px; 
             margin: 0 auto; 
             padding: 2em; 
+            position: relative;
+            z-index: 10;
         }
         
         .header {
             text-align: center;
             margin-bottom: 3em;
+            position: relative;
         }
         
         h1 { 
-            color: #fff; 
-            font-size: 2.5em;
+            color: #FF6B35; 
+            font-size: 2.8em;
             margin-bottom: 0.5em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 8px rgba(255, 107, 53, 0.5);
+            background: linear-gradient(45deg, #FF6B35, #F7931E, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .subtitle {
             font-size: 1.2em;
             opacity: 0.9;
             margin-bottom: 2em;
+            color: #FFB366;
         }
         
         .nav-grid {
@@ -47,48 +95,76 @@
         }
         
         .nav-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            background: linear-gradient(145deg, rgba(139, 69, 19, 0.3), rgba(160, 82, 45, 0.2));
+            border: 1px solid rgba(255, 140, 0, 0.4);
+            border-radius: 15px;
             padding: 1.5em;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s ease;
             cursor: pointer;
             text-decoration: none;
             color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-card:hover::before {
+            left: 100%;
         }
         
         .nav-card:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background: linear-gradient(145deg, rgba(255, 69, 0, 0.3), rgba(220, 20, 60, 0.2));
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(255, 69, 0, 0.3);
+            border-color: rgba(255, 215, 0, 0.6);
         }
         
         .nav-icon {
-            font-size: 2.5em;
+            font-size: 2.8em;
             margin-bottom: 0.5em;
             display: block;
+            filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.5));
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
         }
         
         .nav-title {
             font-size: 1.3em;
             font-weight: bold;
             margin-bottom: 0.5em;
+            color: #FFD700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
         
         .nav-description {
             font-size: 0.9em;
-            opacity: 0.8;
+            opacity: 0.85;
             line-height: 1.4;
+            color: #FFE4B5;
         }
         
         .back-btn {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: linear-gradient(45deg, rgba(139, 69, 19, 0.8), rgba(160, 82, 45, 0.8));
+            color: #FFD700;
+            border: 1px solid rgba(255, 140, 0, 0.5);
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -99,22 +175,28 @@
             justify-content: center;
             transition: all 0.3s ease;
             z-index: 1000;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         }
         
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: linear-gradient(45deg, rgba(255, 69, 0, 0.8), rgba(220, 20, 60, 0.8));
             transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.4);
         }
         
         .section-title {
-            font-size: 1.5em;
+            font-size: 1.6em;
             margin: 2em 0 1em 0;
             text-align: center;
-            opacity: 0.9;
+            opacity: 0.95;
+            color: #FF8C00;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+<div class="stars" id="stars"></div>
 <div id="languageSelectorContainer"></div>
 
 <!-- Back button -->
@@ -124,16 +206,16 @@
 
 <div class="container">
     <div class="header">
-        <h1 data-translate="navigation_center">🧭 Navigation Center</h1>
-        <p class="subtitle" data-translate="navigation_subtitle">Choose your navigation tool</p>
+        <h1 data-translate="navigation_center">� Mars Navigation Center</h1>
+        <p class="subtitle" data-translate="navigation_subtitle">Explore the galaxy of navigation tools</p>
     </div>
     
-    <div class="section-title" data-translate="web_navigators">Web Navigators</div>
+    <div class="section-title" data-translate="web_navigators">🌐 Galactic Web Navigators</div>
     <div class="nav-grid">
         <a href="https://www.google.com/maps" target="_blank" class="nav-card">
             <span class="nav-icon">🗺️</span>
             <div class="nav-title" data-translate="google_maps">Google Maps</div>
-            <div class="nav-description" data-translate="google_maps_desc">World's most popular mapping service</div>
+            <div class="nav-description" data-translate="google_maps_desc">Earth's most popular mapping service</div>
         </a>
         
         <a href="https://www.openstreetmap.org/" target="_blank" class="nav-card">
@@ -145,44 +227,44 @@
         <a href="https://www.mapquest.com/" target="_blank" class="nav-card">
             <span class="nav-icon">🧭</span>
             <div class="nav-title" data-translate="mapquest">MapQuest</div>
-            <div class="nav-description" data-translate="mapquest_desc">Reliable directions and maps</div>
+            <div class="nav-description" data-translate="mapquest_desc">Reliable directions across the cosmos</div>
         </a>
         
         <a href="https://www.bing.com/maps" target="_blank" class="nav-card">
             <span class="nav-icon">🛰️</span>
             <div class="nav-title" data-translate="bing_maps">Bing Maps</div>
-            <div class="nav-description" data-translate="bing_maps_desc">Microsoft's mapping platform</div>
+            <div class="nav-description" data-translate="bing_maps_desc">Microsoft's orbital mapping platform</div>
         </a>
     </div>
     
-    <div class="section-title" data-translate="mobile_apps">Mobile Navigation Apps</div>
+    <div class="section-title" data-translate="mobile_apps">📱 Mobile Navigation Pods</div>
     <div class="nav-grid">
-        <div class="nav-card" onclick="alert('Install Waze from your app store')">
+        <div class="nav-card" onclick="alert('Install Waze from your planetary app store')">
             <span class="nav-icon">🚗</span>
             <div class="nav-title" data-translate="waze">Waze</div>
-            <div class="nav-description" data-translate="waze_desc">Community-driven traffic navigation</div>
+            <div class="nav-description" data-translate="waze_desc">Community-driven interstellar traffic navigation</div>
         </div>
         
-        <div class="nav-card" onclick="alert('Install Apple Maps from your app store')">
+        <div class="nav-card" onclick="alert('Install Apple Maps from your orbital app store')">
             <span class="nav-icon">🍎</span>
             <div class="nav-title" data-translate="apple_maps">Apple Maps</div>
-            <div class="nav-description" data-translate="apple_maps_desc">Apple's built-in navigation app</div>
+            <div class="nav-description" data-translate="apple_maps_desc">Apple's built-in cosmic navigation app</div>
         </div>
         
-        <div class="nav-card" onclick="alert('Install Here WeGo from your app store')">
+        <div class="nav-card" onclick="alert('Install Here WeGo from your space station app store')">
             <span class="nav-icon">🌐</span>
             <div class="nav-title" data-translate="here_wego">HERE WeGo</div>
-            <div class="nav-description" data-translate="here_wego_desc">Offline maps and navigation</div>
+            <div class="nav-description" data-translate="here_wego_desc">Offline maps for distant worlds</div>
         </div>
         
-        <div class="nav-card" onclick="alert('Install Citymapper from your app store')">
+        <div class="nav-card" onclick="alert('Install Citymapper from your martian app store')">
             <span class="nav-icon">🚇</span>
             <div class="nav-title" data-translate="citymapper">Citymapper</div>
-            <div class="nav-description" data-translate="citymapper_desc">Urban transit navigation</div>
+            <div class="nav-description" data-translate="citymapper_desc">Urban transit across the solar system</div>
         </div>
     </div>
     
-    <div class="section-title" data-translate="specialized_navigation">Specialized Navigation</div>
+    <div class="section-title" data-translate="specialized_navigation">🚀 Specialized Navigation Systems</div>
     <div class="nav-grid">
         <a href="https://www.marinetraffic.com/" target="_blank" class="nav-card">
             <span class="nav-icon">🚢</span>
@@ -206,6 +288,12 @@
             <span class="nav-icon">🚊</span>
             <div class="nav-title" data-translate="metro_navigator">Metro Navigator</div>
             <div class="nav-description" data-translate="metro_navigator_desc">Local metro system guide</div>
+        </a>
+        
+        <a href="mars-maps.html" class="nav-card">
+            <span class="nav-icon">🪐</span>
+            <div class="nav-title" data-translate="mars_maps">Mars Maps</div>
+            <div class="nav-description" data-translate="mars_maps_desc">Interplanetary navigation helper</div>
         </a>
     </div>
 </div>
