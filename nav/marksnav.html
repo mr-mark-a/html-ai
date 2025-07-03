@@ -269,36 +269,56 @@
         <a href="https://www.marinetraffic.com/" target="_blank" class="nav-card">
             <span class="nav-icon">🚢</span>
             <div class="nav-title" data-translate="marine_traffic">Marine Traffic</div>
-            <div class="nav-description" data-translate="marine_traffic_desc">Real-time ship tracking</div>
+            <div class="nav-description" data-translate="marine_traffic_desc">Real-time ship tracking across Earth's oceans</div>
         </a>
         
         <a href="https://www.flightradar24.com/" target="_blank" class="nav-card">
             <span class="nav-icon">✈️</span>
             <div class="nav-title" data-translate="flight_radar">FlightRadar24</div>
-            <div class="nav-description" data-translate="flight_radar_desc">Live flight tracking</div>
+            <div class="nav-description" data-translate="flight_radar_desc">Live atmospheric flight tracking</div>
         </a>
         
         <a href="https://www.alltrails.com/" target="_blank" class="nav-card">
             <span class="nav-icon">🥾</span>
             <div class="nav-title" data-translate="alltrails">AllTrails</div>
-            <div class="nav-description" data-translate="alltrails_desc">Hiking and trail navigation</div>
+            <div class="nav-description" data-translate="alltrails_desc">Hiking trails across planetary surfaces</div>
         </a>
         
         <a href="../metro.html" class="nav-card">
             <span class="nav-icon">🚊</span>
             <div class="nav-title" data-translate="metro_navigator">Metro Navigator</div>
-            <div class="nav-description" data-translate="metro_navigator_desc">Local metro system guide</div>
+            <div class="nav-description" data-translate="metro_navigator_desc">Local transit system command center</div>
         </a>
         
         <a href="mars-maps.html" class="nav-card">
             <span class="nav-icon">🪐</span>
             <div class="nav-title" data-translate="mars_maps">Mars Maps</div>
-            <div class="nav-description" data-translate="mars_maps_desc">Interplanetary navigation helper</div>
+            <div class="nav-description" data-translate="mars_maps_desc">Interplanetary navigation command center</div>
         </a>
     </div>
 </div>
 
 <script>
+// Create animated stars background
+function createStars() {
+    const starsContainer = document.getElementById('stars');
+    const numStars = 100;
+    
+    for (let i = 0; i < numStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.width = Math.random() * 2 + 1 + 'px';
+        star.style.height = star.style.width;
+        star.style.animationDelay = Math.random() * 3 + 's';
+        starsContainer.appendChild(star);
+    }
+}
+
+// Initialize stars
+createStars();
+
 // Initialize language selector and translations
 document.addEventListener('DOMContentLoaded', function() {
     // Create and insert language selector
