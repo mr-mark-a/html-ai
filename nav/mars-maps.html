@@ -186,6 +186,7 @@
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
+            position: relative;
         ">
             <input type="text" id="searchBar" placeholder="Enter location or address..." style="
                 flex: 1;
@@ -199,7 +200,24 @@
                 outline: none;
                 backdrop-filter: blur(10px);
                 transition: all 0.3s ease;
-            " onkeypress="handleSearch(event)" onfocus="this.style.borderColor='rgba(255, 165, 0, 0.8)'" onblur="this.style.borderColor='rgba(255, 165, 0, 0.5)'">
+            " onkeypress="handleSearch(event)" oninput="showSuggestions(this.value)" onfocus="this.style.borderColor='rgba(255, 165, 0, 0.8)'" onblur="hideSuggestions(); this.style.borderColor='rgba(255, 165, 0, 0.5)'">
+            
+            <!-- Suggestions Dropdown -->
+            <div id="suggestions" style="
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 80px;
+                background: rgba(0, 0, 0, 0.9);
+                border-radius: 15px;
+                margin-top: 5px;
+                max-height: 200px;
+                overflow-y: auto;
+                display: none;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 165, 0, 0.3);
+            "></div>
             <button id="searchBtn" onclick="performSearch()" style="
                 background: linear-gradient(45deg, #ff6b6b, #ffa500);
                 color: white;
@@ -235,6 +253,43 @@
             " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(76, 175, 80, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(76, 175, 80, 0.3)'">
                 🧭 Navigate
             </button>
+            <button id="viewPointsBtn" onclick="showPointsList()" style="
+                background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+                opacity: 0.6;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(156, 39, 176, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(156, 39, 176, 0.3)'">
+                📋 Points
+            </button>
+        </div>
+        
+        <!-- Status Indicator -->
+        <div id="statusIndicator" style="
+            text-align: center;
+            margin: 10px auto;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 20px;
+            color: #ffa500;
+            font-size: 14px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            max-width: 400px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        ">
+            🗺️ Ready for navigation
         </div>
         <div class="subtitle">Search and navigate across the galaxy</div>
     </div>
@@ -247,6 +302,7 @@
             <button class="control-btn" onclick="setMapMode('terrain')">🏔️ Terrain</button>
             <button class="control-btn" onclick="findLocation()">📍 Find Me</button>
             <button class="control-btn" onclick="navigateFromMyLocation()">🧭 Navigate</button>
+            <button class="control-btn" onclick="toggleAddPointMode()" id="addPointBtn">📌 Add Point</button>
         </div>
         <iframe id="mapsFrame" class="maps-iframe" 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus"
@@ -307,21 +363,40 @@
         
         function findLocation() {
             if (navigator.geolocation) {
+                updateStatusIndicator('📍 Getting your location...', '#ffa500');
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const iframe = document.getElementById('mapsFrame');
                     iframe.src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d12000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    
+                    updateStatusIndicator(`📍 Located! Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`, '#4CAF50');
+                    console.log(`📍 Location found: ${lat}, ${lng}`);
                 }, function() {
+                    updateStatusIndicator('🚨 Unable to access location. Please enable location services.', '#ff6b6b');
                     alert('🛰️ Unable to access your location. Please enable location services.');
                 });
             } else {
+                updateStatusIndicator('🚨 Geolocation not supported by browser', '#ff6b6b');
                 alert('🚀 Geolocation is not supported by this browser.');
             }
         }
         
         // Navigation functionality
         let lastSearchedLocation = '';
+        let searchHistory = [];
+        let locationSuggestions = [
+            'New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 
+            'Phoenix, AZ', 'Philadelphia, PA', 'San Antonio, TX', 'San Diego, CA',
+            'Dallas, TX', 'San Jose, CA', 'Austin, TX', 'Jacksonville, FL',
+            'Fort Worth, TX', 'Columbus, OH', 'Charlotte, NC', 'San Francisco, CA',
+            'Indianapolis, IN', 'Seattle, WA', 'Denver, CO', 'Washington, DC'
+        ];
+        
+        // Add Point functionality
+        let addPointMode = false;
+        let savedPoints = [];
+        let pointCounter = 1;
         
         function navigateFromMyLocation() {
             const searchBar = document.getElementById('searchBar');
@@ -371,30 +446,133 @@
                 // Store the searched location for navigation
                 lastSearchedLocation = searchTerm;
                 
+                // Update status indicator
+                updateStatusIndicator('🔄 Getting directions...', '#ffa500');
+                
                 // Show loading indicator
                 const searchBtn = document.getElementById('searchBtn');
                 const originalText = searchBtn.innerHTML;
                 searchBtn.innerHTML = '🔄 Finding Route...';
                 searchBtn.disabled = true;
                 
-                // Get directions instead of just searching
-                getDirectionsToDestination(searchTerm);
+                // Copy input value and search in Google Maps
+                copyToGoogleMapsSearch(searchTerm);
                 
                 // Enable navigate button
                 const navigateBtn = document.getElementById('navigateBtn');
                 navigateBtn.style.opacity = '1';
                 navigateBtn.style.cursor = 'pointer';
                 
+                // Add to search history
+                addToSearchHistory(searchTerm);
+                
                 // Reset button after delay
                 setTimeout(() => {
                     searchBtn.innerHTML = originalText;
                     searchBtn.disabled = false;
+                    updateStatusIndicator(`🧭 Showing route to: ${searchTerm}`, '#4CAF50');
                 }, 2000);
                 
-                console.log(`🧭 Getting fastest route to: ${searchTerm}`);
+                console.log(`🧭 Getting route to: ${searchTerm}`);
             } else {
                 alert('🪐 Please enter a location to search for!');
             }
+        }
+        
+        function copyToGoogleMapsSearch(destination) {
+            const iframe = document.getElementById('mapsFrame');
+            const encodedDestination = encodeURIComponent(destination);
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Create Google Maps URL with directions from current location to destination
+                    const directionsUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&origin=${userLat},${userLng}&destination=${encodedDestination}&mode=driving`;
+                    
+                    iframe.src = directionsUrl;
+                    
+                    console.log(`🧭 Route from your location (${userLat}, ${userLng}) to: ${destination}`);
+                }, function(error) {
+                    console.log('Geolocation error:', error);
+                    // Fallback: just search for the destination without directions
+                    const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&q=${encodedDestination}`;
+                    iframe.src = searchUrl;
+                    
+                    console.log(`🔍 Searching for: ${destination} (no geolocation)`);
+                });
+            } else {
+                // Fallback: just search for the destination
+                const searchUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&q=${encodedDestination}`;
+                iframe.src = searchUrl;
+                
+                console.log(`🔍 Searching for: ${destination} (no geolocation support)`);
+            }
+        }
+        
+        function showSuggestions(inputValue) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            const searchTerm = inputValue.toLowerCase().trim();
+            
+            if (searchTerm.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Combine search history and location suggestions
+            const allSuggestions = [...new Set([...searchHistory, ...locationSuggestions])];
+            
+            // Filter suggestions based on input
+            const filteredSuggestions = allSuggestions.filter(suggestion =>
+                suggestion.toLowerCase().includes(searchTerm)
+            ).slice(0, 5); // Show only top 5 suggestions
+            
+            if (filteredSuggestions.length > 0) {
+                suggestionsDiv.innerHTML = '';
+                filteredSuggestions.forEach(suggestion => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.style.cssText = `
+                        padding: 10px 15px;
+                        cursor: pointer;
+                        border-bottom: 1px solid rgba(255, 165, 0, 0.2);
+                        color: white;
+                        font-size: 14px;
+                        transition: background-color 0.2s ease;
+                    `;
+                    suggestionItem.innerHTML = `📍 ${suggestion}`;
+                    
+                    suggestionItem.onmouseover = function() {
+                        this.style.backgroundColor = 'rgba(255, 165, 0, 0.2)';
+                    };
+                    suggestionItem.onmouseout = function() {
+                        this.style.backgroundColor = 'transparent';
+                    };
+                    suggestionItem.onclick = function() {
+                        selectSuggestion(suggestion);
+                    };
+                    
+                    suggestionsDiv.appendChild(suggestionItem);
+                });
+                
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+        
+        function hideSuggestions() {
+            setTimeout(() => {
+                const suggestionsDiv = document.getElementById('suggestions');
+                suggestionsDiv.style.display = 'none';
+            }, 200); // Delay to allow clicking on suggestions
+        }
+        
+        function selectSuggestion(suggestion) {
+            const searchBar = document.getElementById('searchBar');
+            searchBar.value = suggestion;
+            hideSuggestions();
+            searchBar.focus();
         }
         
         function navigateToLastSearch() {
@@ -404,17 +582,37 @@
                 navigateBtn.innerHTML = '🔄 Navigating...';
                 navigateBtn.disabled = true;
                 
-                getDirectionsToDestination(lastSearchedLocation);
+                updateStatusIndicator('🔄 Refreshing navigation...', '#ffa500');
+                
+                copyToGoogleMapsSearch(lastSearchedLocation);
                 
                 setTimeout(() => {
                     navigateBtn.innerHTML = originalText;
                     navigateBtn.disabled = false;
+                    updateStatusIndicator(`🧭 Showing route to: ${lastSearchedLocation}`, '#4CAF50');
                 }, 2000);
                 
                 console.log(`🧭 Re-navigating to: ${lastSearchedLocation}`);
             } else {
                 alert('🪐 Please search for a location first!');
             }
+        }
+        
+        function addToSearchHistory(location) {
+            if (!searchHistory.includes(location)) {
+                searchHistory.push(location);
+                // Keep only last 10 searches
+                if (searchHistory.length > 10) {
+                    searchHistory.shift();
+                }
+            }
+        }
+        
+        function updateStatusIndicator(message, color) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.innerHTML = message;
+            indicator.style.color = color;
+            indicator.style.opacity = '1';
         }
         
         function searchLocation(location) {
@@ -443,31 +641,8 @@
         }
         
         function getDirectionsToDestination(destination) {
-            const iframe = document.getElementById('mapsFrame');
-            const encodedDestination = encodeURIComponent(destination);
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    
-                    // Show directions from current location to destination using Google Maps Directions API
-                    // This format ensures we get the fastest route with turn-by-turn directions
-                    const directionsUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&origin=${userLat},${userLng}&destination=${encodedDestination}&mode=driving&avoid=tolls`;
-                    
-                    iframe.src = directionsUrl;
-                    
-                    console.log(`🧭 Fastest route from your location (${userLat}, ${userLng}) to: ${destination}`);
-                }, function(error) {
-                    console.log('Geolocation error:', error);
-                    alert('🚨 Unable to get your location. Please enable location services for turn-by-turn navigation.');
-                    // Fallback: just search for the destination
-                    performBasicSearch(iframe, encodedDestination, destination);
-                });
-            } else {
-                alert('🚨 Geolocation not supported by your browser. Showing destination only.');
-                performBasicSearch(iframe, encodedDestination, destination);
-            }
+            // This function now uses the simplified approach
+            copyToGoogleMapsSearch(destination);
         }
         
         function performBasicSearch(iframe, encodedLocation, location) {
@@ -480,13 +655,214 @@
             console.log(`🔍 Searching for: ${location} (basic search)`);
         }
         
+        // Add Point functionality
+        function toggleAddPointMode() {
+            const addPointBtn = document.getElementById('addPointBtn');
+            
+            if (!addPointMode) {
+                // Enable add point mode
+                addPointMode = true;
+                addPointBtn.innerHTML = '❌ Cancel Point';
+                addPointBtn.style.background = 'linear-gradient(45deg, #ff6b6b, #ff4444)';
+                updateStatusIndicator('📌 Click on the map to add a point', '#ffa500');
+                
+                // Add click listener to iframe (this is limited due to cross-origin restrictions)
+                showAddPointInstructions();
+            } else {
+                // Disable add point mode
+                addPointMode = false;
+                addPointBtn.innerHTML = '📌 Add Point';
+                addPointBtn.style.background = 'linear-gradient(45deg, #ff6b6b, #ffa500)';
+                updateStatusIndicator('📍 Add point mode cancelled', '#6c757d');
+            }
+        }
+        
+        function showAddPointInstructions() {
+            const pointName = prompt('🚀 Enter a name for this location point:', `Point ${pointCounter}`);
+            
+            if (pointName) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        
+                        // Since we can't directly interact with the Google Maps iframe due to cross-origin restrictions,
+                        // we'll add the point to our local storage and create a custom overlay
+                        addPointToMap(userLat, userLng, pointName);
+                        
+                    }, function() {
+                        // Fallback: let user enter coordinates manually
+                        addPointManually(pointName);
+                    });
+                } else {
+                    addPointManually(pointName);
+                }
+            }
+            
+            // Reset add point mode
+            toggleAddPointMode();
+        }
+        
+        function addPointManually(pointName) {
+            const coords = prompt('📍 Enter coordinates (lat,lng) or address:', '40.7128,-74.0060');
+            
+            if (coords) {
+                if (coords.includes(',')) {
+                    // Coordinates format
+                    const [lat, lng] = coords.split(',').map(coord => parseFloat(coord.trim()));
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        addPointToMap(lat, lng, pointName);
+                    } else {
+                        alert('🚨 Invalid coordinates format. Please use: lat,lng');
+                    }
+                } else {
+                    // Address format - geocode it
+                    addPointByAddress(coords, pointName);
+                }
+            }
+        }
+        
+        function addPointByAddress(address, pointName) {
+            // Use Google Maps to find coordinates for the address
+            const iframe = document.getElementById('mapsFrame');
+            const encodedAddress = encodeURIComponent(address);
+            
+            // For now, we'll add it to our points list and show it in the map URL
+            const point = {
+                id: pointCounter++,
+                name: pointName,
+                address: address,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            savedPoints.push(point);
+            updateStatusIndicator(`📌 Added point: ${pointName} at ${address}`, '#4CAF50');
+            
+            // Enable Points button
+            const viewPointsBtn = document.getElementById('viewPointsBtn');
+            viewPointsBtn.style.opacity = '1';
+            
+            // Update map to show the location
+            const mapUrl = `https://www.google.com/maps/embed/v1/search?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&q=${encodedAddress}`;
+            iframe.src = mapUrl;
+            
+            console.log(`📌 Point added: ${pointName} at ${address}`);
+        }
+        
+        function addPointToMap(lat, lng, pointName) {
+            const point = {
+                id: pointCounter++,
+                name: pointName,
+                lat: lat,
+                lng: lng,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            savedPoints.push(point);
+            updateStatusIndicator(`📌 Added point: ${pointName} at ${lat.toFixed(4)}, ${lng.toFixed(4)}`, '#4CAF50');
+            
+            // Enable Points button
+            const viewPointsBtn = document.getElementById('viewPointsBtn');
+            viewPointsBtn.style.opacity = '1';
+            
+            // Update map to show the point
+            const iframe = document.getElementById('mapsFrame');
+            const mapUrl = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+            iframe.src = mapUrl;
+            
+            console.log(`📌 Point added: ${pointName} at ${lat}, ${lng}`);
+        }
+        
+        function showPointsList() {
+            if (savedPoints.length > 0) {
+                let pointsList = '📌 Saved Points:\n\n';
+                savedPoints.forEach((point, index) => {
+                    if (point.lat && point.lng) {
+                        pointsList += `${index + 1}. ${point.name} (${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}) - ${point.timestamp}\n`;
+                    } else {
+                        pointsList += `${index + 1}. ${point.name} (${point.address}) - ${point.timestamp}\n`;
+                    }
+                });
+                
+                pointsList += '\n🗑️ Clear all points?';
+                pointsList += '\n🧭 Navigate to a point? (Enter point number)';
+                
+                const userChoice = prompt(pointsList, 'Enter action: clear/navigate/number');
+                
+                if (userChoice) {
+                    if (userChoice.toLowerCase() === 'clear') {
+                        clearAllPoints();
+                    } else if (userChoice.toLowerCase() === 'navigate' || !isNaN(userChoice)) {
+                        const pointIndex = isNaN(userChoice) ? 0 : parseInt(userChoice) - 1;
+                        if (pointIndex >= 0 && pointIndex < savedPoints.length) {
+                            navigateToSavedPoint(savedPoints[pointIndex]);
+                        } else {
+                            alert('🚨 Invalid point number!');
+                        }
+                    }
+                }
+            } else {
+                updateStatusIndicator('📋 No saved points yet. Use "Add Point" to create some!', '#ffa500');
+                alert('📋 No saved points yet.\n\n� Use the "Add Point" button to save locations on the map!');
+            }
+        }
+        
+        function navigateToSavedPoint(point) {
+            if (point.lat && point.lng) {
+                // Navigate using coordinates
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        const iframe = document.getElementById('mapsFrame');
+                        
+                        const directionsUrl = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&origin=${userLat},${userLng}&destination=${point.lat},${point.lng}&mode=driving`;
+                        iframe.src = directionsUrl;
+                        
+                        updateStatusIndicator(`🧭 Navigating to: ${point.name}`, '#4CAF50');
+                        console.log(`🧭 Navigating to saved point: ${point.name}`);
+                    });
+                } else {
+                    // Just show the point location
+                    const iframe = document.getElementById('mapsFrame');
+                    iframe.src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1000!2d${point.lng}!3d${point.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    updateStatusIndicator(`📍 Showing: ${point.name}`, '#4CAF50');
+                }
+            } else {
+                // Navigate using address
+                copyToGoogleMapsSearch(point.address);
+                updateStatusIndicator(`🧭 Navigating to: ${point.name}`, '#4CAF50');
+            }
+        }
+        
+        function clearAllPoints() {
+            savedPoints = [];
+            pointCounter = 1;
+            updateStatusIndicator('🗑️ All saved points cleared', '#6c757d');
+            
+            // Disable Points button
+            const viewPointsBtn = document.getElementById('viewPointsBtn');
+            viewPointsBtn.style.opacity = '0.6';
+            
+            console.log('🗑️ All points cleared');
+        }
+        
         // Initialize stars
         createStars();
         
+        // Auto-press "Find Me" when page loads
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                findLocation();
+                updateStatusIndicator('📍 Finding your location...', '#ffa500');
+            }, 1000); // Small delay to ensure page is fully loaded
+        });
+        
         // Add some Mars-themed console messages
         console.log('🪐 Mars Maps Navigation Helper Activated');
-        console.log('�️ Embedded navigation system ready');
-        console.log('� Use the controls to explore different map modes');
+        console.log('🛰️ Embedded navigation system ready');
+        console.log('📍 Auto-locating your position...');
+        console.log('🗺️ Use the controls to explore different map modes');
     </script>
 </body>
 </html>
