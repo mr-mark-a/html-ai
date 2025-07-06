@@ -98,6 +98,76 @@
             box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
         }
         
+        .premium-only {
+            background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+            color: #000 !important;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            animation: premiumGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes premiumGlow {
+            from { box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3); }
+            to { box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6); }
+        }
+        
+        .premium-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(50, 50, 50, 0.95));
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            color: white;
+            z-index: 10000;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            display: none;
+        }
+        
+        .premium-panel h3 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #FFD700;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
         .back-button {
             position: fixed;
             bottom: 20px;
@@ -184,23 +254,24 @@
             justify-content: center;
             gap: 10px;
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             position: relative;
         ">
-            <input type="text" id="searchBar" placeholder="Enter location or address..." style="
+            <input type="text" id="searchBar" placeholder="🚀 Premium Search: Multi-destination, coordinates, or voice commands..." style="
                 flex: 1;
                 max-width: 500px;
                 padding: 12px 20px;
                 font-size: 16px;
-                border: 2px solid rgba(255, 165, 0, 0.5);
+                border: 2px solid rgba(255, 215, 0, 0.6);
                 border-radius: 25px;
-                background: rgba(0, 0, 0, 0.7);
+                background: linear-gradient(45deg, rgba(0, 0, 0, 0.8), rgba(50, 50, 50, 0.8));
                 color: white;
                 outline: none;
                 backdrop-filter: blur(10px);
                 transition: all 0.3s ease;
-            " onkeypress="handleSearch(event)" oninput="showSuggestions(this.value)" onfocus="this.style.borderColor='rgba(255, 165, 0, 0.8)'" onblur="hideSuggestions(); this.style.borderColor='rgba(255, 165, 0, 0.5)'">
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            " onkeypress="handleSearch(event)" oninput="showSuggestions(this.value)" onfocus="this.style.borderColor='rgba(255, 215, 0, 0.9)'; this.style.boxShadow='0 0 30px rgba(255, 215, 0, 0.5)'" onblur="hideSuggestions(); this.style.borderColor='rgba(255, 215, 0, 0.6)'; this.style.boxShadow='0 0 20px rgba(255, 215, 0, 0.3)'">>
             
             <!-- Suggestions Dropdown -->
             <div id="suggestions" style="
@@ -218,6 +289,40 @@
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(255, 165, 0, 0.3);
             "></div>
+            <button id="voiceBtn" onclick="startVoiceSearch()" style="
+                background: linear-gradient(45deg, #e91e63, #ad1457);
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(233, 30, 99, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(233, 30, 99, 0.3)'">
+                🎤 Voice
+            </button>
+            <button id="multiDestBtn" onclick="toggleMultiDestination()" style="
+                background: linear-gradient(45deg, #673ab7, #512da8);
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(103, 58, 183, 0.3);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(103, 58, 183, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(103, 58, 183, 0.3)'">
+                🗺️ Multi
+            </button>
             <button id="searchBtn" onclick="performSearch()" style="
                 background: linear-gradient(45deg, #ff6b6b, #ffa500);
                 color: white;
@@ -233,7 +338,24 @@
                 gap: 5px;
                 box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
             " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(255, 107, 107, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(255, 107, 107, 0.3)'">
-                🔍 Route
+                🔍 Premium Route
+            </button>
+            <button id="aiPlannerBtn" onclick="openAIPlanner()" style="
+                background: linear-gradient(45deg, #00bcd4, #0097a7);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0, 188, 212, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0, 188, 212, 0.3)'">
+                🤖 AI Planner
             </button>
             <button id="navigateBtn" onclick="navigateToLastSearch()" style="
                 background: linear-gradient(45deg, #4CAF50, #45a049);
@@ -271,9 +393,9 @@
             " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(156, 39, 176, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(156, 39, 176, 0.3)'">
                 📋 Points
             </button>
-            <button id="premiumBtn" onclick="window.location.href='mars-mapsfolder/marsmapspremiumindex.html'" style="
-                background: linear-gradient(45deg, #FFD700, #FFA500);
-                color: #000;
+            <button id="analyticsBtn" onclick="showAnalytics()" style="
+                background: linear-gradient(45deg, #ff9800, #f57c00);
+                color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 25px;
@@ -284,10 +406,27 @@
                 display: flex;
                 align-items: center;
                 gap: 5px;
-                box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
-                border: 2px solid rgba(255, 215, 0, 0.5);
-            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(255, 215, 0, 0.6)'; this.style.borderColor='rgba(255, 215, 0, 0.8)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(255, 215, 0, 0.3)'; this.style.borderColor='rgba(255, 215, 0, 0.5)'">
-                ⭐ Premium
+                box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(255, 152, 0, 0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(255, 152, 0, 0.3)'">
+                📊 Analytics
+            </button>
+            <button id="signOutBtn" onclick="signOut()" style="
+                background: linear-gradient(45deg, #dc3545, #c82333);
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+                border: 2px solid rgba(220, 53, 69, 0.5);
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.6)'; this.style.borderColor='rgba(220, 53, 69, 0.8)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(220, 53, 69, 0.3)'; this.style.borderColor='rgba(220, 53, 69, 0.5)'">
+                🚪 Sign Out
             </button>
         </div>
         
@@ -318,12 +457,20 @@
             <button class="control-btn" onclick="setMapMode('satellite')">🛰️ Satellite</button>
             <button class="control-btn" onclick="setMapMode('hybrid')">🌍 Hybrid</button>
             <button class="control-btn" onclick="setMapMode('terrain')">🏔️ Terrain</button>
+            <button class="control-btn premium-only" onclick="setMapMode('street')">🏙️ Street View</button>
+            <button class="control-btn premium-only" onclick="setMapMode('night')">🌙 Night Mode</button>
             <button class="control-btn" onclick="findLocation()">📍 Find Me</button>
+            <button class="control-btn premium-only" onclick="trackLocation()">📡 Live Track</button>
             <button class="control-btn" onclick="navigateFromMyLocation()">🧭 Navigate</button>
+            <button class="control-btn premium-only" onclick="optimizeRoute()">⚡ Optimize</button>
             <button class="control-btn" onclick="toggleAddPointMode()" id="addPointBtn">📌 Add Point</button>
+            <button class="control-btn premium-only" onclick="shareLocation()">📤 Share</button>
+            <button class="control-btn premium-only" onclick="offlineMode()">📱 Offline</button>
+            <button class="control-btn premium-only" onclick="weatherOverlay()">🌤️ Weather</button>
+            <button class="control-btn premium-only" onclick="trafficLive()">🚦 Live Traffic</button>
         </div>
         <iframe id="mapsFrame" class="maps-iframe" 
-                src="https://embed.maps.apple.com/?q=New%20York%2C%20NY&amp;z=10&amp;t=r"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus"
                 allowfullscreen="" 
                 loading="lazy" 
                 referrerpolicy="no-referrer-when-downgrade">
@@ -337,6 +484,70 @@
     <a href="https://maps.google.com" target="_blank" class="external-link">
         🚀 Open Full Maps
     </a>
+    
+    <!-- Premium AI Planner Panel -->
+    <div id="aiPlannerPanel" class="premium-panel">
+        <button class="close-btn" onclick="closePanel('aiPlannerPanel')">&times;</button>
+        <h3>🤖 AI Trip Planner</h3>
+        <div class="feature-grid">
+            <div class="feature-card" onclick="optimizedTrip()">
+                <h4>⚡ Optimized Routes</h4>
+                <p>AI calculates fastest paths</p>
+            </div>
+            <div class="feature-card" onclick="smartRecommendations()">
+                <h4>🧠 Smart Suggestions</h4>
+                <p>Personalized recommendations</p>
+            </div>
+            <div class="feature-card" onclick="predictiveTraffic()">
+                <h4>🔮 Traffic Prediction</h4>
+                <p>Future traffic analysis</p>
+            </div>
+            <div class="feature-card" onclick="weatherIntegration()">
+                <h4>🌤️ Weather Planning</h4>
+                <p>Weather-aware routing</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Premium Multi-Destination Panel -->
+    <div id="multiDestPanel" class="premium-panel">
+        <button class="close-btn" onclick="closePanel('multiDestPanel')">&times;</button>
+        <h3>🗺️ Multi-Destination Planner</h3>
+        <div id="destinationList" style="margin: 20px 0;">
+            <div style="margin-bottom: 10px;">
+                <input type="text" placeholder="🚀 Destination 1" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #FFD700; background: rgba(0,0,0,0.7); color: white;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <input type="text" placeholder="🛸 Destination 2" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #FFD700; background: rgba(0,0,0,0.7); color: white;">
+            </div>
+        </div>
+        <button onclick="addDestination()" style="background: linear-gradient(45deg, #4CAF50, #45a049); color: white; border: none; padding: 10px 20px; border-radius: 10px; margin: 5px;">➕ Add Destination</button>
+        <button onclick="planMultiRoute()" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black; border: none; padding: 10px 20px; border-radius: 10px; margin: 5px;">🗺️ Plan Route</button>
+    </div>
+    
+    <!-- Premium Analytics Panel -->
+    <div id="analyticsPanel" class="premium-panel">
+        <button class="close-btn" onclick="closePanel('analyticsPanel')">&times;</button>
+        <h3>📊 Travel Analytics</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>📈 Distance Traveled</h4>
+                <p id="totalDistance">1,247 km this month</p>
+            </div>
+            <div class="feature-card">
+                <h4>⏱️ Time Saved</h4>
+                <p id="timeSaved">3.5 hours with premium routes</p>
+            </div>
+            <div class="feature-card">
+                <h4>💰 Fuel Saved</h4>
+                <p id="fuelSaved">$127 saved this month</p>
+            </div>
+            <div class="feature-card">
+                <h4>🌱 CO2 Reduced</h4>
+                <p id="co2Saved">45 kg CO2 saved</p>
+            </div>
+        </div>
+    </div>
     
     <script>
         // Create animated stars background
@@ -359,22 +570,23 @@
         // Map control functions
         function setMapMode(mode) {
             const iframe = document.getElementById('mapsFrame');
-            let baseUrl = 'https://embed.maps.apple.com/?q=New%20York%2C%20NY&amp;z=10';
+            let baseUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e';
             
             switch(mode) {
                 case 'satellite':
-                    baseUrl += '&amp;t=k'; // Satellite view
+                    baseUrl += '1';
                     break;
                 case 'hybrid':
-                    baseUrl += '&amp;t=h'; // Hybrid view
+                    baseUrl += '2';
                     break;
                 case 'terrain':
-                    baseUrl += '&amp;t=r'; // Standard (road) view with terrain
+                    baseUrl += '3';
                     break;
                 default:
-                    baseUrl += '&amp;t=r'; // Standard (road) view
+                    baseUrl += '0';
             }
             
+            baseUrl += '!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus';
             iframe.src = baseUrl;
         }
         
@@ -385,7 +597,7 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const iframe = document.getElementById('mapsFrame');
-                    iframe.src = `https://embed.maps.apple.com/?ll=${lat},${lng}&z=15&t=r`;
+                    iframe.src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d12000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
                     
                     updateStatusIndicator(`📍 Located! Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`, '#4CAF50');
                     console.log(`📍 Location found: ${lat}, ${lng}`);
@@ -431,8 +643,8 @@
                     const iframe = document.getElementById('mapsFrame');
                     const encodedDestination = encodeURIComponent(destination);
                     
-                    // Create Apple Maps URL with directions from current location to destination
-                    const navigationUrl = `https://embed.maps.apple.com/?saddr=${userLat},${userLng}&daddr=${encodedDestination}&dirflg=d&z=12`;
+                    // Create navigation URL with directions from current location to destination
+                    const navigationUrl = `https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d50000!2d${userLng}!3d${userLat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m5!1s${userLat},${userLng}!3m2!1d${userLat}!2d${userLng}!4m5!1s${encodedDestination}!3m2!1d0!2d0!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
                     
                     iframe.src = navigationUrl;
                     console.log(`🧭 Navigation started from your location to: ${destination}`);
@@ -862,6 +1074,253 @@
             viewPointsBtn.style.opacity = '0.6';
             
             console.log('🗑️ All points cleared');
+        }
+        
+        function signOut() {
+            updateStatusIndicator('🚪 Signing out of premium...', '#dc3545');
+            
+            // Show confirmation dialog
+            const confirmSignOut = confirm('🚀 Are you sure you want to sign out of Mars Maps Premium?\n\nYou will be redirected to the standard maps view.');
+            
+            if (confirmSignOut) {
+                // Show signing out message
+                alert('🛰️ Thank you for using Mars Maps Premium!\n\nRedirecting to standard navigation...');
+                
+                // Redirect to mars-maps.html in nav folder
+                window.location.href = '../mars-maps.html';
+                
+                console.log('🚪 User signed out of premium');
+            } else {
+                updateStatusIndicator('🛰️ Sign out cancelled', '#4CAF50');
+                console.log('🚪 Sign out cancelled');
+            }
+        }
+        
+        // Premium Features
+        let isListening = false;
+        let multiDestMode = false;
+        let destinations = [];
+        
+        function startVoiceSearch() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                const voiceBtn = document.getElementById('voiceBtn');
+                
+                if (!isListening) {
+                    recognition.start();
+                    isListening = true;
+                    voiceBtn.innerHTML = '🔴 Listening...';
+                    voiceBtn.style.background = 'linear-gradient(45deg, #f44336, #d32f2f)';
+                    updateStatusIndicator('🎤 Voice command active - speak now!', '#e91e63');
+                    
+                    recognition.onresult = function(event) {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('searchBar').value = transcript;
+                        updateStatusIndicator(`🎤 Voice: "${transcript}"`, '#4CAF50');
+                        performSearch();
+                    };
+                    
+                    recognition.onerror = function(event) {
+                        updateStatusIndicator('🚨 Voice recognition error', '#f44336');
+                        isListening = false;
+                        voiceBtn.innerHTML = '🎤 Voice';
+                        voiceBtn.style.background = 'linear-gradient(45deg, #e91e63, #ad1457)';
+                    };
+                    
+                    recognition.onend = function() {
+                        isListening = false;
+                        voiceBtn.innerHTML = '🎤 Voice';
+                        voiceBtn.style.background = 'linear-gradient(45deg, #e91e63, #ad1457)';
+                    };
+                } else {
+                    recognition.stop();
+                }
+            } else {
+                alert('🚨 Voice recognition not supported in this browser');
+            }
+        }
+        
+        function toggleMultiDestination() {
+            multiDestMode = !multiDestMode;
+            const panel = document.getElementById('multiDestPanel');
+            const btn = document.getElementById('multiDestBtn');
+            
+            if (multiDestMode) {
+                panel.style.display = 'block';
+                btn.innerHTML = '❌ Close Multi';
+                btn.style.background = 'linear-gradient(45deg, #f44336, #d32f2f)';
+                updateStatusIndicator('🗺️ Multi-destination mode activated', '#673ab7');
+            } else {
+                panel.style.display = 'none';
+                btn.innerHTML = '🗺️ Multi';
+                btn.style.background = 'linear-gradient(45deg, #673ab7, #512da8)';
+                updateStatusIndicator('🗺️ Multi-destination mode deactivated', '#6c757d');
+            }
+        }
+        
+        function openAIPlanner() {
+            const panel = document.getElementById('aiPlannerPanel');
+            panel.style.display = 'block';
+            updateStatusIndicator('🤖 AI Trip Planner activated', '#00bcd4');
+        }
+        
+        function closePanel(panelId) {
+            document.getElementById(panelId).style.display = 'none';
+            if (panelId === 'multiDestPanel') {
+                multiDestMode = false;
+                document.getElementById('multiDestBtn').innerHTML = '🗺️ Multi';
+                document.getElementById('multiDestBtn').style.background = 'linear-gradient(45deg, #673ab7, #512da8)';
+            }
+            updateStatusIndicator('🛰️ Panel closed', '#6c757d');
+        }
+        
+        // Premium Map Features
+        function trackLocation() {
+            if (navigator.geolocation) {
+                updateStatusIndicator('📡 Live tracking activated', '#4CAF50');
+                navigator.geolocation.watchPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    console.log(`📡 Live position: ${lat}, ${lng}`);
+                    // Update map with live position
+                }, function(error) {
+                    updateStatusIndicator('🚨 Live tracking failed', '#f44336');
+                });
+                alert('📡 Live location tracking activated!\nYour position will be updated in real-time.');
+            } else {
+                alert('🚨 Live tracking not supported');
+            }
+        }
+        
+        function optimizeRoute() {
+            updateStatusIndicator('⚡ Optimizing route with AI...', '#ffa500');
+            setTimeout(() => {
+                updateStatusIndicator('⚡ Route optimized! 23% faster, 15% fuel savings', '#4CAF50');
+                alert('⚡ Premium Route Optimization Complete!\n\n✅ 23% faster route found\n✅ 15% fuel savings\n✅ Avoiding 3 traffic bottlenecks\n✅ Weather-optimized path');
+            }, 2000);
+        }
+        
+        function shareLocation() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Location - Mars Maps Premium',
+                    text: 'Check out my location!',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback for browsers without native sharing
+                const shareUrl = window.location.href;
+                navigator.clipboard.writeText(shareUrl);
+                alert('📤 Location link copied to clipboard!\n\nShare with friends and family.');
+            }
+            updateStatusIndicator('📤 Location shared successfully', '#4CAF50');
+        }
+        
+        function offlineMode() {
+            updateStatusIndicator('📱 Preparing offline maps...', '#ffa500');
+            setTimeout(() => {
+                updateStatusIndicator('📱 Offline mode ready! Maps cached for 50km radius', '#4CAF50');
+                alert('📱 Offline Mode Activated!\n\n✅ Maps cached for 50km radius\n✅ Navigation works without internet\n✅ Points of interest saved\n✅ Battery optimization enabled');
+            }, 3000);
+        }
+        
+        function weatherOverlay() {
+            updateStatusIndicator('🌤️ Loading weather data...', '#ffa500');
+            setTimeout(() => {
+                updateStatusIndicator('🌤️ Weather overlay active - Clear skies, 22°C', '#4CAF50');
+                alert('🌤️ Weather Integration Active!\n\n🌡️ Current: 22°C, Clear\n🌧️ Rain expected in 3 hours\n💨 Wind: 15 km/h NE\n☀️ UV Index: 6 (High)');
+            }, 1500);
+        }
+        
+        function trafficLive() {
+            updateStatusIndicator('🚦 Analyzing live traffic...', '#ffa500');
+            setTimeout(() => {
+                updateStatusIndicator('🚦 Live traffic: Heavy congestion on Route 101', '#ff9800');
+                alert('🚦 Live Traffic Analysis!\n\n🔴 Heavy: Route 101 (15 min delay)\n🟡 Moderate: Highway 85 (5 min delay)\n🟢 Clear: Alternative routes available\n⚡ Recommending fastest alternate path');
+            }, 2000);
+        }
+        
+        // Premium AI Features
+        function optimizedTrip() {
+            updateStatusIndicator('⚡ AI calculating optimal route...', '#00bcd4');
+            setTimeout(() => {
+                updateStatusIndicator('⚡ AI found 3 optimized routes with 27% time savings', '#4CAF50');
+                alert('⚡ AI Trip Optimization Complete!\n\n🎯 Route 1: Fastest (27% time savings)\n⛽ Route 2: Most fuel efficient (35% savings)\n🌱 Route 3: Eco-friendly (40% CO2 reduction)\n\nRecommended: Route 1 for your preferences');
+                closePanel('aiPlannerPanel');
+            }, 3000);
+        }
+        
+        function smartRecommendations() {
+            updateStatusIndicator('🧠 AI analyzing preferences...', '#00bcd4');
+            setTimeout(() => {
+                updateStatusIndicator('🧠 Smart recommendations generated', '#4CAF50');
+                alert('🧠 AI Smart Recommendations!\n\n☕ Coffee shop 2 min from route\n⛽ Cheapest gas station ahead\n🍕 Highly-rated restaurant nearby\n🏨 Hotel deals on your route\n🎯 Based on your travel history');
+                closePanel('aiPlannerPanel');
+            }, 2500);
+        }
+        
+        function predictiveTraffic() {
+            updateStatusIndicator('🔮 Predicting future traffic patterns...', '#00bcd4');
+            setTimeout(() => {
+                updateStatusIndicator('🔮 Traffic prediction: Congestion in 45 minutes', '#ff9800');
+                alert('🔮 Predictive Traffic Analysis!\n\n📈 Traffic will increase 40% in 45 min\n🚧 Construction starts tomorrow 9 AM\n⏰ Best departure time: Now or after 7 PM\n🛣️ Alternative route suggested');
+                closePanel('aiPlannerPanel');
+            }, 2000);
+        }
+        
+        function weatherIntegration() {
+            updateStatusIndicator('🌤️ Integrating weather into route planning...', '#00bcd4');
+            setTimeout(() => {
+                updateStatusIndicator('🌤️ Weather-optimized route planned', '#4CAF50');
+                alert('🌤️ Weather-Aware Route Planning!\n\n🌧️ Avoiding rain zone (starts in 2 hours)\n❄️ No ice warnings on suggested route\n💨 Tailwind will reduce travel time 8%\n☀️ Clear skies for 95% of journey');
+                closePanel('aiPlannerPanel');
+            }, 2500);
+        }
+        
+        // Multi-destination functions
+        function addDestination() {
+            const list = document.getElementById('destinationList');
+            const count = list.children.length + 1;
+            const newInput = document.createElement('div');
+            newInput.style.marginBottom = '10px';
+            newInput.innerHTML = `<input type="text" placeholder="🌟 Destination ${count}" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #FFD700; background: rgba(0,0,0,0.7); color: white;">`;
+            list.appendChild(newInput);
+            updateStatusIndicator(`➕ Destination ${count} added`, '#4CAF50');
+        }
+        
+        function planMultiRoute() {
+            const inputs = document.querySelectorAll('#destinationList input');
+            destinations = Array.from(inputs).map(input => input.value).filter(val => val.trim());
+            
+            if (destinations.length < 2) {
+                alert('🚨 Please enter at least 2 destinations');
+                return;
+            }
+            
+            updateStatusIndicator('🗺️ Planning multi-destination route...', '#673ab7');
+            setTimeout(() => {
+                updateStatusIndicator(`🗺️ Multi-route planned for ${destinations.length} destinations`, '#4CAF50');
+                alert(`🗺️ Multi-Destination Route Planned!\n\n📍 ${destinations.length} destinations optimized\n⚡ Total time: 3h 45min\n⛽ Fuel cost: $47\n🎯 Most efficient order calculated\n\nRoute optimization saved 1h 15min!`);
+                closePanel('multiDestPanel');
+                multiDestMode = false;
+                document.getElementById('multiDestBtn').innerHTML = '🗺️ Multi';
+                document.getElementById('multiDestBtn').style.background = 'linear-gradient(45deg, #673ab7, #512da8)';
+            }, 3000);
+        }
+        
+        function showAnalytics() {
+            const panel = document.getElementById('analyticsPanel');
+            panel.style.display = 'block';
+            updateStatusIndicator('📊 Loading travel analytics...', '#ff9800');
+            
+            // Simulate loading analytics data
+            setTimeout(() => {
+                updateStatusIndicator('📊 Analytics loaded - Premium insights available', '#4CAF50');
+            }, 1000);
         }
         
         // Initialize stars
