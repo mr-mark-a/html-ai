@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Maps Premium</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .premium-features {
+            margin-bottom: 40px;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .payment-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .pay-label {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .payment-options {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .payment-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .apple-pay {
+            background: linear-gradient(145deg, #000, #333);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .apple-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .google-pay {
+            background: linear-gradient(145deg, #4285f4, #34a853);
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+        
+        .google-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+        }
+        
+        .paypal {
+            background: linear-gradient(145deg, #0070ba, #003087);
+            box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3);
+        }
+        
+        .paypal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 112, 186, 0.4);
+        }
+        
+        .card-payment {
+            background: linear-gradient(145deg, #6c5ce7, #a29bfe);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+        
+        .card-payment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+        }
+        
+        .payment-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        
+        .price {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            color: #ff6b6b;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Mars Maps Premium</h1>
+        
+        <div class="premium-features">
+            <div class="feature">
+                <h3>🗺️ High-Resolution Mars Terrain Maps</h3>
+                <p>Access detailed topographical maps with 1-meter resolution imagery</p>
+            </div>
+            <div class="feature">
+                <h3>🛰️ Real-Time Satellite Data</h3>
+                <p>Live updates from Mars orbiters and surface missions</p>
+            </div>
+            <div class="feature">
+                <h3>📍 Landing Site Planning</h3>
+                <p>Advanced tools for mission planning and site selection</p>
+            </div>
+            <div class="feature">
+                <h3>🔬 Scientific Data Overlay</h3>
+                <p>Geological, atmospheric, and mineral composition data</p>
+            </div>
+        </div>
+        
+        <div class="payment-section">
+            <div class="pay-label">💰 Ask to Pay</div>
+            <div class="price">$29.99/month</div>
+            
+            <div class="payment-options">
+                <button class="payment-button apple-pay" onclick="processApplePay()">
+                    <span class="payment-icon">🍎</span>
+                    Pay with Apple Pay
+                </button>
+                
+                <button class="payment-button google-pay" onclick="processGooglePay()">
+                    <span class="payment-icon">🟢</span>
+                    Pay with Google Pay
+                </button>
+                
+                <button class="payment-button paypal" onclick="processPayPal()">
+                    <span class="payment-icon">💙</span>
+                    Pay with PayPal
+                </button>
+                
+                <button class="payment-button card-payment" onclick="processCardPayment()">
+                    <span class="payment-icon">💳</span>
+                    Pay with Credit/Debit Card
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function processApplePay() {
+            if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+                // Apple Pay is available
+                alert('Processing Apple Pay payment...');
+                // Simulate payment processing
+                setTimeout(() => {
+                    alert('Payment successful! Redirecting to Mars Maps Premium...');
+                    window.location.href = 'mars-maps-premium.html';
+                }, 2000);
+                console.log('Processing Apple Pay payment');
+            } else {
+                alert('Apple Pay is not available on this device');
+            }
+        }
+        
+        function processGooglePay() {
+            alert('Processing Google Pay payment...');
+            // Simulate payment processing
+            setTimeout(() => {
+                alert('Payment successful! Redirecting to Mars Maps Premium...');
+                window.location.href = 'mars-maps-premium.html';
+            }, 2000);
+            console.log('Processing Google Pay payment');
+        }
+        
+        function processPayPal() {
+            alert('Processing PayPal payment...');
+            // Simulate payment processing
+            setTimeout(() => {
+                alert('Payment successful! Redirecting to Mars Maps Premium...');
+                window.location.href = 'mars-maps-premium.html';
+            }, 2000);
+            console.log('Processing PayPal payment');
+        }
+        
+        function processCardPayment() {
+            alert('Processing card payment...');
+            // Simulate payment processing
+            setTimeout(() => {
+                alert('Payment successful! Redirecting to Mars Maps Premium...');
+                window.location.href = 'mars-maps-premium.html';
+            }, 2000);
+            console.log('Processing card payment');
+        }
+    </script>
+</body>
+</html>

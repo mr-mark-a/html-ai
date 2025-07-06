@@ -323,7 +323,7 @@
             <button class="control-btn" onclick="toggleAddPointMode()" id="addPointBtn">📌 Add Point</button>
         </div>
         <iframe id="mapsFrame" class="maps-iframe" 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus"
+                src="https://embed.maps.apple.com/?q=New%20York%2C%20NY&amp;z=10&amp;t=r"
                 allowfullscreen="" 
                 loading="lazy" 
                 referrerpolicy="no-referrer-when-downgrade">
@@ -359,23 +359,22 @@
         // Map control functions
         function setMapMode(mode) {
             const iframe = document.getElementById('mapsFrame');
-            let baseUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387190.2799160891!2d-74.25987368715491!3d40.697670064001676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e';
+            let baseUrl = 'https://embed.maps.apple.com/?q=New%20York%2C%20NY&amp;z=10';
             
             switch(mode) {
                 case 'satellite':
-                    baseUrl += '1';
+                    baseUrl += '&amp;t=k'; // Satellite view
                     break;
                 case 'hybrid':
-                    baseUrl += '2';
+                    baseUrl += '&amp;t=h'; // Hybrid view
                     break;
                 case 'terrain':
-                    baseUrl += '3';
+                    baseUrl += '&amp;t=r'; // Standard (road) view with terrain
                     break;
                 default:
-                    baseUrl += '0';
+                    baseUrl += '&amp;t=r'; // Standard (road) view
             }
             
-            baseUrl += '!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus';
             iframe.src = baseUrl;
         }
         
@@ -386,7 +385,7 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const iframe = document.getElementById('mapsFrame');
-                    iframe.src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d12000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    iframe.src = `https://embed.maps.apple.com/?ll=${lat},${lng}&z=15&t=r`;
                     
                     updateStatusIndicator(`📍 Located! Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`, '#4CAF50');
                     console.log(`📍 Location found: ${lat}, ${lng}`);
@@ -432,8 +431,8 @@
                     const iframe = document.getElementById('mapsFrame');
                     const encodedDestination = encodeURIComponent(destination);
                     
-                    // Create navigation URL with directions from current location to destination
-                    const navigationUrl = `https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d50000!2d${userLng}!3d${userLat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m5!1s${userLat},${userLng}!3m2!1d${userLat}!2d${userLng}!4m5!1s${encodedDestination}!3m2!1d0!2d0!5e0!3m2!1sen!2sus!4v1691234567890!5m2!1sen!2sus`;
+                    // Create Apple Maps URL with directions from current location to destination
+                    const navigationUrl = `https://embed.maps.apple.com/?saddr=${userLat},${userLng}&daddr=${encodedDestination}&dirflg=d&z=12`;
                     
                     iframe.src = navigationUrl;
                     console.log(`🧭 Navigation started from your location to: ${destination}`);
@@ -884,3 +883,4 @@
     </script>
 </body>
 </html>
+
