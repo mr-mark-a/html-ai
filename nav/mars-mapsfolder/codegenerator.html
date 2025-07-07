@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .editor-bg { background-color: #1e1e1e; }
+        .text-primary { color: #d4d4d4; }
+        .font-ui { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { background-color: #252526; border-right: 1px solid #3e3e42; }
+        .panel { background-color: #2d2d30; border: 1px solid #3e3e42; }
+        .file-item:hover { background-color: #37373d; }
+        .selected { background-color: #094771; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.7); }
+    </style>
+</head>
+<body class="h-screen editor-bg text-primary font-ui overflow-hidden">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-4 border-b border-gray-600">
+        <div class="flex items-center space-x-4">
+            <h1 class="text-xl font-bold">Code Generator</h1>
+            <span id="project-name" class="text-gray-400"></span>
+        </div>
+        <div class="flex space-x-2">
+            <button id="new-project-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
+                New Project
+            </button>
+        </div>
+    </div>
+
+    <!-- Exit Button -->
+    <button 
+        id="exit-btn"
+        class="fixed top-4 right-4 z-50 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200 font-semibold"
+    >
+        Exit
+    </button>
+
+    <!-- Main Content -->
+    <div class="flex h-full">
+        <!-- File Explorer -->
+        <div class="w-64 sidebar p-4">
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold mb-2 text-gray-300">PROJECTS</h3>
+                <div id="projects-list" class="space-y-1">
+                    <div class="text-gray-500 text-sm">No projects available</div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold mb-2 text-gray-300">FILES</h3>
+                <div id="files-list" class="space-y-1">
+                    <div class="text-gray-500 text-sm">Select a project to view files</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Editor -->
+        <div class="flex-1 panel m-2">
+            <div class="h-full flex flex-col">
+                <div class="border-b border-gray-600 p-3">
+                    <span id="file-name" class="text-sm text-gray-300">No file selected</span>
+                </div>
+                <div class="flex-1 p-4">
+                    <textarea 
+                        id="code-editor" 
+                        class="w-full h-full bg-transparent text-green-400 font-mono text-sm resize-none outline-none"
+                        placeholder="Select a file to start editing..."
+                    ></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Panel -->
+        <div class="w-80 panel m-2">
+            <div class="h-full flex flex-col">
+                <div class="border-b border-gray-600 p-3">
+                    <h3 class="text-sm font-semibold text-gray-300">AI ASSISTANT</h3>
+                </div>
+                <div class="flex-1 p-4 space-y-4">
+                    <div class="text-sm text-gray-400">
+                        <p>AI assistance for your code generation needs.</p>
+                        <p class="mt-2">Project: <span id="ai-project" class="text-blue-400">None selected</span></p>
+                        <p>File: <span id="ai-file" class="text-green-400">None selected</span></p>
+                    </div>
+                    <div class="space-y-2">
+                        <button class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200">
+                            Generate Code
+                        </button>
+                        <button class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200">
+                            Analyze Code
+                        </button>
+                        <button class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors duration-200">
+                            Optimize
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600">
+            <h2 class="text-lg font-bold mb-4">Create New Project</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="project-name-input" class="block text-sm font-medium mb-1">Project Name</label>
+                    <input 
+                        type="text" 
+                        id="project-name-input" 
+                        class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter project name..."
+                    >
+                </div>
+                <div>
+                    <label for="project-type" class="block text-sm font-medium mb-1">Project Type</label>
+                    <select 
+                        id="project-type" 
+                        class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="web">Web Application</option>
+                        <option value="api">API Service</option>
+                        <option value="mobile">Mobile App</option>
+                        <option value="desktop">Desktop Application</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button 
+                    id="cancel-modal" 
+                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200"
+                >
+                    Cancel
+                </button>
+                <button 
+                    id="create-project" 
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200"
+                >
+                    Create Project
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let selectedProject = null;
+        let selectedFile = null;
+        let projects = [
+            { id: 1, name: "Web Portfolio", type: "web" },
+            { id: 2, name: "Todo API", type: "api" },
+            { id: 3, name: "Mobile Chat", type: "mobile" }
+        ];
+        let files = {};
+
+        // Sample files for each project
+        files[1] = [
+            { id: 1, name: "index.html", isDirectory: false, content: "<!DOCTYPE html>\n<html>\n<head>\n    <title>Portfolio</title>\n</head>\n<body>\n    <h1>Welcome to my portfolio</h1>\n</body>\n</html>" },
+            { id: 2, name: "style.css", isDirectory: false, content: "body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n}" },
+            { id: 3, name: "assets", isDirectory: true }
+        ];
+        files[2] = [
+            { id: 4, name: "server.js", isDirectory: false, content: "const express = require('express');\nconst app = express();\n\napp.get('/api/todos', (req, res) => {\n    res.json([]);\n});\n\napp.listen(3000);" },
+            { id: 5, name: "package.json", isDirectory: false, content: "{\n    \"name\": \"todo-api\",\n    \"version\": \"1.0.0\",\n    \"dependencies\": {\n        \"express\": \"^4.18.0\"\n    }\n}" }
+        ];
+        files[3] = [
+            { id: 6, name: "App.js", isDirectory: false, content: "import React from 'react';\nimport { View, Text } from 'react-native';\n\nexport default function App() {\n    return (\n        <View>\n            <Text>Chat App</Text>\n        </View>\n    );\n}" }
+        ];
+
+        // DOM elements
+        const projectsList = document.getElementById('projects-list');
+        const filesList = document.getElementById('files-list');
+        const codeEditor = document.getElementById('code-editor');
+        const fileName = document.getElementById('file-name');
+        const projectName = document.getElementById('project-name');
+        const aiProject = document.getElementById('ai-project');
+        const aiFile = document.getElementById('ai-file');
+        const projectModal = document.getElementById('project-modal');
+        const newProjectBtn = document.getElementById('new-project-btn');
+        const exitBtn = document.getElementById('exit-btn');
+        const cancelModal = document.getElementById('cancel-modal');
+        const createProject = document.getElementById('create-project');
+        const projectNameInput = document.getElementById('project-name-input');
+
+        // Event handlers
+        function handleProjectSelect(project) {
+            selectedProject = project;
+            selectedFile = null;
+            updateUI();
+        }
+
+        function handleFileSelect(file) {
+            if (!file.isDirectory) {
+                selectedFile = file;
+                updateUI();
+            }
+        }
+
+        function handleNewProject() {
+            projectModal.classList.remove('hidden');
+            projectModal.classList.add('flex');
+        }
+
+        function handleExit() {
+            window.location.href = '../../marks-games.html';
+        }
+
+        function closeModal() {
+            projectModal.classList.add('hidden');
+            projectModal.classList.remove('flex');
+            projectNameInput.value = '';
+        }
+
+        function createNewProject() {
+            const name = projectNameInput.value.trim();
+            const type = document.getElementById('project-type').value;
+            
+            if (name) {
+                const newProject = {
+                    id: projects.length + 1,
+                    name: name,
+                    type: type
+                };
+                projects.push(newProject);
+                files[newProject.id] = [];
+                selectedProject = newProject;
+                closeModal();
+                updateUI();
+            }
+        }
+
+        // UI update functions
+        function updateUI() {
+            updateProjectsList();
+            updateFilesList();
+            updateCodeEditor();
+            updateAIPanel();
+        }
+
+        function updateProjectsList() {
+            projectsList.innerHTML = '';
+            if (projects.length === 0) {
+                projectsList.innerHTML = '<div class="text-gray-500 text-sm">No projects available</div>';
+                return;
+            }
+
+            projects.forEach(project => {
+                const div = document.createElement('div');
+                div.className = `p-2 rounded cursor-pointer file-item text-sm ${selectedProject?.id === project.id ? 'selected' : ''}`;
+                div.textContent = project.name;
+                div.onclick = () => handleProjectSelect(project);
+                projectsList.appendChild(div);
+            });
+        }
+
+        function updateFilesList() {
+            filesList.innerHTML = '';
+            if (!selectedProject) {
+                filesList.innerHTML = '<div class="text-gray-500 text-sm">Select a project to view files</div>';
+                return;
+            }
+
+            const projectFiles = files[selectedProject.id] || [];
+            if (projectFiles.length === 0) {
+                filesList.innerHTML = '<div class="text-gray-500 text-sm">No files in this project</div>';
+                return;
+            }
+
+            projectFiles.forEach(file => {
+                const div = document.createElement('div');
+                div.className = `p-2 rounded cursor-pointer file-item text-sm ${selectedFile?.id === file.id ? 'selected' : ''}`;
+                div.innerHTML = `${file.isDirectory ? '📁' : '📄'} ${file.name}`;
+                if (!file.isDirectory) {
+                    div.onclick = () => handleFileSelect(file);
+                }
+                filesList.appendChild(div);
+            });
+        }
+
+        function updateCodeEditor() {
+            if (selectedFile && selectedFile.content) {
+                codeEditor.value = selectedFile.content;
+                fileName.textContent = selectedFile.name;
+            } else {
+                codeEditor.value = '';
+                fileName.textContent = 'No file selected';
+            }
+        }
+
+        function updateAIPanel() {
+            projectName.textContent = selectedProject ? selectedProject.name : '';
+            aiProject.textContent = selectedProject ? selectedProject.name : 'None selected';
+            aiFile.textContent = selectedFile ? selectedFile.name : 'None selected';
+        }
+
+        // Event listeners
+        newProjectBtn.addEventListener('click', handleNewProject);
+        exitBtn.addEventListener('click', handleExit);
+        cancelModal.addEventListener('click', closeModal);
+        createProject.addEventListener('click', createNewProject);
+
+        // Close modal when clicking outside
+        projectModal.addEventListener('click', (e) => {
+            if (e.target === projectModal) {
+                closeModal();
+            }
+        });
+
+        // Handle Enter key in project name input
+        projectNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                createNewProject();
+            }
+        });
+
+        // Update code content when typing
+        codeEditor.addEventListener('input', (e) => {
+            if (selectedFile) {
+                selectedFile.content = e.target.value;
+            }
+        });
+
+        // Initialize the page
+        updateUI();
+    </script>
+</body>
+</html>
