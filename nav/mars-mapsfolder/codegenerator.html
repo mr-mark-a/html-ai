@@ -24,6 +24,9 @@
             <span id="project-name" class="text-gray-400"></span>
         </div>
         <div class="flex space-x-2">
+            <button id="save-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
+                Save
+            </button>
             <button id="new-project-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
                 New Project
             </button>
@@ -179,6 +182,7 @@
         const aiFile = document.getElementById('ai-file');
         const projectModal = document.getElementById('project-modal');
         const newProjectBtn = document.getElementById('new-project-btn');
+        const saveBtn = document.getElementById('save-btn');
         const exitBtn = document.getElementById('exit-btn');
         const cancelModal = document.getElementById('cancel-modal');
         const createProject = document.getElementById('create-project');
@@ -203,8 +207,72 @@
             projectModal.classList.add('flex');
         }
 
+        function handleSave() {
+            if (selectedFile && selectedFile.content !== undefined) {
+                // Create a download link for the current file
+                const blob = new Blob([selectedFile.content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = selectedFile.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Save all projects data to localStorage
+                const projectsData = {
+                    projects: projects,
+                    files: files,
+                    savedAt: new Date().toISOString()
+                };
+                
+                try {
+                    localStorage.setItem('codeGeneratorProjects', JSON.stringify(projectsData));
+                    
+                    // Also save individual project backups
+                    projects.forEach(project => {
+                        const projectData = {
+                            project: project,
+                            files: files[project.id] || [],
+                            savedAt: new Date().toISOString()
+                        };
+                        localStorage.setItem(`codeGenProject_${project.id}`, JSON.stringify(projectData));
+                    });
+                    
+                    console.log('All projects and files saved to localStorage');
+                } catch (error) {
+                    console.error('Failed to save to localStorage:', error);
+                    alert('Warning: Could not save projects to browser storage. Storage might be full.');
+                }
+                
+                // Show save confirmation
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = 'Saved!';
+                saveBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                saveBtn.classList.add('bg-green-500');
+                setTimeout(() => {
+                    saveBtn.textContent = originalText;
+                    saveBtn.classList.remove('bg-green-500');
+                    saveBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                }, 2000);
+            } else {
+                alert('Please select a file to save.');
+            }
+        }
+
         function handleExit() {
-            window.location.href = '../../marks-games.html';
+            // Clear browser search input if it exists
+            if (document.querySelector('input[type="search"]')) {
+                document.querySelector('input[type="search"]').value = '';
+            }
+            // Clear any input that might be focused
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.value = '';
+                document.activeElement.blur();
+            }
+            // Navigate to the specific file URL
+            window.location.href = 'file:///d:/marks%20shortcuts/SOFT/massege-caller/marks-games.html';
         }
 
         function closeModal() {
@@ -232,6 +300,22 @@
         }
 
         // UI update functions
+        function loadProjectsFromStorage() {
+            try {
+                const savedData = localStorage.getItem('codeGeneratorProjects');
+                if (savedData) {
+                    const projectsData = JSON.parse(savedData);
+                    if (projectsData.projects && projectsData.files) {
+                        projects = projectsData.projects;
+                        files = projectsData.files;
+                        console.log('Projects loaded from localStorage');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load projects from localStorage:', error);
+            }
+        }
+
         function updateUI() {
             updateProjectsList();
             updateFilesList();
@@ -297,6 +381,7 @@
 
         // Event listeners
         newProjectBtn.addEventListener('click', handleNewProject);
+        saveBtn.addEventListener('click', handleSave);
         exitBtn.addEventListener('click', handleExit);
         cancelModal.addEventListener('click', closeModal);
         createProject.addEventListener('click', createNewProject);
@@ -323,6 +408,7 @@
         });
 
         // Initialize the page
+        loadProjectsFromStorage();
         updateUI();
     </script>
 </body>
