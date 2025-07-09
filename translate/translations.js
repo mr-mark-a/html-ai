@@ -104,7 +104,25 @@ window.TranslationSystem = (function() {
             'alltrails': 'AllTrails',
             'alltrails_desc': 'Hiking and trail navigation',
             'metro_navigator': 'Metro Navigator',
-            'metro_navigator_desc': 'Local metro system guide'
+            'metro_navigator_desc': 'Local metro system guide',
+            
+            // All Languages Page
+            'all_languages_title': 'All Languages',
+            'language_selector_subtitle': 'Choose your preferred language for Mark\'s Games',
+            'total_languages': 'Total Languages',
+            'translated_phrases': 'Translated Phrases',
+            'coverage': 'Coverage',
+            'quick_language_selection': 'Quick Language Selection',
+            'available_languages': 'Available Languages',
+            'features_title': 'Features',
+            'instant_switching': 'Instant Switching',
+            'instant_switching_desc': 'Switch languages instantly without page reload',
+            'persistent_settings': 'Persistent Settings',
+            'persistent_settings_desc': 'Your language preference is saved automatically',
+            'game_integration': 'Game Integration',
+            'game_integration_desc': 'All games support multilingual interface',
+            'global_support': 'Global Support',
+            'global_support_desc': 'RTL languages and cultural adaptations'
         },
         'es': {
             // Login page
@@ -158,7 +176,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Tienda',
-            'coming_soon': 'Próximamente...'
+            'coming_soon': 'Próximamente...',
+            
+            // All Languages Page
+            'all_languages_title': 'Todos los Idiomas',
+            'language_selector_subtitle': 'Elige tu idioma preferido para los Juegos de Mark',
+            'total_languages': 'Idiomas Totales',
+            'translated_phrases': 'Frases Traducidas',
+            'coverage': 'Cobertura',
+            'quick_language_selection': 'Selección Rápida de Idioma',
+            'available_languages': 'Idiomas Disponibles',
+            'features_title': 'Características',
+            'instant_switching': 'Cambio Instantáneo',
+            'instant_switching_desc': 'Cambia idiomas al instante sin recargar la página',
+            'persistent_settings': 'Configuración Persistente',
+            'persistent_settings_desc': 'Tu preferencia de idioma se guarda automáticamente',
+            'game_integration': 'Integración de Juegos',
+            'game_integration_desc': 'Todos los juegos soportan interfaz multiidioma',
+            'global_support': 'Soporte Global',
+            'global_support_desc': 'Idiomas RTL y adaptaciones culturales'
         },
         'fr': {
             // Login page
@@ -212,7 +248,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Magasin',
-            'coming_soon': 'Bientôt disponible...'
+            'coming_soon': 'Bientôt disponible...',
+            
+            // All Languages Page
+            'all_languages_title': 'Toutes les Langues',
+            'language_selector_subtitle': 'Choisissez votre langue préférée pour les Jeux de Mark',
+            'total_languages': 'Langues Totales',
+            'translated_phrases': 'Phrases Traduites',
+            'coverage': 'Couverture',
+            'quick_language_selection': 'Sélection Rapide de Langue',
+            'available_languages': 'Langues Disponibles',
+            'features_title': 'Fonctionnalités',
+            'instant_switching': 'Changement Instantané',
+            'instant_switching_desc': 'Changez de langue instantanément sans recharger la page',
+            'persistent_settings': 'Paramètres Persistants',
+            'persistent_settings_desc': 'Votre préférence de langue est sauvegardée automatiquement',
+            'game_integration': 'Intégration des Jeux',
+            'game_integration_desc': 'Tous les jeux supportent une interface multilingue',
+            'global_support': 'Support Global',
+            'global_support_desc': 'Langues RTL et adaptations culturelles'
         },
         'de': {
             // Login page
@@ -266,7 +320,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Geschäft',
-            'coming_soon': 'Demnächst...'
+            'coming_soon': 'Demnächst...',
+            
+            // All Languages Page
+            'all_languages_title': 'Alle Sprachen',
+            'language_selector_subtitle': 'Wählen Sie Ihre bevorzugte Sprache für Mark\'s Spiele',
+            'total_languages': 'Sprachen Insgesamt',
+            'translated_phrases': 'Übersetzte Phrasen',
+            'coverage': 'Abdeckung',
+            'quick_language_selection': 'Schnelle Sprachauswahl',
+            'available_languages': 'Verfügbare Sprachen',
+            'features_title': 'Funktionen',
+            'instant_switching': 'Sofortiger Wechsel',
+            'instant_switching_desc': 'Sprachen sofort wechseln ohne Seitenneuladung',
+            'persistent_settings': 'Dauerhafte Einstellungen',
+            'persistent_settings_desc': 'Ihre Sprachpräferenz wird automatisch gespeichert',
+            'game_integration': 'Spiel-Integration',
+            'game_integration_desc': 'Alle Spiele unterstützen mehrsprachige Oberfläche',
+            'global_support': 'Globaler Support',
+            'global_support_desc': 'RTL-Sprachen und kulturelle Anpassungen'
         },
         'it': {
             // Login page
@@ -320,7 +392,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Negozio',
-            'coming_soon': 'Prossimamente...'
+            'coming_soon': 'Prossimamente...',
+            
+            // All Languages Page
+            'all_languages_title': 'Tutte le Lingue',
+            'language_selector_subtitle': 'Scegli la tua lingua preferita per i Giochi di Mark',
+            'total_languages': 'Lingue Totali',
+            'translated_phrases': 'Frasi Tradotte',
+            'coverage': 'Copertura',
+            'quick_language_selection': 'Selezione Rapida Lingua',
+            'available_languages': 'Lingue Disponibili',
+            'features_title': 'Caratteristiche',
+            'instant_switching': 'Cambio Istantaneo',
+            'instant_switching_desc': 'Cambia lingua istantaneamente senza ricaricare la pagina',
+            'persistent_settings': 'Impostazioni Permanenti',
+            'persistent_settings_desc': 'La tua preferenza linguistica viene salvata automaticamente',
+            'game_integration': 'Integrazione Giochi',
+            'game_integration_desc': 'Tutti i giochi supportano interfaccia multilingue',
+            'global_support': 'Supporto Globale',
+            'global_support_desc': 'Lingue RTL e adattamenti culturali'
         },
         'pt': {
             // Login page
@@ -374,7 +464,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Loja',
-            'coming_soon': 'Em breve...'
+            'coming_soon': 'Em breve...',
+            
+            // All Languages Page
+            'all_languages_title': 'Todos os Idiomas',
+            'language_selector_subtitle': 'Escolha seu idioma preferido para os Jogos do Mark',
+            'total_languages': 'Total de Idiomas',
+            'translated_phrases': 'Frases Traduzidas',
+            'coverage': 'Cobertura',
+            'quick_language_selection': 'Seleção Rápida de Idioma',
+            'available_languages': 'Idiomas Disponíveis',
+            'features_title': 'Recursos',
+            'instant_switching': 'Troca Instantânea',
+            'instant_switching_desc': 'Mude idiomas instantaneamente sem recarregar a página',
+            'persistent_settings': 'Configurações Persistentes',
+            'persistent_settings_desc': 'Sua preferência de idioma é salva automaticamente',
+            'game_integration': 'Integração de Jogos',
+            'game_integration_desc': 'Todos os jogos suportam interface multilíngue',
+            'global_support': 'Suporte Global',
+            'global_support_desc': 'Idiomas RTL e adaptações culturais'
         },
         'ru': {
             // Login page
@@ -428,7 +536,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'Магазин',
-            'coming_soon': 'Скоро...'
+            'coming_soon': 'Скоро...',
+            
+            // All Languages Page
+            'all_languages_title': 'Все Языки',
+            'language_selector_subtitle': 'Выберите предпочитаемый язык для Игр Марка',
+            'total_languages': 'Всего Языков',
+            'translated_phrases': 'Переведенные Фразы',
+            'coverage': 'Покрытие',
+            'quick_language_selection': 'Быстрый Выбор Языка',
+            'available_languages': 'Доступные Языки',
+            'features_title': 'Возможности',
+            'instant_switching': 'Мгновенное Переключение',
+            'instant_switching_desc': 'Переключайте языки мгновенно без перезагрузки страницы',
+            'persistent_settings': 'Постоянные Настройки',
+            'persistent_settings_desc': 'Ваши языковые предпочтения сохраняются автоматически',
+            'game_integration': 'Интеграция Игр',
+            'game_integration_desc': 'Все игры поддерживают многоязычный интерфейс',
+            'global_support': 'Глобальная Поддержка',
+            'global_support_desc': 'RTL языки и культурные адаптации'
         },
         'zh': {
             // Login page
@@ -482,7 +608,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': '商店',
-            'coming_soon': '即将推出...'
+            'coming_soon': '即将推出...',
+            
+            // All Languages Page
+            'all_languages_title': '所有语言',
+            'language_selector_subtitle': '为马克的游戏选择您的首选语言',
+            'total_languages': '总语言数',
+            'translated_phrases': '翻译短语',
+            'coverage': '覆盖率',
+            'quick_language_selection': '快速语言选择',
+            'available_languages': '可用语言',
+            'features_title': '功能',
+            'instant_switching': '即时切换',
+            'instant_switching_desc': '无需重新加载页面即可即时切换语言',
+            'persistent_settings': '持久设置',
+            'persistent_settings_desc': '您的语言偏好会自动保存',
+            'game_integration': '游戏集成',
+            'game_integration_desc': '所有游戏都支持多语言界面',
+            'global_support': '全球支持',
+            'global_support_desc': 'RTL语言和文化适应'
         },
         'ja': {
             // Login page
@@ -536,7 +680,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'ストア',
-            'coming_soon': '近日公開...'
+            'coming_soon': '近日公開...',
+            
+            // All Languages Page
+            'all_languages_title': 'すべての言語',
+            'language_selector_subtitle': 'マークのゲーム用の好みの言語を選択してください',
+            'total_languages': '総言語数',
+            'translated_phrases': '翻訳されたフレーズ',
+            'coverage': 'カバレッジ',
+            'quick_language_selection': '迅速な言語選択',
+            'available_languages': '利用可能な言語',
+            'features_title': '機能',
+            'instant_switching': '即座の切り替え',
+            'instant_switching_desc': 'ページを再読み込みせずに即座に言語を切り替える',
+            'persistent_settings': '永続的設定',
+            'persistent_settings_desc': '言語設定は自動的に保存されます',
+            'game_integration': 'ゲーム統合',
+            'game_integration_desc': 'すべてのゲームが多言語インターフェースをサポート',
+            'global_support': 'グローバルサポート',
+            'global_support_desc': 'RTL言語と文化的適応'
         },
         'ar': {
             // Login page
@@ -590,7 +752,25 @@ window.TranslationSystem = (function() {
             
             // Store app
             'store_title': 'متجر',
-            'coming_soon': 'قريباً...'
+            'coming_soon': 'قريباً...',
+            
+            // All Languages Page
+            'all_languages_title': 'جميع اللغات',
+            'language_selector_subtitle': 'اختر لغتك المفضلة لألعاب مارك',
+            'total_languages': 'إجمالي اللغات',
+            'translated_phrases': 'العبارات المترجمة',
+            'coverage': 'التغطية',
+            'quick_language_selection': 'اختيار سريع للغة',
+            'available_languages': 'اللغات المتاحة',
+            'features_title': 'الميزات',
+            'instant_switching': 'التبديل الفوري',
+            'instant_switching_desc': 'بدّل اللغات فوراً دون إعادة تحميل الصفحة',
+            'persistent_settings': 'الإعدادات الدائمة',
+            'persistent_settings_desc': 'يتم حفظ تفضيل اللغة تلقائياً',
+            'game_integration': 'تكامل الألعاب',
+            'game_integration_desc': 'جميع الألعاب تدعم واجهة متعددة اللغات',
+            'global_support': 'الدعم العالمي',
+            'global_support_desc': 'لغات RTL والتكيفات الثقافية'
         }
     };
     
