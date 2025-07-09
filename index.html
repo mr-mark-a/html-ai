@@ -4,9 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate-title="document_title">Cat & Mouse Game</title>
-    <script src="translations.js"></script>
+    <script src="translate/translations.js"></script>
     <style>
-        body {
+    <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option active" data-lang="en">🇺🇸 English</div>
+        <div class="lang-option" data-lang="es">🇪🇸 Español</div>
+        <div class="lang-option" data-lang="fr">🇫🇷 Français</div>
+        <div class="lang-option" data-lang="de">🇩🇪 Deutsch</div>
+        <div class="lang-option" data-lang="it">🇮🇹 Italiano</div>
+        <div class="lang-option" data-lang="pt">🇵🇹 Português</div>
+        <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
+        <div class="lang-option" data-lang="zh">🇨🇳 中文</div>
+        <div class="lang-option" data-lang="ja">🇯🇵 日本語</div>
+        <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
+        <div class="lang-separator"></div>
+        <div class="lang-see-more" id="seeMoreBtn">
+            <span class="see-more-icon">🌍</span>
+            <span class="see-more-text" data-translate="see_more_languages">More</span>
+            <span class="see-more-arrow">→</span>
+        </div>
+    </div> {
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -259,6 +276,26 @@
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
+        
+        /* RTL support for Arabic */
+        [dir="rtl"] .language-selector {
+            left: 20px;
+            right: auto;
+        }
+        
+        [dir="rtl"] .lang-dropdown {
+            left: 0;
+            right: auto;
+        }
+        
+        [dir="rtl"] #loginContainer {
+            direction: rtl;
+        }
+        
+        [dir="rtl"] .back-button {
+            right: 20px;
+            left: auto;
+        }
     </style>
 </head>
 <body style="position:relative;">
@@ -273,13 +310,12 @@
         <div class="lang-option" data-lang="es">🇪🇸 Español</div>
         <div class="lang-option" data-lang="fr">🇫🇷 Français</div>
         <div class="lang-option" data-lang="de">🇩🇪 Deutsch</div>
-        <div class="lang-option" data-lang="zh">🇨🇳 中文</div>
-        <div class="lang-separator"></div>
-        <div class="lang-see-more" id="seeMoreBtn">
-            <span class="see-more-icon">🌍</span>
-            <span class="see-more-text" data-translate="see_more_languages">See More</span>
-            <span class="see-more-arrow">→</span>
-        </div>
+        <div class="lang-option" data-lang="it">�� Italiano</div>
+        <div class="lang-option" data-lang="pt">🇵🇹 Português</div>
+        <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
+        <div class="lang-option" data-lang="zh">�🇳 中文</div>
+        <div class="lang-option" data-lang="ja">🇯🇵 日本語</div>
+        <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
     </div>
 </div>
 
@@ -376,46 +412,81 @@ document.getElementById('tryFreeBtn').onclick = function() {
     const currentLang = document.getElementById('currentLang');
     const langOptions = document.querySelectorAll('.lang-option');
     
-    // Language mappings - only fast/popular languages
+    // Language mappings - all supported languages
     const languages = {
         'en': '🇺🇸 EN',
         'es': '🇪🇸 ES',
         'fr': '🇫🇷 FR',
         'de': '🇩🇪 DE',
-        'zh': '🇨🇳 ZH'
+        'it': '🇮🇹 IT',
+        'pt': '🇵🇹 PT',
+        'ru': '🇷🇺 RU',
+        'zh': '🇨🇳 ZH',
+        'ja': '🇯🇵 JA',
+        'ar': '🇸🇦 AR'
     };
     
-    // Translation dictionaries - only fast/popular languages
+    // Translation dictionaries - all supported languages
     const translations = {
         'en': {
             'password': 'Password',
             'login': 'Login',
             'tryForFree': 'Try for Free',
-            'see_more_languages': 'See More'
+            'see_more_languages': 'More'
         },
         'es': {
             'password': 'Contraseña',
             'login': 'Iniciar Sesión',
             'tryForFree': 'Prueba Gratis',
-            'see_more_languages': 'Ver Más'
+            'see_more_languages': 'Más'
         },
         'fr': {
             'password': 'Mot de passe',
             'login': 'Connexion',
             'tryForFree': 'Essai Gratuit',
-            'see_more_languages': 'Voir Plus'
+            'see_more_languages': 'Plus'
         },
         'de': {
             'password': 'Passwort',
             'login': 'Anmelden',
             'tryForFree': 'Kostenlos Testen',
-            'see_more_languages': 'Mehr Sehen'
+            'see_more_languages': 'Mehr'
+        },
+        'it': {
+            'password': 'Password',
+            'login': 'Accedi',
+            'tryForFree': 'Prova Gratis',
+            'see_more_languages': 'Altro'
+        },
+        'pt': {
+            'password': 'Senha',
+            'login': 'Entrar',
+            'tryForFree': 'Experimente Grátis',
+            'see_more_languages': 'Mais'
+        },
+        'ru': {
+            'password': 'Пароль',
+            'login': 'Войти',
+            'tryForFree': 'Попробовать Бесплатно',
+            'see_more_languages': 'Больше'
         },
         'zh': {
             'password': '密码',
             'login': '登录',
             'tryForFree': '免费试用',
-            'see_more_languages': '查看更多'
+            'see_more_languages': '更多'
+        },
+        'ja': {
+            'password': 'パスワード',
+            'login': 'ログイン',
+            'tryForFree': '無料で試す',
+            'see_more_languages': 'もっと'
+        },
+        'ar': {
+            'password': 'كلمة المرور',
+            'login': 'تسجيل الدخول',
+            'tryForFree': 'جرب مجاناً',
+            'see_more_languages': 'المزيد'
         }
     };
     
@@ -450,7 +521,14 @@ document.getElementById('tryFreeBtn').onclick = function() {
         // Update document title
         document.title = texts.tryForFree + ' - Cat & Mouse Game';
         
-        // No RTL support needed for fast languages (removed Arabic)
+        // Add RTL support for Arabic
+        if (langCode === 'ar') {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.documentElement.setAttribute('lang', 'ar');
+        } else {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.documentElement.setAttribute('lang', langCode);
+        }
     }
     
     // Toggle dropdown with enhanced functionality
@@ -512,9 +590,7 @@ document.getElementById('tryFreeBtn').onclick = function() {
         });
     });
     
-    // Note: langOptions is defined above but may be updated by updateDropdownWithFastAccess
-    
-    // Handle "See More" button click
+    // Handle "More" button click - clears search and navigates to comprehensive language selector
     const seeMoreBtn = document.getElementById('seeMoreBtn');
     if (seeMoreBtn) {
         seeMoreBtn.addEventListener('click', function() {
@@ -522,8 +598,24 @@ document.getElementById('tryFreeBtn').onclick = function() {
             langBtn.classList.remove('expanded');
             langDropdown.classList.remove('show');
             
-            // Navigate to comprehensive language selector
-            window.location.href = 'translate/all.html';
+            // Clear browser search input if it exists
+            try {
+                // Clear any active search inputs on the page
+                const searchInputs = document.querySelectorAll('input[type="search"], input[name*="search"], input[placeholder*="search"], input[placeholder*="Search"]');
+                searchInputs.forEach(input => {
+                    input.value = '';
+                });
+                
+                // Clear browser's find-in-page (Ctrl+F) if possible
+                if (window.find) {
+                    window.find(''); // This may not work in all browsers due to security restrictions
+                }
+            } catch (error) {
+                console.log('Could not clear search inputs:', error);
+            }
+            
+            // Navigate to comprehensive language selector using file protocol
+            window.location.href = 'file:///D:/marks%20shortcuts/SOFT/massege-caller/translate/all.html';
         });
     }
     
@@ -620,10 +712,10 @@ document.getElementById('tryFreeBtn').onclick = function() {
                     'es': '🇪🇸 Español', 
                     'fr': '🇫🇷 Français',
                     'de': '🇩🇪 Deutsch',
-                    'zh': '🇨🇳 中文',
                     'it': '🇮🇹 Italiano',
                     'pt': '🇵🇹 Português',
                     'ru': '🇷🇺 Русский',
+                    'zh': '🇨🇳 中文',
                     'ja': '🇯🇵 日本語',
                     'ar': '🇸🇦 العربية'
                 };

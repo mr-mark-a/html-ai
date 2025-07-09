@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro City Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .building-menu {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .building-menu h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .building-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .building-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .building-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .building-cost {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .game-board {
+            flex: 1;
+            position: relative;
+            background: #2c3e50;
+            overflow: hidden;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .grid-cell {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .grid-cell:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4CAF50;
+            transform: scale(1.05);
+        }
+
+        .grid-cell.occupied {
+            cursor: pointer;
+        }
+
+        .grid-cell.occupied:hover {
+            transform: scale(1.05);
+            border-color: #FFD700;
+        }
+
+        .grid-cell.demolish-mode:hover {
+            border-color: #e74c3c !important;
+            background: rgba(231, 76, 60, 0.2) !important;
+        }
+
+        .building {
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: buildingAppear 0.5s ease-out;
+            position: relative;
+        }
+
+        .building-stack {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FFD700;
+            color: #000;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .building-layers {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            display: flex;
+            gap: 1px;
+            flex-wrap: wrap;
+            max-height: 15px;
+            overflow: hidden;
+        }
+
+        .layer-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            border: 1px solid white;
+        }
+
+        @keyframes buildingAppear {
+            from {
+                transform: scale(0) rotate(180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .metro-station {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .metro-line {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+        }
+
+        .metro-depot {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .metro-office {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+
+        .skyscraper {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+        }
+
+        .city-office {
+            background: linear-gradient(45deg, #16a085, #1abc9c);
+        }
+
+        .hotel {
+            background: linear-gradient(45deg, #e91e63, #ad1457);
+        }
+
+        .apartment {
+            background: linear-gradient(45deg, #8e44ad, #9b59b6);
+        }
+
+        .selected-building {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50 !important;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f44336;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .inventory-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .inventory-button:hover {
+            background: rgba(76, 175, 80, 0.2);
+            transform: scale(1.05);
+        }
+
+        .inventory-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .inventory-panel.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .inventory-panel h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inventory-item:last-child {
+            border-bottom: none;
+        }
+
+        .inventory-building {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inventory-emoji {
+            font-size: 20px;
+        }
+
+        .inventory-name {
+            font-weight: bold;
+        }
+
+        .inventory-count {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .inventory-stats {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .inventory-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .close-inventory {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #f44336;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-inventory:hover {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="sidebar">
+            <h1>🚇 Metro Builder</h1>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span>💰 Money:</span>
+                    <span id="money">$1000</span>
+                </div>
+                <div class="stat-item">
+                    <span>👥 Population:</span>
+                    <span id="population">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>🏢 Buildings:</span>
+                    <span id="buildings">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>💵 Income/sec:</span>
+                    <span id="income">$0</span>
+                </div>
+                <div class="stat-item">
+                    <span>🚇 Network:</span>
+                    <span id="network-status">Inactive</span>
+                </div>
+            </div>
+
+            <div class="building-menu">
+                <h3>🏗️ Build Metro</h3>
+                
+                <button class="building-btn" id="station-btn" data-building="station">
+                    🚉 Metro Station
+                    <div class="building-cost">Cost: $100 | Income: $10/s</div>
+                </button>
+                
+                <button class="building-btn" id="line-btn" data-building="line">
+                    🛤️ Metro Line
+                    <div class="building-cost">Cost: $50 | Connects stations</div>
+                </button>
+                
+                <button class="building-btn" id="depot-btn" data-building="depot">
+                    🏭 Metro Depot
+                    <div class="building-cost">Cost: $200 | Income: $25/s*</div>
+                </button>
+                
+                <button class="building-btn" id="office-btn" data-building="office">
+                    🏢 Metro Office
+                    <div class="building-cost">Cost: $300 | Income: $40/s*</div>
+                </button>
+
+                <h3 style="color: #FFD700; margin: 20px 0 15px 0; text-align: center; font-size: 16px;">🏙️ City Buildings</h3>
+                
+                <button class="building-btn" id="apartment-btn" data-building="apartment">
+                    🏠 Apartment
+                    <div class="building-cost">Cost: $150 | Income: $20/s</div>
+                </button>
+                
+                <button class="building-btn" id="cityoffice-btn" data-building="cityoffice">
+                    🏬 City Office
+                    <div class="building-cost">Cost: $250 | Income: $35/s</div>
+                </button>
+                
+                <button class="building-btn" id="hotel-btn" data-building="hotel">
+                    🏨 Hotel
+                    <div class="building-cost">Cost: $400 | Income: $50/s*</div>
+                </button>
+                
+                <button class="building-btn" id="skyscraper-btn" data-building="skyscraper">
+                    🏙️ Skyscraper
+                    <div class="building-cost">Cost: $500 | Income: $60/s*</div>
+                </button>
+
+                <button class="reset-btn" id="reset-btn">
+                    🔄 Reset City
+                </button>
+                
+                <button class="building-btn" id="demolish-btn" data-building="demolish" style="background: linear-gradient(45deg, #e74c3c, #c0392b); margin-top: 10px;">
+                    🧨 Demolish Building
+                    <div class="building-cost">Remove top building from stack</div>
+                </button>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; font-size: 11px; color: #ccc;">
+                    * Business buildings only generate income when metro network is active (2+ stations + 1+ line)<br>
+                    City buildings (🏠🏬) always generate income, but premium buildings (🏨🏙️) require metro network
+                </div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="grid" id="game-grid"></div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="inventory-button" id="inventory-btn">
+        📦 Inventory
+    </div>
+
+    <div class="inventory-panel" id="inventory-panel">
+        <button class="close-inventory" id="close-inventory">✕</button>
+        <h3>🏗️ Building Inventory</h3>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🚉</span>
+                <span class="inventory-name">Metro Stations</span>
+            </div>
+            <span class="inventory-count" id="station-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🛤️</span>
+                <span class="inventory-name">Metro Lines</span>
+            </div>
+            <span class="inventory-count" id="line-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏭</span>
+                <span class="inventory-name">Metro Depots</span>
+            </div>
+            <span class="inventory-count" id="depot-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏢</span>
+                <span class="inventory-name">Metro Offices</span>
+            </div>
+            <span class="inventory-count" id="office-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏠</span>
+                <span class="inventory-name">Apartments</span>
+            </div>
+            <span class="inventory-count" id="apartment-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏬</span>
+                <span class="inventory-name">City Offices</span>
+            </div>
+            <span class="inventory-count" id="cityoffice-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏨</span>
+                <span class="inventory-name">Hotels</span>
+            </div>
+            <span class="inventory-count" id="hotel-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
+                <span class="inventory-emoji">🏙️</span>
+                <span class="inventory-name">Skyscrapers</span>
+            </div>
+            <span class="inventory-count" id="skyscraper-count">0</span>
+        </div>
+
+        <div class="inventory-stats">
+            <div class="inventory-stat">
+                <span>💰 Total Value:</span>
+                <span id="total-value">$0</span>
+            </div>
+            <div class="inventory-stat">
+                <span>💵 Active Income:</span>
+                <span id="active-income">$0/s</span>
+            </div>
+            <div class="inventory-stat">
+                <span>🚇 Network Status:</span>
+                <span id="network-status-inv">Inactive</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MetroCityBuilder {
+            constructor() {
+                this.money = 1000;
+                this.population = 0;
+                this.buildings = 0;
+                this.income = 0;
+                this.selectedBuilding = null;
+                this.grid = [];
+                this.gridSize = { rows: 10, cols: 15 };
+                this.inventoryOpen = false;
+                
+                this.buildingTypes = {
+                    station: { cost: 100, income: 10, emoji: '🚉', class: 'metro-station' },
+                    line: { cost: 50, income: 0, emoji: '🛤️', class: 'metro-line' },
+                    depot: { cost: 200, income: 25, emoji: '🏭', class: 'metro-depot' },
+                    office: { cost: 300, income: 40, emoji: '🏢', class: 'metro-office' },
+                    skyscraper: { cost: 500, income: 60, emoji: '🏙️', class: 'skyscraper' },
+                    cityoffice: { cost: 250, income: 35, emoji: '🏬', class: 'city-office' },
+                    hotel: { cost: 400, income: 50, emoji: '🏨', class: 'hotel' },
+                    apartment: { cost: 150, income: 20, emoji: '🏠', class: 'apartment' }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.createGrid();
+                this.setupEventListeners();
+                this.startIncomeLoop();
+                this.updateUI();
+            }
+
+            createGrid() {
+                const gridElement = document.getElementById('game-grid');
+                gridElement.innerHTML = '';
+                this.grid = [];
+
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    this.grid[row] = [];
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        cell.addEventListener('click', () => this.handleCellClick(row, col));
+                        
+                        gridElement.appendChild(cell);
+                        this.grid[row][col] = { buildings: [], element: cell };
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                // Building selection buttons
+                document.querySelectorAll('.building-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const buildingType = btn.dataset.building;
+                        if (buildingType) {
+                            this.selectBuilding(buildingType);
+                        }
+                    });
+                });
+
+                // Reset button
+                document.getElementById('reset-btn').addEventListener('click', () => {
+                    this.resetGame();
+                });
+
+                // Inventory button
+                document.getElementById('inventory-btn').addEventListener('click', () => {
+                    this.toggleInventory();
+                });
+
+                // Close inventory button
+                document.getElementById('close-inventory').addEventListener('click', () => {
+                    this.closeInventory();
+                });
+
+                // Close inventory when clicking outside
+                document.addEventListener('click', (e) => {
+                    const inventoryPanel = document.getElementById('inventory-panel');
+                    const inventoryBtn = document.getElementById('inventory-btn');
+                    
+                    if (this.inventoryOpen && 
+                        !inventoryPanel.contains(e.target) && 
+                        !inventoryBtn.contains(e.target)) {
+                        this.closeInventory();
+                    }
+                });
+            }
+
+            selectBuilding(type) {
+                this.selectedBuilding = type;
+                
+                // Update button states
+                document.querySelectorAll('.building-btn').forEach(btn => {
+                    btn.classList.remove('selected-building');
+                });
+                
+                const selectedBtn = document.querySelector(`[data-building="${type}"]`);
+                if (selectedBtn) {
+                    selectedBtn.classList.add('selected-building');
+                }
+
+                if (type === 'demolish') {
+                    this.showNotification('🧨 Demolish Mode: Click on buildings to remove them (50% refund)', 'success');
+                } else {
+                    this.showNotification(`Selected: ${this.buildingTypes[type].emoji} ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'success');
+                }
+            }
+
+            handleCellClick(row, col) {
+                const cell = this.grid[row][col];
+                
+                if (!this.selectedBuilding) {
+                    if (cell.buildings.length > 0) {
+                        this.showBuildingInfo(cell);
+                    } else {
+                        this.showNotification('Please select a building type first!', 'error');
+                    }
+                    return;
+                }
+
+                // Handle demolish mode
+                if (this.selectedBuilding === 'demolish') {
+                    if (cell.buildings.length === 0) {
+                        this.showNotification('No buildings to demolish here!', 'error');
+                        return;
+                    }
+                    this.demolishBuilding(row, col);
+                    return;
+                }
+
+                // Check if cell has a skyscraper - prevent building on top of skyscrapers
+                const hasSkyscraper = cell.buildings.some(building => building.type === 'skyscraper');
+                if (hasSkyscraper) {
+                    this.showNotification('Cannot build on top of skyscrapers!', 'error');
+                    return;
+                }
+
+                const buildingType = this.buildingTypes[this.selectedBuilding];
+                
+                if (this.money < buildingType.cost) {
+                    this.showNotification('Not enough money!', 'error');
+                    return;
+                }
+
+                this.buildBuilding(row, col, this.selectedBuilding);
+            }
+
+            buildBuilding(row, col, type) {
+                const buildingType = this.buildingTypes[type];
+                const cell = this.grid[row][col];
+
+                // Deduct money
+                this.money -= buildingType.cost;
+                
+                // Add building to stack
+                cell.buildings.push({ type, income: buildingType.income });
+
+                // Update visual representation
+                this.updateCellVisual(cell);
+
+                // Update stats
+                this.buildings++;
+                this.income += buildingType.income;
+                
+                // Population calculation based on building type
+                if (type === 'station') this.population += 50;
+                else if (type === 'office') this.population += 100;
+                else if (type === 'apartment') this.population += 80;
+                else if (type === 'cityoffice') this.population += 75;
+                else if (type === 'hotel') this.population += 120;
+                else if (type === 'skyscraper') this.population += 200;
+                else this.population += 25;
+
+                this.updateUI();
+                
+                const stackCount = cell.buildings.length;
+                const stackText = stackCount > 1 ? ` (Stack: ${stackCount})` : '';
+                this.showNotification(`Built ${buildingType.emoji} ${type}!${stackText}`, 'success');
+
+                // Check if metro network just became active
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                if (stationCount >= 2 && lineCount >= 1) {
+                    setTimeout(() => {
+                        this.showNotification('🚇 Metro Network Active! Business buildings now generate income!', 'success');
+                    }, 1000);
+                }
+            }
+
+            demolishBuilding(row, col) {
+                const cell = this.grid[row][col];
+                
+                if (cell.buildings.length === 0) {
+                    this.showNotification('No buildings to demolish!', 'error');
+                    return;
+                }
+
+                // Remove the topmost building
+                const removedBuilding = cell.buildings.pop();
+                const buildingType = this.buildingTypes[removedBuilding.type];
+                
+                // Refund full building cost
+                const refund = buildingType.cost;
+                this.money += refund;
+                
+                // Update visual representation
+                this.updateCellVisual(cell);
+
+                // Update stats
+                this.buildings--;
+                this.income -= removedBuilding.income;
+                
+                // Remove population based on building type
+                if (removedBuilding.type === 'station') this.population -= 50;
+                else if (removedBuilding.type === 'office') this.population -= 100;
+                else if (removedBuilding.type === 'apartment') this.population -= 80;
+                else if (removedBuilding.type === 'cityoffice') this.population -= 75;
+                else if (removedBuilding.type === 'hotel') this.population -= 120;
+                else if (removedBuilding.type === 'skyscraper') this.population -= 200;
+                else this.population -= 25;
+
+                // Ensure population doesn't go negative
+                this.population = Math.max(0, this.population);
+
+                this.updateUI();
+                
+                const stackCount = cell.buildings.length;
+                const stackText = stackCount > 0 ? ` (${stackCount} remaining)` : '';
+                this.showNotification(`Demolished ${buildingType.emoji} ${removedBuilding.type}! Refund: $${refund}${stackText}`, 'success');
+
+                // Check if metro network became inactive
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                if (stationCount < 2 || lineCount < 1) {
+                    setTimeout(() => {
+                        this.showNotification('⚠️ Metro Network Inactive! Premium buildings stopped generating income!', 'error');
+                    }, 1000);
+                }
+            }
+
+            startIncomeLoop() {
+                setInterval(() => {
+                    this.money += this.calculateActiveIncome();
+                    this.updateUI();
+                }, 1000);
+            }
+
+            calculateActiveIncome() {
+                let activeIncome = 0;
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                const isMetroNetworkActive = stationCount >= 2 && lineCount >= 1;
+
+                // Always count station income
+                activeIncome += this.countBuildingType('station') * this.buildingTypes.station.income;
+                
+                // City buildings that always work
+                activeIncome += this.countBuildingType('apartment') * this.buildingTypes.apartment.income;
+                activeIncome += this.countBuildingType('cityoffice') * this.buildingTypes.cityoffice.income;
+
+                // Premium buildings that require metro network
+                if (isMetroNetworkActive) {
+                    activeIncome += this.countBuildingType('depot') * this.buildingTypes.depot.income;
+                    activeIncome += this.countBuildingType('office') * this.buildingTypes.office.income;
+                    activeIncome += this.countBuildingType('hotel') * this.buildingTypes.hotel.income;
+                    activeIncome += this.countBuildingType('skyscraper') * this.buildingTypes.skyscraper.income;
+                }
+
+                return activeIncome;
+            }
+
+            countBuildingType(type) {
+                let count = 0;
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = this.grid[row][col];
+                        count += cell.buildings.filter(building => building.type === type).length;
+                    }
+                }
+                return count;
+            }
+
+            updateUI() {
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                const isMetroNetworkActive = stationCount >= 2 && lineCount >= 1;
+                const activeIncome = this.calculateActiveIncome();
+
+                document.getElementById('money').textContent = `$${this.money}`;
+                document.getElementById('population').textContent = this.population;
+                document.getElementById('buildings').textContent = this.buildings;
+                document.getElementById('income').textContent = `$${activeIncome}`;
+
+                // Update button states based on affordability
+                Object.keys(this.buildingTypes).forEach(type => {
+                    const btn = document.querySelector(`[data-building="${type}"]`);
+                    const cost = this.buildingTypes[type].cost;
+                    
+                    if (btn) {
+                        btn.disabled = this.money < cost;
+                        
+                        // Visual indicator for buildings that require metro network
+                        if ((type === 'depot' || type === 'office' || type === 'hotel' || type === 'skyscraper') && !isMetroNetworkActive) {
+                            btn.style.opacity = '0.6';
+                            btn.title = 'Requires 2+ Metro Stations and 1+ Metro Line to generate income';
+                        } else {
+                            btn.style.opacity = '1';
+                            btn.title = '';
+                        }
+                    }
+                });
+
+                // Demolish button is always enabled
+                const demolishBtn = document.querySelector('[data-building="demolish"]');
+                if (demolishBtn) {
+                    demolishBtn.disabled = false;
+                    demolishBtn.style.opacity = '1';
+                }
+
+                // Show metro network status
+                this.updateNetworkStatus(isMetroNetworkActive, stationCount, lineCount);
+                this.updateInventory();
+                this.updateGridVisuals();
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            resetGame() {
+                if (confirm('Are you sure you want to reset your city? This will delete all progress.')) {
+                    this.money = 1000;
+                    this.population = 0;
+                    this.buildings = 0;
+                    this.income = 0;
+                    this.selectedBuilding = null;
+                    
+                    this.createGrid();
+                    this.updateUI();
+                    this.showNotification('City reset successfully!', 'success');
+                }
+            }
+
+            updateNetworkStatus(isActive, stationCount, lineCount) {
+                const statusElement = document.getElementById('network-status');
+                if (isActive) {
+                    statusElement.textContent = 'Active ✅';
+                    statusElement.style.color = '#4CAF50';
+                } else {
+                    statusElement.textContent = `Need ${Math.max(0, 2 - stationCount)} stations, ${Math.max(0, 1 - lineCount)} lines`;
+                    statusElement.style.color = '#f44336';
+                }
+            }
+
+            toggleInventory() {
+                this.inventoryOpen = !this.inventoryOpen;
+                const panel = document.getElementById('inventory-panel');
+                
+                if (this.inventoryOpen) {
+                    panel.classList.add('show');
+                    this.updateInventory();
+                } else {
+                    panel.classList.remove('show');
+                }
+            }
+
+            closeInventory() {
+                this.inventoryOpen = false;
+                document.getElementById('inventory-panel').classList.remove('show');
+            }
+
+            updateInventory() {
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                const depotCount = this.countBuildingType('depot');
+                const officeCount = this.countBuildingType('office');
+                const apartmentCount = this.countBuildingType('apartment');
+                const cityofficeCount = this.countBuildingType('cityoffice');
+                const hotelCount = this.countBuildingType('hotel');
+                const skyscraperCount = this.countBuildingType('skyscraper');
+                const isMetroNetworkActive = stationCount >= 2 && lineCount >= 1;
+                const activeIncome = this.calculateActiveIncome();
+
+                // Update counts
+                document.getElementById('station-count').textContent = stationCount;
+                document.getElementById('line-count').textContent = lineCount;
+                document.getElementById('depot-count').textContent = depotCount;
+                document.getElementById('office-count').textContent = officeCount;
+                document.getElementById('apartment-count').textContent = apartmentCount;
+                document.getElementById('cityoffice-count').textContent = cityofficeCount;
+                document.getElementById('hotel-count').textContent = hotelCount;
+                document.getElementById('skyscraper-count').textContent = skyscraperCount;
+
+                // Calculate total value
+                const totalValue = 
+                    stationCount * this.buildingTypes.station.cost +
+                    lineCount * this.buildingTypes.line.cost +
+                    depotCount * this.buildingTypes.depot.cost +
+                    officeCount * this.buildingTypes.office.cost +
+                    apartmentCount * this.buildingTypes.apartment.cost +
+                    cityofficeCount * this.buildingTypes.cityoffice.cost +
+                    hotelCount * this.buildingTypes.hotel.cost +
+                    skyscraperCount * this.buildingTypes.skyscraper.cost;
+
+                document.getElementById('total-value').textContent = `$${totalValue}`;
+                document.getElementById('active-income').textContent = `$${activeIncome}/s`;
+
+                // Update network status in inventory
+                const networkStatusInv = document.getElementById('network-status-inv');
+                if (isMetroNetworkActive) {
+                    networkStatusInv.textContent = 'Active ✅';
+                    networkStatusInv.style.color = '#4CAF50';
+                } else {
+                    networkStatusInv.textContent = 'Inactive ❌';
+                    networkStatusInv.style.color = '#f44336';
+                }
+            }
+
+            updateCellVisual(cell) {
+                // Clear existing visual
+                cell.element.innerHTML = '';
+                
+                if (cell.buildings.length === 0) {
+                    cell.element.classList.remove('occupied');
+                    return;
+                }
+
+                cell.element.classList.add('occupied');
+
+                // Show the topmost building
+                const topBuilding = cell.buildings[cell.buildings.length - 1];
+                const buildingType = this.buildingTypes[topBuilding.type];
+                
+                const building = document.createElement('div');
+                building.className = `building ${buildingType.class}`;
+                building.textContent = buildingType.emoji;
+                
+                // Add stack indicator if more than one building
+                if (cell.buildings.length > 1) {
+                    const stackIndicator = document.createElement('div');
+                    stackIndicator.className = 'building-stack';
+                    stackIndicator.textContent = cell.buildings.length;
+                    building.appendChild(stackIndicator);
+                }
+
+                // Add layer indicators
+                if (cell.buildings.length > 1) {
+                    const layersContainer = document.createElement('div');
+                    layersContainer.className = 'building-layers';
+                    
+                    cell.buildings.forEach(b => {
+                        const layer = document.createElement('div');
+                        layer.className = 'layer-indicator';
+                        layer.style.backgroundColor = this.getBuildingColor(b.type);
+                        layersContainer.appendChild(layer);
+                    });
+                    
+                    building.appendChild(layersContainer);
+                }
+
+                cell.element.appendChild(building);
+            }
+
+            getBuildingColor(type) {
+                const colors = {
+                    station: '#e74c3c',
+                    line: '#3498db',
+                    depot: '#9b59b6',
+                    office: '#f39c12',
+                    skyscraper: '#34495e',
+                    cityoffice: '#16a085',
+                    hotel: '#e91e63',
+                    apartment: '#8e44ad'
+                };
+                return colors[type] || '#fff';
+            }
+
+            showBuildingInfo(cell) {
+                if (cell.buildings.length === 0) return;
+                
+                const buildingCounts = {};
+                let totalIncome = 0;
+                
+                cell.buildings.forEach(building => {
+                    buildingCounts[building.type] = (buildingCounts[building.type] || 0) + 1;
+                    totalIncome += building.income;
+                });
+
+                let info = 'Buildings in this cell:\n';
+                Object.entries(buildingCounts).forEach(([type, count]) => {
+                    const emoji = this.buildingTypes[type].emoji;
+                    info += `${emoji} ${type}: ${count}\n`;
+                });
+                
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                const isNetworkActive = stationCount >= 2 && lineCount >= 1;
+                
+                // Calculate actual income from this cell
+                let actualIncome = 0;
+                cell.buildings.forEach(building => {
+                    if (building.type === 'station' || building.type === 'apartment' || building.type === 'cityoffice') {
+                        actualIncome += building.income;
+                    } else if ((building.type === 'depot' || building.type === 'office' || building.type === 'hotel' || building.type === 'skyscraper') && isNetworkActive) {
+                        actualIncome += building.income;
+                    }
+                });
+                
+                info += `💵 Cell Income: $${actualIncome}/s`;
+                
+                this.showNotification(info, 'success');
+            }
+
+            updateGridVisuals() {
+                // Update grid cell classes based on selected building mode
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = this.grid[row][col];
+                        
+                        if (this.selectedBuilding === 'demolish') {
+                            if (cell.buildings.length > 0) {
+                                cell.element.classList.add('demolish-mode');
+                            }
+                        } else {
+                            cell.element.classList.remove('demolish-mode');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Start the game when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            new MetroCityBuilder();
+        });
+    </script>
+</body>
+</html>

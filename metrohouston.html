@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Навигация метро</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 2em;
+    }
+    
+    .metro-container {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .metro-map {
+      flex: 1;
+      position: relative;
+      background: #f8f9fa;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      min-height: 400px;
+    }
+    
+    .station {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      line-height: 1.2;
+      border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .station:hover {
+      transform: scale(1.1);
+      z-index: 10;
+    }
+    
+    .station.center { background: #e74c3c; top: 200px; left: 300px; }
+    .station.north { background: #3498db; top: 100px; left: 300px; }
+    .station.south { background: #27ae60; top: 300px; left: 300px; }
+    .station.west { background: #f39c12; top: 200px; left: 200px; }
+    .station.east { background: #9b59b6; top: 200px; left: 400px; }
+    .station.southwest { background: #e67e22; top: 280px; left: 220px; }
+    .station.northeast { background: #1abc9c; top: 120px; left: 380px; }
+    
+    .metro-line {
+      position: absolute;
+      background: #34495e;
+      z-index: 1;
+    }
+    
+    .line-vertical {
+      width: 4px;
+      height: 200px;
+      top: 100px;
+      left: 328px;
+    }
+    
+    .line-horizontal {
+      height: 4px;
+      width: 200px;
+      top: 228px;
+      left: 200px;
+    }
+    
+    .line-diagonal1 {
+      width: 4px;
+      height: 140px;
+      top: 140px;
+      left: 248px;
+      transform: rotate(45deg);
+      transform-origin: center;
+    }
+    
+    .line-diagonal2 {
+      width: 4px;
+      height: 140px;
+      top: 140px;
+      left: 408px;
+      transform: rotate(-45deg);
+      transform-origin: center;
+    }
+    
+    .controls {
+      flex: 0 0 300px;
+      background: #ecf0f1;
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #bdc3c7;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #bdc3c7;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+    
+    button {
+      width: 100%;
+      padding: 15px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    button:hover {
+      background: #2980b9;
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    #output {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      min-height: 100px;
+      white-space: pre-wrap;
+      border: 2px solid #34495e;
+    }
+    
+    .station-list {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .station-list h4 {
+      margin: 0 0 10px 0;
+      color: #495057;
+    }
+    
+    .station-list ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .station-list li {
+      margin: 5px 0;
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 3px;
+      transition: background 0.2s ease;
+    }
+    
+    .station-list li:hover {
+      background: #e9ecef;
+    }
+    
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Навигация метро 🚇 (с автопоправкой)</h2>
+
+    <div class="metro-container">
+      <!-- Metro Map -->
+      <div class="metro-map">
+        <!-- Metro Lines -->
+        <div class="metro-line line-vertical"></div>
+        <div class="metro-line line-horizontal"></div>
+        <div class="metro-line line-diagonal1"></div>
+        <div class="metro-line line-diagonal2"></div>
+        
+        <!-- Metro Stations -->
+        <div class="station center" onclick="selectStation('Центр')" title="Центр">Центр</div>
+        <div class="station north" onclick="selectStation('Север')" title="Север">Север</div>
+        <div class="station south" onclick="selectStation('Юг')" title="Юг">Юг</div>
+        <div class="station west" onclick="selectStation('Запад')" title="Запад">Запад</div>
+        <div class="station east" onclick="selectStation('Восток')" title="Восток">Восток</div>
+        <div class="station southwest" onclick="selectStation('Юго-Запад')" title="Юго-Запад">Юго-Запад</div>
+        <div class="station northeast" onclick="selectStation('Северо-Восток')" title="Северо-Восток">Северо-Восток</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="form-group">
+          <label for="start">Станция отправления:</label>
+          <input id="start" type="text" placeholder="Введите название станции..." />
+        </div>
+        
+        <div class="form-group">
+          <label for="end">Станция назначения:</label>
+          <input id="end" type="text" placeholder="Введите название станции..." />
+        </div>
+        
+        <button onclick="findRoute()">🔍 Показать маршрут</button>
+        
+        <div class="station-list">
+          <h4>📍 Доступные станции:</h4>
+          <ul>
+            <li onclick="selectStation('Центр')">🔴 Центр</li>
+            <li onclick="selectStation('Север')">🔵 Север</li>
+            <li onclick="selectStation('Юг')">🟢 Юг</li>
+            <li onclick="selectStation('Запад')">🟡 Запад</li>
+            <li onclick="selectStation('Восток')">🟣 Восток</li>
+            <li onclick="selectStation('Юго-Запад')">🟠 Юго-Запад</li>
+            <li onclick="selectStation('Северо-Восток')">🟦 Северо-Восток</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e74c3c;"></div>
+        <span>Центральная станция</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #3498db;"></div>
+        <span>Северная линия</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #27ae60;"></div>
+        <span>Южная линия</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #f39c12;"></div>
+        <span>Западная линия</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #9b59b6;"></div>
+        <span>Восточная линия</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e67e22;"></div>
+        <span>Юго-Западная линия</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #1abc9c;"></div>
+        <span>Северо-Восточная линия</span>
+      </div>
+    </div>
+
+    <pre id="output">👋 Выберите станции отправления и назначения для поиска маршрута</pre>
+  </div>
+
+  <script>
+    // Схема метро
+    const metro = {
+      "Юг": ["Центр"],
+      "Центр": ["Юг", "Север", "Запад", "Восток", "Юго-Запад", "Северо-Восток"],
+      "Север": ["Центр"],
+      "Запад": ["Центр"],
+      "Восток": ["Центр"],
+      "Юго-Запад": ["Центр"],
+      "Северо-Восток": ["Центр"]
+    };
+
+    const stationNames = Object.keys(metro);
+    let selectedField = null; // Track which input field is being filled
+
+    // Function to select station from map or list
+    function selectStation(stationName) {
+      const startInput = document.getElementById("start");
+      const endInput = document.getElementById("end");
+      
+      // If start is empty, fill start; if start is filled but end is empty, fill end
+      if (!startInput.value.trim()) {
+        startInput.value = stationName;
+        startInput.focus();
+      } else if (!endInput.value.trim()) {
+        endInput.value = stationName;
+        endInput.focus();
+      } else {
+        // Both are filled, replace the last focused one or start
+        if (selectedField === 'end') {
+          endInput.value = stationName;
+        } else {
+          startInput.value = stationName;
+        }
+      }
+      
+      // Auto-calculate route if both fields are filled
+      if (startInput.value.trim() && endInput.value.trim()) {
+        setTimeout(findRoute, 300); // Small delay for better UX
+      }
+    }
+    
+    // Track which field was last focused
+    document.getElementById("start").addEventListener('focus', () => selectedField = 'start');
+    document.getElementById("end").addEventListener('focus', () => selectedField = 'end');
+
+    // Функция похожести (расстояние Левенштейна)
+    function levenshtein(a, b) {
+      const matrix = [];
+      for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+      }
+      for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+      }
+
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          if (b.charAt(i - 1).toLowerCase() === a.charAt(j - 1).toLowerCase()) {
+            matrix[i][j] = matrix[i - 1][j - 1];
+          } else {
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j - 1] + 1, // замена
+              matrix[i][j - 1] + 1,     // вставка
+              matrix[i - 1][j] + 1      // удаление
+            );
+          }
+        }
+      }
+
+      return matrix[b.length][a.length];
+    }
+
+    function guessStation(name) {
+      let bestMatch = stationNames[0];
+      let bestScore = Infinity;
+      for (const station of stationNames) {
+        const score = levenshtein(name, station);
+        if (score < bestScore) {
+          bestScore = score;
+          bestMatch = station;
+        }
+      }
+      return bestScore <= 3 ? bestMatch : null; // допускаем до 3 ошибок
+    }
+
+    function bfs(start, end) {
+      let queue = [[start]];
+      let visited = new Set();
+
+      while (queue.length > 0) {
+        const path = queue.shift();
+        const station = path[path.length - 1];
+
+        if (station === end) return path;
+
+        if (!visited.has(station)) {
+          visited.add(station);
+          for (const neighbor of metro[station]) {
+            queue.push([...path, neighbor]);
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function findRoute() {
+      const inputStart = document.getElementById("start").value.trim();
+      const inputEnd = document.getElementById("end").value.trim();
+      const output = document.getElementById("output");
+
+      // Clear previous highlights
+      document.querySelectorAll('.station').forEach(station => {
+        station.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+        station.style.transform = 'scale(1)';
+      });
+
+      if (!inputStart || !inputEnd) {
+        output.textContent = "⚠️ Пожалуйста, введите станции отправления и назначения.";
+        return;
+      }
+
+      const start = metro[inputStart] ? inputStart : guessStation(inputStart);
+      const end = metro[inputEnd] ? inputEnd : guessStation(inputEnd);
+
+      if (!start || !end) {
+        output.textContent = "❌ Не удалось распознать одну или обе станции.\n\nДоступные станции:\n" + 
+          stationNames.join(", ");
+        return;
+      }
+
+      const route = bfs(start, end);
+      if (route) {
+        // Highlight route on map
+        route.forEach((station, index) => {
+          const stationElement = document.querySelector(`.station[title="${station}"]`);
+          if (stationElement) {
+            setTimeout(() => {
+              stationElement.style.boxShadow = '0 0 20px #ffd700, 0 0 30px #ffd700';
+              stationElement.style.transform = 'scale(1.15)';
+            }, index * 200);
+          }
+        });
+
+        const routeInfo = route.map((station, index) => {
+          if (index === 0) return `🚩 ${station} (отправление)`;
+          if (index === route.length - 1) return `🏁 ${station} (прибытие)`;
+          return `🚇 ${station}`;
+        }).join('\n');
+
+        output.textContent =
+          `📍 Маршрут от "${inputStart}"${start !== inputStart ? ` (найдено: ${start})` : ''} до "${inputEnd}"${end !== inputEnd ? ` (найдено: ${end})` : ''}:\n\n` +
+          routeInfo +
+          `\n\n⏱️ Количество пересадок: ${route.length - 2}\n` +
+          `🚇 Всего станций в пути: ${route.length}\n` +
+          `⏰ Примерное время в пути: ${(route.length - 1) * 2} минут`;
+      } else {
+        output.textContent = "❌ Путь не найден между указанными станциями.";
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Selector - Mark's Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .search-box {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 20px;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .language-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .language-item:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .language-item.selected {
+            border-color: #27ae60;
+            background: #e8f5e8;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.3);
+        }
+
+        .flag {
+            font-size: 24px;
+            min-width: 35px;
+        }
+
+        .language-info {
+            flex: 1;
+        }
+
+        .language-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .language-native {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .quick-access {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .quick-access h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .quick-languages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-lang {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .quick-lang:hover {
+            background: #dee2e6;
+            border-color: #adb5bd;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-1px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(52, 73, 94, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: rgba(52, 73, 94, 1);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 600px) {
+            .language-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-button">
+        ← Back to Game
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Select Your Language</h1>
+            <p>Choose your preferred language for Mark's Games</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search languages..." id="searchInput">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="quick-access">
+            <h3>🚀 Quick Access</h3>
+            <div class="quick-languages">
+                <span class="quick-lang" data-lang="en">🇺🇸 English</span>
+                <span class="quick-lang" data-lang="es">🇪🇸 Español</span>
+                <span class="quick-lang" data-lang="fr">🇫🇷 Français</span>
+                <span class="quick-lang" data-lang="de">🇩🇪 Deutsch</span>
+                <span class="quick-lang" data-lang="zh">🇨🇳 中文</span>
+            </div>
+        </div>
+
+        <div class="language-grid" id="languageGrid">
+            <!-- Languages will be populated by JavaScript -->
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <p>No languages found matching your search.</p>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="applyLanguage()">Apply Language</button>
+            <a href="../index.html" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+
+    <script>
+        // Available languages
+        const languages = [
+            { code: 'en', flag: '🇺🇸', name: 'English', native: 'English' },
+            { code: 'es', flag: '🇪🇸', name: 'Spanish', native: 'Español' },
+            { code: 'fr', flag: '🇫🇷', name: 'French', native: 'Français' },
+            { code: 'de', flag: '🇩🇪', name: 'German', native: 'Deutsch' },
+            { code: 'it', flag: '🇮🇹', name: 'Italian', native: 'Italiano' },
+            { code: 'pt', flag: '🇵🇹', name: 'Portuguese', native: 'Português' },
+            { code: 'ru', flag: '🇷🇺', name: 'Russian', native: 'Русский' },
+            { code: 'zh', flag: '🇨🇳', name: 'Chinese', native: '中文' },
+            { code: 'ja', flag: '🇯🇵', name: 'Japanese', native: '日本語' },
+            { code: 'ar', flag: '🇸🇦', name: 'Arabic', native: 'العربية' },
+            { code: 'ko', flag: '🇰🇷', name: 'Korean', native: '한국어' },
+            { code: 'hi', flag: '🇮🇳', name: 'Hindi', native: 'हिन्दी' },
+            { code: 'th', flag: '🇹🇭', name: 'Thai', native: 'ไทย' },
+            { code: 'vi', flag: '🇻🇳', name: 'Vietnamese', native: 'Tiếng Việt' },
+            { code: 'tr', flag: '🇹🇷', name: 'Turkish', native: 'Türkçe' },
+            { code: 'pl', flag: '🇵🇱', name: 'Polish', native: 'Polski' },
+            { code: 'nl', flag: '🇳🇱', name: 'Dutch', native: 'Nederlands' },
+            { code: 'sv', flag: '🇸🇪', name: 'Swedish', native: 'Svenska' },
+            { code: 'da', flag: '🇩🇰', name: 'Danish', native: 'Dansk' },
+            { code: 'no', flag: '🇳🇴', name: 'Norwegian', native: 'Norsk' }
+        ];
+
+        let selectedLanguage = null;
+        let filteredLanguages = [...languages];
+
+        // Load current language from storage
+        function loadCurrentLanguage() {
+            const savedLang = localStorage.getItem('selectedLanguage') || 
+                            localStorage.getItem('language') || 
+                            localStorage.getItem('lang') || 
+                            'en';
+            selectedLanguage = savedLang;
+        }
+
+        // Render languages
+        function renderLanguages(languagesToRender = languages) {
+            const grid = document.getElementById('languageGrid');
+            const noResults = document.getElementById('noResults');
+            
+            if (languagesToRender.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            noResults.style.display = 'none';
+            
+            grid.innerHTML = languagesToRender.map(lang => `
+                <div class="language-item ${lang.code === selectedLanguage ? 'selected' : ''}" 
+                     data-lang="${lang.code}" onclick="selectLanguage('${lang.code}')">
+                    <span class="flag">${lang.flag}</span>
+                    <div class="language-info">
+                        <div class="language-name">${lang.name}</div>
+                        <div class="language-native">${lang.native}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Select language
+        function selectLanguage(langCode) {
+            selectedLanguage = langCode;
+            
+            // Update visual selection
+            document.querySelectorAll('.language-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-lang="${langCode}"]`).classList.add('selected');
+        }
+
+        // Search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                filteredLanguages = languages.filter(lang => 
+                    lang.name.toLowerCase().includes(query) ||
+                    lang.native.toLowerCase().includes(query) ||
+                    lang.code.toLowerCase().includes(query)
+                );
+                renderLanguages(filteredLanguages);
+            });
+        }
+
+        // Quick access functionality
+        function setupQuickAccess() {
+            document.querySelectorAll('.quick-lang').forEach(item => {
+                item.addEventListener('click', () => {
+                    const langCode = item.getAttribute('data-lang');
+                    selectLanguage(langCode);
+                    
+                    // Scroll to selected language
+                    const selectedItem = document.querySelector(`[data-lang="${langCode}"]`);
+                    if (selectedItem) {
+                        selectedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            });
+        }
+
+        // Apply language and save
+        function applyLanguage() {
+            if (!selectedLanguage) {
+                alert('Please select a language first.');
+                return;
+            }
+
+            // Save to multiple storage keys for compatibility
+            localStorage.setItem('selectedLanguage', selectedLanguage);
+            localStorage.setItem('language', selectedLanguage);
+            localStorage.setItem('lang', selectedLanguage);
+
+            // Show confirmation
+            const langInfo = languages.find(l => l.code === selectedLanguage);
+            alert(`Language changed to ${langInfo.name} (${langInfo.native})`);
+
+            // Redirect back to main page
+            window.location.href = '../index.html';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCurrentLanguage();
+            renderLanguages();
+            setupSearch();
+            setupQuickAccess();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = '../index.html';
+            } else if (e.key === 'Enter' && selectedLanguage) {
+                applyLanguage();
+            }
+        });
+    </script>
+</body>
+</html>
