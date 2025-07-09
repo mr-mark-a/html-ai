@@ -106,8 +106,8 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(15, 1fr);
-            grid-template-rows: repeat(10, 1fr);
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(15, 1fr);
             gap: 2px;
             height: 100%;
             padding: 10px;
@@ -237,6 +237,10 @@
 
         .apartment {
             background: linear-gradient(45deg, #8e44ad, #9b59b6);
+        }
+
+        .column {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
         }
 
         .selected-building {
@@ -462,6 +466,11 @@
                     <div class="building-cost">Cost: $300 | Income: $40/s*</div>
                 </button>
 
+                <button class="building-btn" id="column-btn" data-building="column">
+                    🏛️ Column
+                    <div class="building-cost">Cost: $75 | Decorative structure</div>
+                </button>
+
                 <h3 style="color: #FFD700; margin: 20px 0 15px 0; text-align: center; font-size: 16px;">🏙️ City Buildings</h3>
                 
                 <button class="building-btn" id="apartment-btn" data-building="apartment">
@@ -549,6 +558,14 @@
         
         <div class="inventory-item">
             <div class="inventory-building">
+                <span class="inventory-emoji">🏛️</span>
+                <span class="inventory-name">Columns</span>
+            </div>
+            <span class="inventory-count" id="column-count">0</span>
+        </div>
+        
+        <div class="inventory-item">
+            <div class="inventory-building">
                 <span class="inventory-emoji">🏠</span>
                 <span class="inventory-name">Apartments</span>
             </div>
@@ -604,7 +621,7 @@
                 this.income = 0;
                 this.selectedBuilding = null;
                 this.grid = [];
-                this.gridSize = { rows: 10, cols: 15 };
+                this.gridSize = { rows: 15, cols: 20 };
                 this.inventoryOpen = false;
                 
                 this.buildingTypes = {
@@ -612,6 +629,7 @@
                     line: { cost: 50, income: 0, emoji: '🛤️', class: 'metro-line' },
                     depot: { cost: 200, income: 25, emoji: '🏭', class: 'metro-depot' },
                     office: { cost: 300, income: 40, emoji: '🏢', class: 'metro-office' },
+                    column: { cost: 75, income: 0, emoji: '🏛️', class: 'column' },
                     skyscraper: { cost: 500, income: 60, emoji: '🏙️', class: 'skyscraper' },
                     cityoffice: { cost: 250, income: 35, emoji: '🏬', class: 'city-office' },
                     hotel: { cost: 400, income: 50, emoji: '🏨', class: 'hotel' },
@@ -729,7 +747,7 @@
                     this.demolishBuilding(row, col);
                     return;
                 }
-
+                
                 // Check if cell has a skyscraper - prevent building on top of skyscrapers
                 const hasSkyscraper = cell.buildings.some(building => building.type === 'skyscraper');
                 if (hasSkyscraper) {
@@ -739,12 +757,113 @@
 
                 const buildingType = this.buildingTypes[this.selectedBuilding];
                 
+                // Check if this is a multi-level building (city office or hotel)
+                if (this.selectedBuilding === 'cityoffice' || this.selectedBuilding === 'hotel') {
+                    this.promptForLevels(row, col, this.selectedBuilding);
+                    return;
+                }
+                
                 if (this.money < buildingType.cost) {
                     this.showNotification('Not enough money!', 'error');
                     return;
                 }
 
                 this.buildBuilding(row, col, this.selectedBuilding);
+            }
+
+            promptForLevels(row, col, buildingType) {
+                const buildingData = this.buildingTypes[buildingType];
+                const buildingName = buildingType === 'cityoffice' ? 'City Office' : 'Hotel';
+                
+                // Calculate max levels based on available money
+                const maxLevels = Math.floor(this.money / buildingData.cost);
+                
+                if (maxLevels === 0) {
+                    this.showNotification('Not enough money!', 'error');
+                    return;
+                }
+                
+                const levels = prompt(
+                    `How many levels of ${buildingName} would you like to build?\n` +
+                    `Cost per level: $${buildingData.cost}\n` +
+                    `Available money: $${this.money}\n` +
+                    `Maximum levels: ${maxLevels}`,
+                    '1'
+                );
+                
+                if (levels === null) {
+                    // User cancelled
+                    return;
+                }
+                
+                const numLevels = parseInt(levels);
+                
+                if (isNaN(numLevels) || numLevels < 1) {
+                    this.showNotification('Please enter a valid number of levels!', 'error');
+                    return;
+                }
+                
+                if (numLevels > maxLevels) {
+                    this.showNotification(`Not enough money for ${numLevels} levels! Maximum: ${maxLevels}`, 'error');
+                    return;
+                }
+                
+                const totalCost = numLevels * buildingData.cost;
+                
+                if (this.money < totalCost) {
+                    this.showNotification('Not enough money!', 'error');
+                    return;
+                }
+                
+                // Build multiple levels
+                this.buildMultipleLevels(row, col, buildingType, numLevels);
+                
+                // Debug: Verify the stack was built correctly
+                const cell = this.grid[row][col];
+                console.log(`Built ${numLevels} levels. Cell now has ${cell.buildings.length} buildings.`);
+            }
+
+            buildMultipleLevels(row, col, type, levels) {
+                const buildingType = this.buildingTypes[type];
+                const cell = this.grid[row][col];
+                const totalCost = levels * buildingType.cost;
+                
+                // Deduct total money
+                this.money -= totalCost;
+                
+                // Add multiple buildings to stack
+                for (let i = 0; i < levels; i++) {
+                    cell.buildings.push({ type, income: buildingType.income });
+                }
+                
+                // Update stats
+                this.buildings += levels;
+                this.income += buildingType.income * levels;
+                
+                // Population calculation based on building type
+                let populationPerLevel = 0;
+                if (type === 'cityoffice') populationPerLevel = 75;
+                else if (type === 'hotel') populationPerLevel = 120;
+                
+                this.population += populationPerLevel * levels;
+                
+                // Update visual representation - do this after all stats are updated
+                this.updateCellVisual(cell);
+                this.updateUI();
+                
+                const stackCount = cell.buildings.length;
+                const levelText = levels > 1 ? `${levels} levels` : '1 level';
+                const buildingName = type === 'cityoffice' ? 'City Office' : type === 'hotel' ? 'Hotel' : type;
+                this.showNotification(`Built ${levelText} of ${buildingType.emoji} ${buildingName}! Total in stack: ${stackCount}`, 'success');
+                
+                // Check if metro network just became active
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                if (stationCount >= 2 && lineCount >= 1) {
+                    setTimeout(() => {
+                        this.showNotification('🚇 Metro Network Active! Business buildings now generate income!', 'success');
+                    }, 1000);
+                }
             }
 
             buildBuilding(row, col, type) {
@@ -771,6 +890,7 @@
                 else if (type === 'cityoffice') this.population += 75;
                 else if (type === 'hotel') this.population += 120;
                 else if (type === 'skyscraper') this.population += 200;
+                else if (type === 'column') this.population += 5;
                 else this.population += 25;
 
                 this.updateUI();
@@ -819,6 +939,7 @@
                 else if (removedBuilding.type === 'cityoffice') this.population -= 75;
                 else if (removedBuilding.type === 'hotel') this.population -= 120;
                 else if (removedBuilding.type === 'skyscraper') this.population -= 200;
+                else if (removedBuilding.type === 'column') this.population -= 5;
                 else this.population -= 25;
 
                 // Ensure population doesn't go negative
@@ -983,6 +1104,7 @@
                 const lineCount = this.countBuildingType('line');
                 const depotCount = this.countBuildingType('depot');
                 const officeCount = this.countBuildingType('office');
+                const columnCount = this.countBuildingType('column');
                 const apartmentCount = this.countBuildingType('apartment');
                 const cityofficeCount = this.countBuildingType('cityoffice');
                 const hotelCount = this.countBuildingType('hotel');
@@ -995,6 +1117,7 @@
                 document.getElementById('line-count').textContent = lineCount;
                 document.getElementById('depot-count').textContent = depotCount;
                 document.getElementById('office-count').textContent = officeCount;
+                document.getElementById('column-count').textContent = columnCount;
                 document.getElementById('apartment-count').textContent = apartmentCount;
                 document.getElementById('cityoffice-count').textContent = cityofficeCount;
                 document.getElementById('hotel-count').textContent = hotelCount;
@@ -1006,6 +1129,7 @@
                     lineCount * this.buildingTypes.line.cost +
                     depotCount * this.buildingTypes.depot.cost +
                     officeCount * this.buildingTypes.office.cost +
+                    columnCount * this.buildingTypes.column.cost +
                     apartmentCount * this.buildingTypes.apartment.cost +
                     cityofficeCount * this.buildingTypes.cityoffice.cost +
                     hotelCount * this.buildingTypes.hotel.cost +
@@ -1076,6 +1200,7 @@
                     line: '#3498db',
                     depot: '#9b59b6',
                     office: '#f39c12',
+                    column: '#95a5a6',
                     skyscraper: '#34495e',
                     cityoffice: '#16a085',
                     hotel: '#e91e63',
