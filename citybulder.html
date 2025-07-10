@@ -413,6 +413,254 @@
         .close-inventory:hover {
             color: #ff6b6b;
         }
+
+        .project-button {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #9b59b6;
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .project-button:hover {
+            background: rgba(155, 89, 182, 0.2);
+            transform: scale(1.05);
+        }
+
+        .project-panel {
+            position: fixed;
+            top: 130px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 2px solid #9b59b6;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .project-panel.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .project-panel h3 {
+            color: #9b59b6;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .project-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .project-item:hover {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: #9b59b6;
+            transform: translateY(-2px);
+        }
+
+        .project-item.current {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .project-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #FFD700;
+        }
+
+        .project-stats {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+
+        .project-date {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .project-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .project-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .project-action-btn.load {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .project-action-btn.delete {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .project-action-btn.rename {
+            border-color: #f39c12;
+            color: #f39c12;
+        }
+
+        .no-projects {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .close-project-panel {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #f44336;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-project-panel:hover {
+            color: #ff6b6b;
+        }
+
+        .train {
+            position: absolute;
+            font-size: 16px;
+            z-index: 10;
+            animation: trainMove 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes trainMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100%, 0); }
+        }
+
+        .rail-connection {
+            position: absolute;
+            background: #3498db;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .rail-horizontal {
+            height: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .rail-vertical {
+            width: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .rail-corner {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #3498db;
+        }
+
+        /* Station Connection Styles */
+        .station-connection {
+            position: absolute;
+            border: 3px dashed #e74c3c;
+            border-radius: 8px;
+            background: rgba(231, 76, 60, 0.1);
+            z-index: 3;
+            pointer-events: none;
+            animation: stationPulse 2s infinite;
+        }
+
+        @keyframes stationPulse {
+            0%, 100% { 
+                border-color: #e74c3c;
+                background: rgba(231, 76, 60, 0.1);
+            }
+            50% { 
+                border-color: #c0392b;
+                background: rgba(231, 76, 60, 0.2);
+            }
+        }
+
+        .connected-station {
+            position: relative;
+        }
+
+        .connected-station .building {
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+            border: 2px solid #e74c3c;
+        }
+
+        .connection-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 12px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            animation: connectionBlink 1.5s infinite;
+        }
+
+        @keyframes connectionBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
     </style>
 </head>
 <body>
@@ -493,13 +741,55 @@
                     <div class="building-cost">Cost: $500 | Income: $60/s*</div>
                 </button>
 
+                <h3 style="color: #e74c3c; margin: 20px 0 15px 0; text-align: center; font-size: 16px;">💥 Demolish Store</h3>
+                
+                <button class="building-btn" id="demolish-btn" data-building="demolish" style="background: linear-gradient(45deg, #e74c3c, #c0392b); margin-top: 5px;">
+                    🧨 Single Demolish
+                    <div class="building-cost">Remove top building (full refund)</div>
+                </button>
+                
+                <button class="building-btn" id="demolish-stack-btn" data-building="demolish-stack" style="background: linear-gradient(45deg, #c0392b, #a93226); margin-top: 5px;">
+                    💥 Stack Demolish
+                    <div class="building-cost">Remove entire building stack</div>
+                </button>
+                
+                <button class="building-btn" id="demolish-area-btn" data-building="demolish-area" style="background: linear-gradient(45deg, #8e44ad, #732d91); margin-top: 5px;">
+                    🗑️ Area Demolish
+                    <div class="building-cost">Remove multiple buildings (coming soon)</div>
+                </button>
+                
+                <button class="building-btn" id="expand-grid-btn" data-building="expand-grid" style="background: linear-gradient(45deg, #27ae60, #2ecc71); margin-top: 5px;">
+                    🔳 Expand Grid
+                    <div class="building-cost">Add 300 cells for $100</div>
+                </button>
+                
+                <div style="margin: 10px 0; padding: 8px; background: rgba(231,76,60,0.1); border-radius: 5px; border: 1px solid rgba(231,76,60,0.3);">
+                    <div style="color: #e74c3c; font-weight: bold; font-size: 12px; margin-bottom: 5px;">💡 Demolish Tips:</div>
+                    <div style="font-size: 11px; color: #ccc; line-height: 1.3;">
+                        • Single: Removes top building only<br>
+                        • Stack: Removes all buildings in cell<br>
+                        • Full refund for all demolish operations<br>
+                        • Use strategically to optimize your city
+                    </div>
+                </div>
+
                 <button class="reset-btn" id="reset-btn">
                     🔄 Reset City
                 </button>
                 
-                <button class="building-btn" id="demolish-btn" data-building="demolish" style="background: linear-gradient(45deg, #e74c3c, #c0392b); margin-top: 10px;">
-                    🧨 Demolish Building
-                    <div class="building-cost">Remove top building from stack</div>
+                <button class="building-btn" id="new-project-btn" style="background: linear-gradient(45deg, #9b59b6, #8e44ad); margin-top: 10px;">
+                    🆕 New Project
+                    <div class="building-cost">Start fresh with save option</div>
+                </button>
+                
+                <button class="building-btn" id="save-btn" style="background: linear-gradient(45deg, #2ecc71, #27ae60); margin-top: 5px;">
+                    💾 Save Game
+                    <div class="building-cost">Save progress to browser</div>
+                </button>
+                
+                <button class="building-btn" id="load-btn" style="background: linear-gradient(45deg, #3498db, #2980b9); margin-top: 5px;">
+                    📂 Load Game
+                    <div class="building-cost">Load saved progress</div>
                 </button>
                 
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; font-size: 11px; color: #ccc;">
@@ -518,6 +808,10 @@
 
     <div class="inventory-button" id="inventory-btn">
         📦 Inventory
+    </div>
+
+    <div class="project-button" id="project-btn">
+        📁 Projects
     </div>
 
     <div class="inventory-panel" id="inventory-panel">
@@ -612,6 +906,14 @@
         </div>
     </div>
 
+    <div class="project-panel" id="project-panel">
+        <button class="close-project-panel" id="close-project-panel">✕</button>
+        <h3>📁 Project Manager</h3>
+        <div id="project-list">
+            <div class="no-projects">No saved projects found</div>
+        </div>
+    </div>
+
     <script>
         class MetroCityBuilder {
             constructor() {
@@ -623,6 +925,12 @@
                 this.grid = [];
                 this.gridSize = { rows: 15, cols: 20 };
                 this.inventoryOpen = false;
+                this.projectPanelOpen = false;
+                this.currentProjectName = 'Untitled Project';
+                this.railConnections = [];
+                this.stationConnections = [];
+                this.trains = [];
+                this.trainInterval = null;
                 
                 this.buildingTypes = {
                     station: { cost: 100, income: 10, emoji: '🚉', class: 'metro-station' },
@@ -644,6 +952,14 @@
                 this.setupEventListeners();
                 this.startIncomeLoop();
                 this.updateUI();
+                this.checkForSavedGame();
+                
+                // Initialize rail connections and trains
+                setTimeout(() => {
+                    this.updateRailConnections();
+                    this.updateStationConnections();
+                    this.checkAndStartTrains();
+                }, 1000);
             }
 
             createGrid() {
@@ -683,9 +999,29 @@
                     this.resetGame();
                 });
 
+                // New Project button
+                document.getElementById('new-project-btn').addEventListener('click', () => {
+                    this.newProject();
+                });
+
+                // Save button
+                document.getElementById('save-btn').addEventListener('click', () => {
+                    this.saveGame();
+                });
+
+                // Load button
+                document.getElementById('load-btn').addEventListener('click', () => {
+                    this.loadGame();
+                });
+
                 // Inventory button
                 document.getElementById('inventory-btn').addEventListener('click', () => {
                     this.toggleInventory();
+                });
+
+                // Project button
+                document.getElementById('project-btn').addEventListener('click', () => {
+                    this.toggleProjectPanel();
                 });
 
                 // Close inventory button
@@ -693,15 +1029,28 @@
                     this.closeInventory();
                 });
 
+                // Close project panel button
+                document.getElementById('close-project-panel').addEventListener('click', () => {
+                    this.closeProjectPanel();
+                });
+
                 // Close inventory when clicking outside
                 document.addEventListener('click', (e) => {
                     const inventoryPanel = document.getElementById('inventory-panel');
                     const inventoryBtn = document.getElementById('inventory-btn');
+                    const projectPanel = document.getElementById('project-panel');
+                    const projectBtn = document.getElementById('project-btn');
                     
                     if (this.inventoryOpen && 
                         !inventoryPanel.contains(e.target) && 
                         !inventoryBtn.contains(e.target)) {
                         this.closeInventory();
+                    }
+                    
+                    if (this.projectPanelOpen && 
+                        !projectPanel.contains(e.target) && 
+                        !projectBtn.contains(e.target)) {
+                        this.closeProjectPanel();
                     }
                 });
             }
@@ -720,7 +1069,14 @@
                 }
 
                 if (type === 'demolish') {
-                    this.showNotification('🧨 Demolish Mode: Click on buildings to remove them (50% refund)', 'success');
+                    this.showNotification('🧨 Demolish Mode: Click on buildings to remove them (full refund)', 'success');
+                } else if (type === 'demolish-stack') {
+                    this.showNotification('💥 Demolish Stack Mode: Click on buildings to remove entire stack (full refund)', 'success');
+                } else if (type === 'demolish-area') {
+                    this.showNotification('🗑️ Area Demolish Mode: Coming soon - will allow multi-cell demolition', 'success');
+                } else if (type === 'expand-grid') {
+                    this.expandGrid();
+                    return; // Don't set as selected building, just execute the action
                 } else {
                     this.showNotification(`Selected: ${this.buildingTypes[type].emoji} ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'success');
                 }
@@ -745,6 +1101,22 @@
                         return;
                     }
                     this.demolishBuilding(row, col);
+                    return;
+                }
+                
+                // Handle demolish stack mode
+                if (this.selectedBuilding === 'demolish-stack') {
+                    if (cell.buildings.length === 0) {
+                        this.showNotification('No buildings to demolish here!', 'error');
+                        return;
+                    }
+                    this.demolishStack(row, col);
+                    return;
+                }
+                
+                // Handle area demolish mode (coming soon)
+                if (this.selectedBuilding === 'demolish-area') {
+                    this.showNotification('🗑️ Area Demolish feature coming soon! For now, use Single or Stack demolish.', 'error');
                     return;
                 }
                 
@@ -899,6 +1271,15 @@
                 const stackText = stackCount > 1 ? ` (Stack: ${stackCount})` : '';
                 this.showNotification(`Built ${buildingType.emoji} ${type}!${stackText}`, 'success');
 
+                // Handle rail connections and trains
+                if (type === 'line') {
+                    this.updateRailConnections();
+                    this.checkAndStartTrains();
+                } else if (type === 'station') {
+                    this.updateStationConnections();
+                    this.checkAndStartTrains();
+                }
+
                 // Check if metro network just became active
                 const stationCount = this.countBuildingType('station');
                 const lineCount = this.countBuildingType('line');
@@ -951,6 +1332,15 @@
                 const stackText = stackCount > 0 ? ` (${stackCount} remaining)` : '';
                 this.showNotification(`Demolished ${buildingType.emoji} ${removedBuilding.type}! Refund: $${refund}${stackText}`, 'success');
 
+                // Handle rail connections and trains
+                if (removedBuilding.type === 'line') {
+                    this.updateRailConnections();
+                    this.checkAndStartTrains();
+                } else if (removedBuilding.type === 'station') {
+                    this.updateStationConnections();
+                    this.checkAndStartTrains();
+                }
+
                 // Check if metro network became inactive
                 const stationCount = this.countBuildingType('station');
                 const lineCount = this.countBuildingType('line');
@@ -959,6 +1349,200 @@
                         this.showNotification('⚠️ Metro Network Inactive! Premium buildings stopped generating income!', 'error');
                     }, 1000);
                 }
+            }
+
+            demolishStack(row, col) {
+                const cell = this.grid[row][col];
+                
+                if (cell.buildings.length === 0) {
+                    this.showNotification('No buildings to demolish!', 'error');
+                    return;
+                }
+
+                const stackCount = cell.buildings.length;
+                
+                // Show confirmation dialog
+                const confirmDemolish = confirm(
+                    `💥 Demolish entire stack?\n\n` +
+                    `Stack contains ${stackCount} building${stackCount > 1 ? 's' : ''}:\n` +
+                    this.getStackDescription(cell) + '\n\n' +
+                    `Total refund: $${this.calculateStackRefund(cell)}\n\n` +
+                    `This action cannot be undone!`
+                );
+
+                if (!confirmDemolish) {
+                    return;
+                }
+
+                let totalRefund = 0;
+                let totalIncomeReduction = 0;
+                let totalPopulationReduction = 0;
+                const buildingCounts = {};
+
+                // Process each building in the stack
+                cell.buildings.forEach(building => {
+                    const buildingType = this.buildingTypes[building.type];
+                    totalRefund += buildingType.cost;
+                    totalIncomeReduction += building.income;
+                    
+                    // Count buildings for notification
+                    buildingCounts[building.type] = (buildingCounts[building.type] || 0) + 1;
+                    
+                    // Calculate population reduction
+                    if (building.type === 'station') totalPopulationReduction += 50;
+                    else if (building.type === 'office') totalPopulationReduction += 100;
+                    else if (building.type === 'apartment') totalPopulationReduction += 80;
+                    else if (building.type === 'cityoffice') totalPopulationReduction += 75;
+                    else if (building.type === 'hotel') totalPopulationReduction += 120;
+                    else if (building.type === 'skyscraper') totalPopulationReduction += 200;
+                    else if (building.type === 'column') totalPopulationReduction += 5;
+                    else totalPopulationReduction += 25;
+                });
+
+                // Clear the entire stack
+                cell.buildings = [];
+                
+                // Update stats
+                this.money += totalRefund;
+                this.buildings -= stackCount;
+                this.income -= totalIncomeReduction;
+                this.population -= totalPopulationReduction;
+                
+                // Ensure population doesn't go negative
+                this.population = Math.max(0, this.population);
+
+                // Update visual representation
+                this.updateCellVisual(cell);
+                this.updateUI();
+
+                // Create notification message
+                let buildingList = '';
+                Object.entries(buildingCounts).forEach(([type, count]) => {
+                    const emoji = this.buildingTypes[type].emoji;
+                    buildingList += `${emoji}${count} `;
+                });
+
+                this.showNotification(`💥 Stack demolished! ${buildingList}| Refund: $${totalRefund}`, 'success');
+
+                // Handle rail connections and trains if rails or stations were demolished
+                let updateRails = false;
+                let updateTrains = false;
+                let updateStations = false;
+                Object.keys(buildingCounts).forEach(type => {
+                    if (type === 'line') {
+                        updateRails = true;
+                        updateTrains = true;
+                    } else if (type === 'station') {
+                        updateTrains = true;
+                        updateStations = true;
+                    }
+                });
+
+                if (updateRails) {
+                    this.updateRailConnections();
+                }
+                if (updateStations) {
+                    this.updateStationConnections();
+                }
+                if (updateTrains) {
+                    this.checkAndStartTrains();
+                }
+
+                // Check if metro network became inactive
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+                if (stationCount < 2 || lineCount < 1) {
+                    setTimeout(() => {
+                        this.showNotification('⚠️ Metro Network Inactive! Premium buildings stopped generating income!', 'error');
+                    }, 1000);
+                }
+            }
+
+            getStackDescription(cell) {
+                const buildingCounts = {};
+                cell.buildings.forEach(building => {
+                    buildingCounts[building.type] = (buildingCounts[building.type] || 0) + 1;
+                });
+
+                let description = '';
+                Object.entries(buildingCounts).forEach(([type, count]) => {
+                    const emoji = this.buildingTypes[type].emoji;
+                    const name = type.charAt(0).toUpperCase() + type.slice(1);
+                    description += `${emoji} ${name}: ${count}\n`;
+                });
+
+                return description;
+            }
+
+            calculateStackRefund(cell) {
+                let totalRefund = 0;
+                cell.buildings.forEach(building => {
+                    totalRefund += this.buildingTypes[building.type].cost;
+                });
+                return totalRefund;
+            }
+
+            expandGrid() {
+                const expansionCost = 100;
+                
+                // Check if player has enough money
+                if (this.money < expansionCost) {
+                    this.showNotification('❌ Not enough money to expand grid! Need $100', 'error');
+                    return;
+                }
+
+                // Confirm expansion
+                const confirmExpansion = confirm(
+                    `🔳 Expand Grid?\n\n` +
+                    `Cost: $${expansionCost}\n` +
+                    `Current grid: ${this.gridSize.cols} × ${this.gridSize.rows} (${this.gridSize.cols * this.gridSize.rows} cells)\n` +
+                    `New grid: ${this.gridSize.cols + 15} × ${this.gridSize.rows} (${(this.gridSize.cols + 15) * this.gridSize.rows} cells)\n` +
+                    `Additional cells: ${15 * this.gridSize.rows}\n\n` +
+                    `This will expand the grid to the right.`
+                );
+
+                if (!confirmExpansion) {
+                    return;
+                }
+
+                // Deduct money
+                this.money -= expansionCost;
+
+                // Store current grid data
+                const oldGrid = [];
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    oldGrid[row] = [];
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        oldGrid[row][col] = {
+                            buildings: [...this.grid[row][col].buildings]
+                        };
+                    }
+                }
+
+                // Update grid size
+                const oldCols = this.gridSize.cols;
+                this.gridSize.cols += 15;
+
+                // Recreate grid with new size
+                this.createGrid();
+
+                // Restore buildings to existing cells
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < oldCols; col++) {
+                        this.grid[row][col].buildings = oldGrid[row][col].buildings;
+                        this.updateCellVisual(this.grid[row][col]);
+                    }
+                }
+
+                // Update UI and connections
+                this.updateUI();
+                this.updateRailConnections();
+                this.updateStationConnections();
+                this.checkAndStartTrains();
+
+                const newTotal = this.gridSize.cols * this.gridSize.rows;
+                const addedCells = 15 * this.gridSize.rows;
+                this.showNotification(`🔳 Grid expanded! Added ${addedCells} cells. New size: ${this.gridSize.cols}×${this.gridSize.rows} (${newTotal} total)`, 'success');
             }
 
             startIncomeLoop() {
@@ -1040,6 +1624,21 @@
                     demolishBtn.style.opacity = '1';
                 }
 
+                // Demolish stack button is always enabled
+                const demolishStackBtn = document.querySelector('[data-building="demolish-stack"]');
+                if (demolishStackBtn) {
+                    demolishStackBtn.disabled = false;
+                    demolishStackBtn.style.opacity = '1';
+                }
+
+                // Demolish area button is always enabled
+                const demolishAreaBtn = document.querySelector('[data-building="demolish-area"]');
+                if (demolishAreaBtn) {
+                    demolishAreaBtn.disabled = false;
+                    demolishAreaBtn.style.opacity = '0.6'; // Slightly dimmed since it's coming soon
+                    demolishAreaBtn.title = 'Feature coming soon - multi-cell demolition';
+                }
+
                 // Show metro network status
                 this.updateNetworkStatus(isMetroNetworkActive, stationCount, lineCount);
                 this.updateInventory();
@@ -1069,6 +1668,74 @@
                     this.updateUI();
                     this.showNotification('City reset successfully!', 'success');
                 }
+            }
+
+            newProject() {
+                // Check if there's any progress to save
+                if (this.buildings > 0 || this.money !== 1000) {
+                    const saveChoice = confirm(
+                        '🆕 Starting a new project will reset your current city.\n\n' +
+                        'Would you like to save your current progress first?\n\n' +
+                        'Click "OK" to save and continue\n' +
+                        'Click "Cancel" to start new project without saving'
+                    );
+
+                    if (saveChoice) {
+                        // User chose to save first
+                        this.saveGame();
+                        
+                        // Give a moment for the save notification to show, then ask to proceed
+                        setTimeout(() => {
+                            const proceedChoice = confirm(
+                                '💾 Game saved!\n\n' +
+                                'Now start the new project?'
+                            );
+                            
+                            if (proceedChoice) {
+                                this.startNewProject();
+                            }
+                        }, 1500);
+                    } else {
+                        // User chose not to save, confirm they want to proceed
+                        const finalChoice = confirm(
+                            '⚠️ Are you sure you want to start a new project without saving?\n\n' +
+                            'Your current progress will be lost!'
+                        );
+                        
+                        if (finalChoice) {
+                            this.startNewProject();
+                        }
+                    }
+                } else {
+                    // No progress to lose, just start new project
+                    this.startNewProject();
+                }
+            }
+
+            startNewProject() {
+                this.money = 1000;
+                this.population = 0;
+                this.buildings = 0;
+                this.income = 0;
+                this.selectedBuilding = null;
+                this.currentProjectName = 'Untitled Project';
+                
+                // Stop trains and clear connections
+                this.stopTrains();
+                this.railConnections = [];
+                this.stationConnections = [];
+                
+                // Clear existing station connection visuals
+                document.querySelectorAll('.station-connection').forEach(el => el.remove());
+                document.querySelectorAll('.connected-station').forEach(el => {
+                    el.classList.remove('connected-station');
+                    const indicator = el.querySelector('.connection-indicator');
+                    if (indicator) indicator.remove();
+                });
+                
+                this.createGrid();
+                this.updateUI();
+                this.showNotification('🆕 New project started! Welcome to Metro City Builder!', 'success');
             }
 
             updateNetworkStatus(isActive, stationCount, lineCount) {
@@ -1150,8 +1817,9 @@
             }
 
             updateCellVisual(cell) {
-                // Clear existing visual
+                // Clear existing visual and connection styles
                 cell.element.innerHTML = '';
+                cell.element.classList.remove('connected-station');
                 
                 if (cell.buildings.length === 0) {
                     cell.element.classList.remove('occupied');
@@ -1251,7 +1919,7 @@
                     for (let col = 0; col < this.gridSize.cols; col++) {
                         const cell = this.grid[row][col];
                         
-                        if (this.selectedBuilding === 'demolish') {
+                        if (this.selectedBuilding === 'demolish' || this.selectedBuilding === 'demolish-stack' || this.selectedBuilding === 'demolish-area') {
                             if (cell.buildings.length > 0) {
                                 cell.element.classList.add('demolish-mode');
                             }
@@ -1261,11 +1929,688 @@
                     }
                 }
             }
+
+            updateRailConnections() {
+                // Clear existing connections
+                document.querySelectorAll('.rail-connection').forEach(el => el.remove());
+                this.railConnections = [];
+
+                // Find all rail cells
+                const railCells = [];
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = this.grid[row][col];
+                        if (cell.buildings.some(building => building.type === 'line')) {
+                            railCells.push({ row, col, element: cell.element });
+                        }
+                    }
+                }
+
+                // Create connections between adjacent rails
+                railCells.forEach(rail => {
+                    const { row, col, element } = rail;
+                    
+                    // Check all 4 directions for adjacent rails
+                    const directions = [
+                        { dr: 0, dc: 1, class: 'rail-horizontal' },   // Right
+                        { dr: 1, dc: 0, class: 'rail-vertical' },    // Down
+                        { dr: 0, dc: -1, class: 'rail-horizontal' },  // Left
+                        { dr: -1, dc: 0, class: 'rail-vertical' }    // Up
+                    ];
+
+                    directions.forEach(dir => {
+                        const newRow = row + dir.dr;
+                        const newCol = col + dir.dc;
+                        
+                        if (newRow >= 0 && newRow < this.gridSize.rows && 
+                            newCol >= 0 && newCol < this.gridSize.cols) {
+                            
+                            const adjacentCell = this.grid[newRow][newCol];
+                            if (adjacentCell.buildings.some(building => building.type === 'line')) {
+                                // Create visual connection
+                                this.createRailConnection(rail, { row: newRow, col: newCol }, dir.class);
+                                
+                                // Store connection data
+                                this.railConnections.push({
+                                    from: { row, col },
+                                    to: { row: newRow, col: newCol }
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+
+            createRailConnection(fromRail, toRail, connectionClass) {
+                const gridElement = document.getElementById('game-grid');
+                const connection = document.createElement('div');
+                connection.className = `rail-connection ${connectionClass}`;
+                
+                const fromRect = fromRail.element.getBoundingClientRect();
+                const gridRect = gridElement.getBoundingClientRect();
+                
+                if (connectionClass === 'rail-horizontal') {
+                    connection.style.left = `${fromRect.left - gridRect.left + fromRect.width}px`;
+                    connection.style.top = `${fromRect.top - gridRect.top + fromRect.height / 2}px`;
+                    connection.style.width = `2px`; // Gap between cells
+                } else if (connectionClass === 'rail-vertical') {
+                    connection.style.left = `${fromRect.left - gridRect.left + fromRect.width / 2}px`;
+                    connection.style.top = `${fromRect.top - gridRect.top + fromRect.height}px`;
+                    connection.style.height = `2px`; // Gap between cells
+                }
+                
+                gridElement.appendChild(connection);
+            }
+
+            checkAndStartTrains() {
+                // Stop existing trains
+                this.stopTrains();
+
+                // Check if we have enough stations and rails for trains
+                const stationCount = this.countBuildingType('station');
+                const lineCount = this.countBuildingType('line');
+
+                if (stationCount >= 2 && lineCount >= 1) {
+                    this.startTrains();
+                }
+            }
+
+            startTrains() {
+                // Find all stations
+                const stations = [];
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = this.grid[row][col];
+                        if (cell.buildings.some(building => building.type === 'station')) {
+                            stations.push({ row, col, element: cell.element });
+                        }
+                    }
+                }
+
+                if (stations.length < 2) return;
+
+                // Create trains that move between connected stations
+                this.trainInterval = setInterval(() => {
+                    if (Math.random() < 0.3) { // 30% chance to spawn a train each interval
+                        this.spawnTrain(stations);
+                    }
+                }, 3000);
+            }
+
+            spawnTrain(stations) {
+                // Pick a random starting station
+                const startStation = stations[Math.floor(Math.random() * stations.length)];
+                
+                // Find connected stations via rail network
+                const connectedStations = this.findConnectedStations(startStation, stations);
+                
+                if (connectedStations.length === 0) return;
+
+                // Pick a random destination
+                const endStation = connectedStations[Math.floor(Math.random() * connectedStations.length)];
+                
+                // Create train element
+                const train = document.createElement('div');
+                train.className = 'train';
+                train.textContent = '🚇';
+                
+                // Position train at start station
+                const gridElement = document.getElementById('game-grid');
+                const startRect = startStation.element.getBoundingClientRect();
+                const gridRect = gridElement.getBoundingClientRect();
+                
+                train.style.left = `${startRect.left - gridRect.left}px`;
+                train.style.top = `${startRect.top - gridRect.top}px`;
+                
+                gridElement.appendChild(train);
+                
+                // Animate train to destination
+                this.animateTrainToDestination(train, startStation, endStation);
+            }
+
+            findConnectedStations(startStation, allStations) {
+                // Simple pathfinding - check if there's a rail path to other stations
+                const connected = [];
+                
+                allStations.forEach(station => {
+                    if (station.row === startStation.row && station.col === startStation.col) return;
+                    
+                    // Check if there's a rail path (simplified - adjacent or nearby rails)
+                    if (this.hasRailPath(startStation, station)) {
+                        connected.push(station);
+                    }
+                });
+                
+                return connected;
+            }
+
+            hasRailPath(from, to) {
+                // Simplified path checking - look for rails in between
+                const rowDiff = Math.abs(to.row - from.row);
+                const colDiff = Math.abs(to.col - from.col);
+                
+                // Check horizontal path
+                if (rowDiff === 0 && colDiff > 1) {
+                    const startCol = Math.min(from.col, to.col);
+                    const endCol = Math.max(from.col, to.col);
+                    
+                    for (let col = startCol + 1; col < endCol; col++) {
+                        const cell = this.grid[from.row][col];
+                        if (!cell.buildings.some(building => building.type === 'line')) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                
+                // Check vertical path
+                if (colDiff === 0 && rowDiff > 1) {
+                    const startRow = Math.min(from.row, to.row);
+                    const endRow = Math.max(from.row, to.row);
+                    
+                    for (let row = startRow + 1; row < endRow; row++) {
+                        const cell = this.grid[row][from.col];
+                        if (!cell.buildings.some(building => building.type === 'line')) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                
+                // Adjacent stations
+                if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+                    return true;
+                }
+                
+                return false;
+            }
+
+            animateTrainToDestination(train, start, end) {
+                const startRect = start.element.getBoundingClientRect();
+                const endRect = end.element.getBoundingClientRect();
+                const gridRect = document.getElementById('game-grid').getBoundingClientRect();
+                
+                const startX = startRect.left - gridRect.left;
+                const startY = startRect.top - gridRect.top;
+                const endX = endRect.left - gridRect.left;
+                const endY = endRect.top - gridRect.top;
+                
+                train.style.transition = 'all 4s linear';
+                train.style.left = `${endX}px`;
+                train.style.top = `${endY}px`;
+                
+                // Remove train after animation
+                setTimeout(() => {
+                    if (train.parentNode) {
+                        train.remove();
+                    }
+                }, 4000);
+            }
+
+            stopTrains() {
+                // Clear train interval
+                if (this.trainInterval) {
+                    clearInterval(this.trainInterval);
+                    this.trainInterval = null;
+                }
+                
+                // Remove all existing trains
+                document.querySelectorAll('.train').forEach(train => train.remove());
+                this.trains = [];
+            }
+
+            updateStationConnections() {
+                // Clear existing station connections
+                document.querySelectorAll('.station-connection').forEach(el => el.remove());
+                this.stationConnections = this.stationConnections || [];
+                this.stationConnections = [];
+
+                // Find all station cells
+                const stationCells = [];
+                for (let row = 0; row < this.gridSize.rows; row++) {
+                    for (let col = 0; col < this.gridSize.cols; col++) {
+                        const cell = this.grid[row][col];
+                        if (cell.buildings.some(building => building.type === 'station')) {
+                            stationCells.push({ row, col, element: cell.element });
+                        }
+                    }
+                }
+
+                // Group adjacent stations into connected clusters
+                const stationClusters = this.findStationClusters(stationCells);
+                
+                // Update visual representation for each cluster
+                stationClusters.forEach(cluster => {
+                    if (cluster.length > 1) {
+                        this.visualizeStationCluster(cluster);
+                    }
+                });
+            }
+
+            findStationClusters(stationCells) {
+                const visited = new Set();
+                const clusters = [];
+
+                stationCells.forEach(station => {
+                    const key = `${station.row},${station.col}`;
+                    if (!visited.has(key)) {
+                        const cluster = [];
+                        this.exploreStationCluster(station, stationCells, visited, cluster);
+                        clusters.push(cluster);
+                    }
+                });
+
+                return clusters;
+            }
+
+            exploreStationCluster(station, allStations, visited, cluster) {
+                const key = `${station.row},${station.col}`;
+                if (visited.has(key)) return;
+
+                visited.add(key);
+                cluster.push(station);
+
+                // Check all 4 directions for adjacent stations
+                const directions = [
+                    { dr: 0, dc: 1 },   // Right
+                    { dr: 1, dc: 0 },   // Down
+                    { dr: 0, dc: -1 },  // Left
+                    { dr: -1, dc: 0 }   // Up
+                ];
+
+                directions.forEach(dir => {
+                    const newRow = station.row + dir.dr;
+                    const newCol = station.col + dir.dc;
+                    
+                    const adjacentStation = allStations.find(s => s.row === newRow && s.col === newCol);
+                    if (adjacentStation) {
+                        this.exploreStationCluster(adjacentStation, allStations, visited, cluster);
+                    }
+                });
+            }
+
+            visualizeStationCluster(cluster) {
+                const gridElement = document.getElementById('game-grid');
+                
+                // Calculate cluster bounds
+                const minRow = Math.min(...cluster.map(s => s.row));
+                const maxRow = Math.max(...cluster.map(s => s.row));
+                const minCol = Math.min(...cluster.map(s => s.col));
+                const maxCol = Math.max(...cluster.map(s => s.col));
+
+                // Create connection overlay for the cluster
+                const connection = document.createElement('div');
+                connection.className = 'station-connection';
+                
+                // Get grid information for positioning
+                const gridRect = gridElement.getBoundingClientRect();
+                const firstCell = cluster[0].element;
+                const firstRect = firstCell.getBoundingClientRect();
+                
+                const cellWidth = firstRect.width;
+                const cellHeight = firstRect.height;
+                const gap = 2; // Grid gap
+                
+                // Calculate overlay position and size
+                const left = (minCol * (cellWidth + gap)) + 10; // Grid padding
+                const top = (minRow * (cellHeight + gap)) + 10; // Grid padding
+                const width = (maxCol - minCol + 1) * (cellWidth + gap) - gap;
+                const height = (maxRow - minRow + 1) * (cellHeight + gap) - gap;
+                
+                connection.style.left = `${left}px`;
+                connection.style.top = `${top}px`;
+                connection.style.width = `${width}px`;
+                connection.style.height = `${height}px`;
+                
+                gridElement.appendChild(connection);
+
+                // Add visual indicators to each station in the cluster
+                cluster.forEach(station => {
+                    station.element.classList.add('connected-station');
+                    
+                    // Add connection indicators
+                    const stationBuilding = station.element.querySelector('.building');
+                    if (stationBuilding && !stationBuilding.querySelector('.connection-indicator')) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'connection-indicator';
+                        indicator.textContent = '🔗';
+                        stationBuilding.appendChild(indicator);
+                    }
+                });
+
+                // Store connection data
+                this.stationConnections.push({
+                    cluster: cluster.map(s => ({ row: s.row, col: s.col })),
+                    bounds: { minRow, maxRow, minCol, maxCol }
+                });
+            }
+
+            saveGame() {
+                try {
+                    // Prompt for project name if it's untitled or user wants to rename
+                    let projectName = this.currentProjectName;
+                    if (projectName === 'Untitled Project') {
+                        projectName = prompt('Enter a name for your project:', 'My City Project');
+                        if (!projectName || projectName.trim() === '') {
+                            this.showNotification('❌ Save cancelled - no project name provided!', 'error');
+                            return;
+                        }
+                        projectName = projectName.trim();
+                        this.currentProjectName = projectName;
+                    }
+
+                    // Create save data object
+                    const saveData = {
+                        name: projectName,
+                        money: this.money,
+                        population: this.population,
+                        buildings: this.buildings,
+                        income: this.income,
+                        grid: [],
+                        timestamp: new Date().toISOString()
+                    };
+
+                    // Save grid data
+                    for (let row = 0; row < this.gridSize.rows; row++) {
+                        saveData.grid[row] = [];
+                        for (let col = 0; col < this.gridSize.cols; col++) {
+                            saveData.grid[row][col] = {
+                                buildings: this.grid[row][col].buildings
+                            };
+                        }
+                    }
+
+                    // Get existing projects
+                    const existingProjects = this.getAllProjects();
+                    existingProjects[projectName] = saveData;
+
+                    // Save to localStorage
+                    localStorage.setItem('metroCityBuilderProjects', JSON.stringify(existingProjects));
+                    
+                    const saveTime = new Date().toLocaleString();
+                    this.showNotification(`💾 Project "${projectName}" saved successfully! (${saveTime})`, 'success');
+                    
+                    // Update project panel if open
+                    if (this.projectPanelOpen) {
+                        this.updateProjectList();
+                    }
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    this.showNotification('❌ Failed to save project!', 'error');
+                }
+            }
+
+            loadGame() {
+                try {
+                    const savedData = localStorage.getItem('metroCityBuilderSave');
+                    
+                    if (!savedData) {
+                        this.showNotification('❌ No saved game found!', 'error');
+                        return;
+                    }
+
+                    const saveData = JSON.parse(savedData);
+                    const saveTime = new Date(saveData.timestamp).toLocaleString();
+                    
+                    const confirmLoad = confirm(
+                        `Load saved game from ${saveTime}?\n\n` +
+                        `Saved stats:\n` +
+                        `💰 Money: $${saveData.money}\n` +
+                        `👥 Population: ${saveData.population}\n` +
+                        `🏢 Buildings: ${saveData.buildings}\n\n` +
+                        `This will overwrite your current progress!`
+                    );
+
+                    if (!confirmLoad) {
+                        return;
+                    }
+
+                    // Restore game state
+                    this.money = saveData.money;
+                    this.population = saveData.population;
+                    this.buildings = saveData.buildings;
+                    this.income = saveData.income;
+
+                    // Clear current grid
+                    this.createGrid();
+
+                    // Restore grid buildings
+                    for (let row = 0; row < this.gridSize.rows; row++) {
+                        for (let col = 0; col < this.gridSize.cols; col++) {
+                            if (saveData.grid[row] && saveData.grid[row][col]) {
+                                this.grid[row][col].buildings = saveData.grid[row][col].buildings || [];
+                                this.updateCellVisual(this.grid[row][col]);
+                            }
+                        }
+                    }
+
+                    // Update UI
+                    this.updateUI();
+                    
+                    // Update rail and station connections
+                    this.updateRailConnections();
+                    this.updateStationConnections();
+                    this.checkAndStartTrains();
+                    
+                    this.showNotification(`📂 Game loaded successfully! (${saveTime})`, 'success');
+                } catch (error) {
+                    console.error('Load failed:', error);
+                    this.showNotification('❌ Failed to load game!', 'error');
+                }
+            }
+
+            // Check if there's a saved game on startup
+            checkForSavedGame() {
+                const savedData = localStorage.getItem('metroCityBuilderSave');
+                if (savedData) {
+                    try {
+                        const saveData = JSON.parse(savedData);
+                        const saveTime = new Date(saveData.timestamp).toLocaleString();
+                        
+                        setTimeout(() => {
+                            this.showNotification(`💾 Saved game found from ${saveTime}. Click Load Game to restore it.`, 'success');
+                        }, 2000);
+                    } catch (error) {
+                        console.error('Error checking saved game:', error);
+                    }
+                }
+                
+                // Also check for projects
+                const projects = this.getAllProjects();
+                if (Object.keys(projects).length > 0) {
+                    setTimeout(() => {
+                        this.showNotification(`📁 ${Object.keys(projects).length} saved project(s) found. Open Projects panel to manage them.`, 'success');
+                    }, 4000);
+                }
+            }
+
+            getAllProjects() {
+                try {
+                    const projectsData = localStorage.getItem('metroCityBuilderProjects');
+                    return projectsData ? JSON.parse(projectsData) : {};
+                } catch (error) {
+                    console.error('Error loading projects:', error);
+                    return {};
+                }
+            }
+
+            toggleProjectPanel() {
+                this.projectPanelOpen = !this.projectPanelOpen;
+                const panel = document.getElementById('project-panel');
+                
+                if (this.projectPanelOpen) {
+                    panel.classList.add('show');
+                    this.updateProjectList();
+                } else {
+                    panel.classList.remove('show');
+                }
+            }
+
+            closeProjectPanel() {
+                this.projectPanelOpen = false;
+                document.getElementById('project-panel').classList.remove('show');
+            }
+
+            updateProjectList() {
+                const projectList = document.getElementById('project-list');
+                const projects = this.getAllProjects();
+                
+                if (Object.keys(projects).length === 0) {
+                    projectList.innerHTML = '<div class="no-projects">No saved projects found</div>';
+                    return;
+                }
+
+                let html = '';
+                Object.entries(projects).forEach(([name, data]) => {
+                    const saveTime = new Date(data.timestamp).toLocaleString();
+                    const isCurrent = name === this.currentProjectName;
+                    
+                    html += `
+                        <div class="project-item ${isCurrent ? 'current' : ''}" data-project-name="${name}">
+                            <div class="project-name">${name} ${isCurrent ? '(Current)' : ''}</div>
+                            <div class="project-stats">
+                                💰 $${data.money} | 👥 ${data.population} | 🏢 ${data.buildings}
+                            </div>
+                            <div class="project-date">Saved: ${saveTime}</div>
+                            <div class="project-actions">
+                                <button class="project-action-btn load" onclick="game.loadProject('${name}')">
+                                    📂 Load
+                                </button>
+                                <button class="project-action-btn rename" onclick="game.renameProject('${name}')">
+                                    ✏️ Rename
+                                </button>
+                                <button class="project-action-btn delete" onclick="game.deleteProject('${name}')">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                projectList.innerHTML = html;
+            }
+
+            loadProject(projectName) {
+                try {
+                    const projects = this.getAllProjects();
+                    const projectData = projects[projectName];
+                    
+                    if (!projectData) {
+                        this.showNotification('❌ Project not found!', 'error');
+                        return;
+                    }
+
+                    const saveTime = new Date(projectData.timestamp).toLocaleString();
+                    
+                    const confirmLoad = confirm(
+                        `Load project "${projectName}"?\n\n` +
+                        `Saved: ${saveTime}\n` +
+                        `💰 Money: $${projectData.money}\n` +
+                        `👥 Population: ${projectData.population}\n` +
+                        `🏢 Buildings: ${projectData.buildings}\n\n` +
+                        `This will overwrite your current progress!`
+                    );
+
+                    if (!confirmLoad) {
+                        return;
+                    }
+
+                    // Restore game state
+                    this.currentProjectName = projectName;
+                    this.money = projectData.money;
+                    this.population = projectData.population;
+                    this.buildings = projectData.buildings;
+                    this.income = projectData.income;
+
+                    // Clear current grid
+                    this.createGrid();
+
+                    // Restore grid buildings
+                    for (let row = 0; row < this.gridSize.rows; row++) {
+                        for (let col = 0; col < this.gridSize.cols; col++) {
+                            if (projectData.grid[row] && projectData.grid[row][col]) {
+                                this.grid[row][col].buildings = projectData.grid[row][col].buildings || [];
+                                this.updateCellVisual(this.grid[row][col]);
+                            }
+                        }
+                    }
+
+                    // Update UI
+                    this.updateUI();
+                    this.updateProjectList();
+                    
+                    // Restart rail connections, station connections, and trains
+                    setTimeout(() => {
+                        this.updateRailConnections();
+                        this.updateStationConnections();
+                        this.checkAndStartTrains();
+                    }, 500);
+                    
+                    this.showNotification(`📂 Project "${projectName}" loaded successfully!`, 'success');
+                } catch (error) {
+                    console.error('Load failed:', error);
+                    this.showNotification('❌ Failed to load project!', 'error');
+                }
+            }
+
+            renameProject(oldName) {
+                const newName = prompt(`Rename project "${oldName}" to:`, oldName);
+                
+                if (!newName || newName.trim() === '' || newName.trim() === oldName) {
+                    return;
+                }
+
+                const trimmedName = newName.trim();
+                const projects = this.getAllProjects();
+                
+                if (projects[trimmedName]) {
+                    this.showNotification('❌ A project with that name already exists!', 'error');
+                    return;
+                }
+
+                // Copy project data with new name
+                projects[trimmedName] = { ...projects[oldName], name: trimmedName };
+                delete projects[oldName];
+
+                // Update current project name if this was the current project
+                if (this.currentProjectName === oldName) {
+                    this.currentProjectName = trimmedName;
+                }
+
+                // Save updated projects
+                localStorage.setItem('metroCityBuilderProjects', JSON.stringify(projects));
+                this.updateProjectList();
+                this.showNotification(`✏️ Project renamed to "${trimmedName}"!`, 'success');
+            }
+
+            deleteProject(projectName) {
+                const confirmDelete = confirm(
+                    `Delete project "${projectName}"?\n\n` +
+                    `This action cannot be undone!`
+                );
+
+                if (!confirmDelete) {
+                    return;
+                }
+
+                const projects = this.getAllProjects();
+                delete projects[projectName];
+
+                // If this was the current project, reset to untitled
+                if (this.currentProjectName === projectName) {
+                    this.currentProjectName = 'Untitled Project';
+                }
+
+                localStorage.setItem('metroCityBuilderProjects', JSON.stringify(projects));
+                this.updateProjectList();
+                this.showNotification(`🗑️ Project "${projectName}" deleted!`, 'success');
+            }
         }
 
         // Start the game when page loads
+        let game; // Global reference for project management
         window.addEventListener('DOMContentLoaded', () => {
-            new MetroCityBuilder();
+            game = new MetroCityBuilder();
         });
     </script>
 </body>

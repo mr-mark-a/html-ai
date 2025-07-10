@@ -104,7 +104,7 @@ window.TranslationSystem = (function() {
             'alltrails': 'AllTrails',
             'alltrails_desc': 'Hiking and trail navigation',
             'metro_navigator': 'Metro Navigator',
-            'metro_navigator_desc': 'Local metro system guide',
+           'metro_navigator_desc': 'Local metro system guide',
             
             // All Languages Page
             'all_languages_title': 'All Languages',
