@@ -32,6 +32,9 @@
 </head>
 <body>
   <h2>💬 GPT Chat — $2 for 50 Messages</h2>
+  
+  <!-- Exit Button (hidden initially) -->
+  <button id="exitBtn" onclick="exitChat()">❌ Exit</button>
 
   <div id="payment">
     <h3>🚀 Unlock GPT Chat</h3>
@@ -158,7 +161,16 @@
     function unlockChat() {
       document.getElementById('payment').style.display = 'none';
       document.getElementById('chat').style.display = 'block';
+      document.getElementById('exitBtn').style.display = 'block'; // Show exit button after payment
       updateCounter();
+    }
+
+    function exitChat() {
+      const confirmed = confirm("⚠️ Your progress will be lost if you exit!\n\nAre you sure you want to leave?");
+      if (confirmed) {
+        window.location.href = 'index.html';
+      }
+      // If cancelled, do nothing (message automatically disappears)
     }
 
     function updateCounter() {
