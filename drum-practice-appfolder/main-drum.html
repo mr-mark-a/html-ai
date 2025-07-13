@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Practice App</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .drum-logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 80px;
+            height: auto;
+            z-index: 1000;
+        }
+        
+        .container {
+            padding: 20px;
+            padding-left: 110px; /* Leave space for the logo */
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin-top: 20px;
+        }
+        
+        .drum-pad-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 600px;
+            margin: 50px auto;
+        }
+        
+        .drum-pad {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #ff6b6b;
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .drum-pad:hover {
+            background: linear-gradient(145deg, #3d3d3d, #2a2a2a);
+            transform: scale(1.05);
+        }
+        
+        .drum-pad:active {
+            background: linear-gradient(145deg, #ff6b6b, #ff5252);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <img src="https://i.pinimg.com/736x/6a/55/3d/6a553dd7647b07d0a590fa59012b66ce.jpg" alt="Drum Set" class="drum-logo">
+    
+    <div class="container">
+        <h1>Drum Practice App</h1>
+        
+        <div class="drum-pad-container">
+            <div class="drum-pad" data-sound="kick">KICK</div>
+            <div class="drum-pad" data-sound="snare">SNARE</div>
+            <div class="drum-pad" data-sound="hihat">HI-HAT</div>
+            <div class="drum-pad" data-sound="crash">CRASH</div>
+            <div class="drum-pad" data-sound="ride">RIDE</div>
+            <div class="drum-pad" data-sound="tom">TOM</div>
+        </div>
+    </div>
+
+    <script>
+        // Add click sound simulation for now
+        document.querySelectorAll('.drum-pad').forEach(pad => {
+            pad.addEventListener('click', function() {
+                const sound = this.getAttribute('data-sound');
+                console.log(`Playing ${sound} sound`);
+                
+                // Create a simple beep sound using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Different frequencies for different drum sounds
+                const frequencies = {
+                    kick: 60,
+                    snare: 200,
+                    hihat: 800,
+                    crash: 1000,
+                    ride: 600,
+                    tom: 150
+                };
+                
+                oscillator.frequency.setValueAtTime(frequencies[sound] || 440, audioContext.currentTime);
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            });
+        });
+    </script>
+</body>
+</html>

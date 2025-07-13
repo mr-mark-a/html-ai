@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DEMO Payment - No Real Money</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 2em auto; }
+    input, button, label { display: block; width: 100%; margin-bottom: 1em; }
+    .card-field { padding: 0.5em; font-size: 1em; }
+    .output { margin-top: 1em; font-weight: bold; }
+    .payment-panel { border: 1px solid #ccc; padding: 1em; border-radius: 6px; }
+    button:disabled { opacity: 0.6; }
+    .demo-warning { 
+      background: #fff3cd; 
+      border: 1px solid #ffeaa7; 
+      padding: 1em; 
+      border-radius: 6px; 
+      margin-bottom: 1em; 
+      color: #856404; 
+      font-weight: bold; 
+      text-align: center; 
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Enter Dial Code & Pay (DEMO)</h2>
+  <input type="text" id="dialCodeInput" placeholder="Dial code (e.g. 3302)">
+
+  <div class="payment-panel">
+    <label><input type="checkbox" id="paymentOption"> I want to make a payment</label>
+
+    <div id="fakePaymentForm" style="display:none;">
+      <p style="color: #666; font-size: 0.9em; margin: 0.5em 0;">
+        📝 Enter any fake card details - this is just a demo!
+      </p>
+      <input type="text" id="cardName" class="card-field" placeholder="Name on card (any fake name)">
+      <input type="text" id="cardNumber" class="card-field" placeholder="Card number (any 16 digits)">
+      <input type="text" id="expiry" class="card-field" placeholder="Expiry (any MM/YY)">
+      <input type="text" id="cvc" class="card-field" placeholder="CVC (any 3 digits)">
+    </div>
+
+    <button id="payBtn" onclick="submitAll()">Submit Demo Payment (No Real Money)</button>
+  </div>
+
+  <p id="output" class="output"></p>
+
+<script>
+  const codeAmounts = { "3302":200, "3102":200, "3202":10, "3402":100, "3502":20 };
+
+  document.getElementById("paymentOption").addEventListener("change", () => {
+    document.getElementById("fakePaymentForm").style.display = document.getElementById("paymentOption").checked ? "block" : "none";
+    document.getElementById("output").textContent = "";
+  });
+
+  function submitAll() {
+    const code = document.getElementById("dialCodeInput").value.trim();
+    const wantsPay = document.getElementById("paymentOption").checked;
+    const out = document.getElementById("output");
+
+    if (!wantsPay) {
+      out.textContent = "Select payment option first.";
+      return;
+    }
+    if (code === "") {
+      out.textContent = "Dial code first.";
+      return;
+    }
+    if (!(code in codeAmounts)) {
+      out.textContent = "Invalid dial code. Cannot process payment.";
+      return;
+    }
+
+    // card fields
+    const name = document.getElementById("cardName").value.trim();
+    const num = document.getElementById("cardNumber").value.trim();
+    const exp = document.getElementById("expiry").value.trim();
+    const cvc = document.getElementById("cvc").value.trim();
+    if (!name || !num || !exp || !cvc) {
+      out.textContent = "Please fill in all card details.";
+      return;
+    }
+
+    const amount = codeAmounts[code];
+    out.textContent = "Processing payment...";
+
+    setTimeout(() => {
+      out.textContent = `✅ DEMO Payment of $${amount} for code ${code} simulated successfully! (No real money charged)`;
+      
+      // Navigate to congratulations page after 2 seconds
+      setTimeout(() => {
+        window.location.href = 'congrats.html';
+      }, 2000);
+    }, 1500);
+  }
+</script>
+
+</body>
+</html>

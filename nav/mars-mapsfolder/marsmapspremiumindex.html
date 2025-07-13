@@ -188,12 +188,8 @@
         function processApplePay() {
             if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
                 // Apple Pay is available
-                alert('Processing Apple Pay payment...');
-                // Simulate payment processing
-                setTimeout(() => {
-                    alert('Payment successful! Redirecting to Mars Maps Premium...');
-                    window.location.href = 'mars-maps-premium.html';
-                }, 2000);
+                alert('Redirecting to Apple Pay...');
+                // Implement Apple Pay integration here
                 console.log('Processing Apple Pay payment');
             } else {
                 alert('Apple Pay is not available on this device');
@@ -201,32 +197,20 @@
         }
         
         function processGooglePay() {
-            alert('Processing Google Pay payment...');
-            // Simulate payment processing
-            setTimeout(() => {
-                alert('Payment successful! Redirecting to Mars Maps Premium...');
-                window.location.href = 'mars-maps-premium.html';
-            }, 2000);
+            alert('Redirecting to Google Pay...');
+            // Implement Google Pay integration here
             console.log('Processing Google Pay payment');
         }
         
         function processPayPal() {
-            alert('Processing PayPal payment...');
-            // Simulate payment processing
-            setTimeout(() => {
-                alert('Payment successful! Redirecting to Mars Maps Premium...');
-                window.location.href = 'mars-maps-premium.html';
-            }, 2000);
+            alert('Redirecting to PayPal...');
+            // Implement PayPal integration here
             console.log('Processing PayPal payment');
         }
         
         function processCardPayment() {
-            alert('Processing card payment...');
-            // Simulate payment processing
-            setTimeout(() => {
-                alert('Payment successful! Redirecting to Mars Maps Premium...');
-                window.location.href = 'mars-maps-premium.html';
-            }, 2000);
+            alert('Redirecting to card payment form...');
+            // Implement card payment form here
             console.log('Processing card payment');
         }
     </script>

@@ -6,24 +6,10 @@
     <title data-translate-title="document_title">Cat & Mouse Game</title>
     <script src="translate/translations.js"></script>
     <style>
-    <div class="lang-dropdown" id="langDropdown">
-        <div class="lang-option active" data-lang="en">🇺🇸 English</div>
-        <div class="lang-option" data-lang="es">🇪🇸 Español</div>
-        <div class="lang-option" data-lang="fr">🇫🇷 Français</div>
-        <div class="lang-option" data-lang="de">🇩🇪 Deutsch</div>
-        <div class="lang-option" data-lang="it">🇮🇹 Italiano</div>
-        <div class="lang-option" data-lang="pt">🇵🇹 Português</div>
-        <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
-        <div class="lang-option" data-lang="zh">🇨🇳 中文</div>
-        <div class="lang-option" data-lang="ja">🇯🇵 日本語</div>
-        <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
-        <div class="lang-separator"></div>
-        <div class="lang-see-more" id="seeMoreBtn">
-            <span class="see-more-icon">🌍</span>
-            <span class="see-more-text" data-translate="see_more_languages">More</span>
-            <span class="see-more-arrow">→</span>
-        </div>
-    </div> {
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -277,6 +263,78 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
+        .ideal-fines-button {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        
+        .ideal-fines-button:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) translateX(5px);
+            box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+        }
+        
+        .ideal-fines-button:active {
+            transform: translateY(-50%) translateX(0px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        
+        .git-bot-button {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .git-bot-button:hover {
+            background: linear-gradient(135deg, #1e7e34, #155724);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) translateX(-5px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+        
+        .git-bot-button:active {
+            transform: translateY(-50%) translateX(0px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
         /* RTL support for Arabic */
         [dir="rtl"] .language-selector {
             left: 20px;
@@ -292,9 +350,14 @@
             direction: rtl;
         }
         
-        [dir="rtl"] .back-button {
+        [dir="rtl"] .ideal-fines-button {
             right: 20px;
             left: auto;
+        }
+        
+        [dir="rtl"] .git-bot-button {
+            left: 20px;
+            right: auto;
         }
     </style>
 </head>
@@ -316,8 +379,24 @@
         <div class="lang-option" data-lang="zh">�🇳 中文</div>
         <div class="lang-option" data-lang="ja">🇯🇵 日本語</div>
         <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
+        <div class="lang-separator"></div>
+        <div class="lang-see-more" id="seeMoreBtn">
+            <span class="see-more-icon">🌍</span>
+            <span class="see-more-text" data-translate="see_more_languages">More</span>
+            <span class="see-more-arrow">→</span>
+        </div>
     </div>
 </div>
+
+<!-- Ideal Fines Button -->
+<button class="ideal-fines-button" id="idealFinesBtn">
+    💳 Ideal Fines
+</button>
+
+<!-- Git Bot Button -->
+<button class="git-bot-button" id="gitBotBtn">
+    🤖 Git Bot
+</button>
 
 <div id="loginContainer">
     <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
@@ -405,6 +484,16 @@ document.getElementById('tryFreeBtn').onclick = function() {
     window.location.href = 'cat-and-mouse-game.html';
 };
 
+// Ideal Fines button functionality
+document.getElementById('idealFinesBtn').onclick = function() {
+    window.location.href = 'ideal/payment.html';
+};
+
+// Git Bot button functionality
+document.getElementById('gitBotBtn').onclick = function() {
+    window.location.href = 'git-bot.html';
+};
+
 // Language selector functionality
 (function() {
     const langBtn = document.getElementById('langBtn');
@@ -432,60 +521,70 @@ document.getElementById('tryFreeBtn').onclick = function() {
             'password': 'Password',
             'login': 'Login',
             'tryForFree': 'Try for Free',
+            'idealFines': 'Ideal Fines',
             'see_more_languages': 'More'
         },
         'es': {
             'password': 'Contraseña',
             'login': 'Iniciar Sesión',
             'tryForFree': 'Prueba Gratis',
+            'idealFines': 'Multas Ideales',
             'see_more_languages': 'Más'
         },
         'fr': {
             'password': 'Mot de passe',
             'login': 'Connexion',
             'tryForFree': 'Essai Gratuit',
+            'idealFines': 'Amendes Idéales',
             'see_more_languages': 'Plus'
         },
         'de': {
             'password': 'Passwort',
             'login': 'Anmelden',
             'tryForFree': 'Kostenlos Testen',
+            'idealFines': 'Ideale Bußgelder',
             'see_more_languages': 'Mehr'
         },
         'it': {
             'password': 'Password',
             'login': 'Accedi',
             'tryForFree': 'Prova Gratis',
+            'idealFines': 'Multe Ideali',
             'see_more_languages': 'Altro'
         },
         'pt': {
             'password': 'Senha',
             'login': 'Entrar',
             'tryForFree': 'Experimente Grátis',
+            'idealFines': 'Multas Ideais',
             'see_more_languages': 'Mais'
         },
         'ru': {
             'password': 'Пароль',
             'login': 'Войти',
             'tryForFree': 'Попробовать Бесплатно',
+            'idealFines': 'Идеальные Штрафы',
             'see_more_languages': 'Больше'
         },
         'zh': {
             'password': '密码',
             'login': '登录',
             'tryForFree': '免费试用',
+            'idealFines': '理想罚款',
             'see_more_languages': '更多'
         },
         'ja': {
             'password': 'パスワード',
             'login': 'ログイン',
             'tryForFree': '無料で試す',
+            'idealFines': '理想的な罰金',
             'see_more_languages': 'もっと'
         },
         'ar': {
             'password': 'كلمة المرور',
             'login': 'تسجيل الدخول',
             'tryForFree': 'جرب مجاناً',
+            'idealFines': 'الغرامات المثالية',
             'see_more_languages': 'المزيد'
         }
     };
@@ -510,6 +609,12 @@ document.getElementById('tryFreeBtn').onclick = function() {
         const tryFreeBtn = document.getElementById('tryFreeBtn');
         if (tryFreeBtn) {
             tryFreeBtn.textContent = texts.tryForFree;
+        }
+        
+        // Update ideal fines button text
+        const idealFinesBtn = document.getElementById('idealFinesBtn');
+        if (idealFinesBtn) {
+            idealFinesBtn.innerHTML = '💳 ' + texts.idealFines;
         }
         
         // Update see more button text

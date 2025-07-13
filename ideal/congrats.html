@@ -1,0 +1,51 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Success</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 4em;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+    .success-message {
+      font-size: 2.5em;
+      color: #28a745;
+      margin-bottom: 2em;
+    }
+    button {
+      font-size: 1.5em;
+      padding: 0.5em 1.5em;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:focus {
+      outline: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="success-message">✅ Payment Successful!</div>
+
+  <button onclick="goToIndex()">›</button>
+
+  <script>
+    function goToIndex() {
+      window.location.href = '../index.html';
+    }
+  </script>
+
+</body>
+</html>
