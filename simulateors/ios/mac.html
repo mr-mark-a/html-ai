@@ -198,16 +198,21 @@
     }
     
     .power-button {
-      position: absolute;
-      top: -5px;
-      right: 20px;
-      width: 30px;
-      height: 8px;
       background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    
+    .power-button::after {
+      content: "⏻ POWER";
     }
     
     .power-button:hover {
@@ -226,17 +231,31 @@
     .CodeMirror { height: 100%; }
     #preview iframe { width:100%; height:100%; border:none; }
     
-    /* Expanded welcome section */
+    /* Expanded welcome section - now contains Mac interface */
     #welcome {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: transparent;
       border-radius: 15px;
-      padding: 30px;
+      padding: 20px;
       margin: 20px 0;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      min-height: 200px;
+      min-height: 250px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+    }
+    
+    #macScreen {
+      display: block; 
+      width: 100%; 
+      max-width: 600px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: all 0.6s ease;
+      position: relative;
+      overflow: hidden;
+      height: 250px;
+      border: 3px solid #333;
     }
     button { padding: 8px 14px; margin: 5px 0; border:none; border-radius:4px; background:#007aff; color:#fff; cursor:pointer; }
     button:hover { background:#005bb5; }
@@ -431,23 +450,71 @@
       </div>
     </div>
 
-    <!-- Expanded Welcome Section -->
-    <h2 id="welcome" style="text-align: center;">
-      <div style="color: white; font-size: 28px; font-weight: 300;">
-        Welcome to MacBook Air Simulator
-        <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
-          Experience the power of Apple's M3 chip in this interactive environment
-        </div>
-        <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
-          Click the MacBook below to toggle between M3 and M4 configurations
+    <!-- Expanded Welcome Section - Now Mac Interface -->
+    <div id="welcome" style="text-align: center;">
+      <div id="macScreen">
+        <div class="macos-interface" id="macosInterface">
+          <!-- Menu Bar -->
+          <div class="menu-bar">
+            <div class="menu-left">
+              <span>🍎</span>
+              <span>Finder</span>
+              <span>File</span>
+              <span>Edit</span>
+              <span>View</span>
+            </div>
+            <div class="menu-right">
+              <span>🔋100%</span>
+              <span>📶</span>
+              <span id="macTime">9:41 AM</span>
+            </div>
+          </div>
+          
+          <!-- Desktop -->
+          <div class="desktop">
+            <div class="desktop-icons">
+              <div class="desktop-icon" onclick="openApp('folder')" title="Documents">📁</div>
+              <div class="desktop-icon" onclick="openApp('trash')" title="Trash">🗑️</div>
+              <div class="desktop-icon" onclick="openApp('file')" title="TextEdit">📝</div>
+            </div>
+            
+            <!-- Application Window -->
+            <div class="window" id="appWindow">
+              <div class="window-header">
+                <div class="traffic-lights">
+                  <div class="traffic-light close" onclick="closeWindow()"></div>
+                  <div class="traffic-light minimize"></div>
+                  <div class="traffic-light maximize"></div>
+                </div>
+              </div>
+              <div class="window-content" id="windowContent">
+                <h3 style="margin:0; font-size:10px;">Welcome to macOS</h3>
+                <p style="margin:4px 0; font-size:7px;">This is a realistic Mac interface simulation.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Dock -->
+          <div class="dock">
+            <div class="dock-icon finder" onclick="openApp('finder')" title="Finder"></div>
+            <div class="dock-icon safari" onclick="openApp('safari')" title="Safari"></div>
+            <div class="dock-icon mail" onclick="openApp('mail')" title="Mail"></div>
+            <div class="dock-icon photos" onclick="openApp('photos')" title="Photos"></div>
+            <div class="dock-icon music" onclick="openApp('music')" title="Music"></div>
+            <div class="dock-icon maps" onclick="openApp('maps')" title="Maps"></div>
+            <div class="dock-icon settings" onclick="openApp('settings')" title="System Preferences"></div>
+            <div class="dock-icon vscode" onclick="openApp('vscode')" title="VS Code"></div>
+          </div>
         </div>
       </div>
-    </h2>
+      
+      <!-- Power Button positioned above the screen -->
+      <div class="power-button" id="powerButton" title="Power Button" onclick="toggleMacScreen(event)" style="position: relative; top: -10px; right: 0; margin: 0 auto 10px; width: 60px; height: 12px;"></div>
+    </div>
 
-    <div id="macContainer">
+    <div id="macContainer" style="display: none;">
       <div id="macWrapper" onclick="toggleFold()">
-        <div class="power-button" id="powerButton" title="Power Button" onclick="toggleMacScreen(event)"></div>
-        <img id="macScreen" src="" alt="MacBook Air Screen" />
+        <div id="oldMacScreen"></div>
       </div>
     </div>
     <p id="macInfo"></p>
@@ -490,15 +557,19 @@
       // Keyboard is now in HTML, just need to set up functionality
       setupKeyboard();
       
-      macScreen.src = mac.img;
+      // Start the Mac time clock
+      updateMacTime();
+      setInterval(updateMacTime, 1000);
+      
       macInfo.textContent = `MacBook Air — ${mac.chip}, ${mac.year}`;
 
-      macWrapper.onclick = () => {
-        mac.chip = mac.chip === 'M3' ? 'M4' : 'M3';
-        mac.year = mac.year === '2025' ? '2026' : '2025';
-        localStorage.setItem('macData', JSON.stringify(mac));
-        showMain(user, mac, editor ? editor.getValue() : '');
-      };
+      // Hide the old mac wrapper functionality since we moved the interface
+      // macWrapper.onclick = () => {
+      //   mac.chip = mac.chip === 'M3' ? 'M4' : 'M3';
+      //   mac.year = mac.year === '2025' ? '2026' : '2025';
+      //   localStorage.setItem('macData', JSON.stringify(mac));
+      //   showMain(user, mac, editor ? editor.getValue() : '');
+      // };
 
       // Initialize editor but keep it hidden
       initEditor(code);
@@ -553,10 +624,10 @@
     let isMacScreenOn = true;
     
     function toggleMacScreen(event) {
-      event.stopPropagation(); // Prevent triggering the fold function
+      event.stopPropagation(); // Prevent triggering other functions
       
       const macScreen = document.getElementById('macScreen');
-      const welcomeDiv = document.querySelector('#welcome div');
+      const macosInterface = document.getElementById('macosInterface');
       
       // Toggle screen state
       isMacScreenOn = !isMacScreenOn;
@@ -564,39 +635,192 @@
       if (isMacScreenOn) {
         // Turn screen on
         macScreen.classList.remove('screen-off');
-        if (welcomeDiv) {
-          welcomeDiv.innerHTML = `
-            Welcome to MacBook Air Simulator
-            <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
-              Experience the power of Apple's M3 chip in this interactive environment
-            </div>
-            <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
-              💻 MacBook Screen: ON | Click the power button to turn off
-            </div>
-          `;
-        }
+        if (macosInterface) macosInterface.style.display = 'block';
+        
+        // Show screen-on message in the interface itself
+        showSystemMessage('💻 macOS System Online', 'Welcome back! Click apps in the dock to interact.');
       } else {
         // Turn screen off (black)
         macScreen.classList.add('screen-off');
-        if (welcomeDiv) {
-          welcomeDiv.innerHTML = `
-            Welcome to MacBook Air Simulator
-            <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
-              Experience the power of Apple's M3 chip in this interactive environment
-            </div>
-            <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
-              💻 MacBook Screen: OFF | Click the power button to turn on
-            </div>
-          `;
-        }
+        if (macosInterface) macosInterface.style.display = 'none';
+        
+        // Show a simple offline message
+        showSystemMessage('💻 System Sleep Mode', 'Click power button to wake up.');
       }
       
       // Power button press animation
       const powerButton = document.getElementById('powerButton');
-      powerButton.style.transform = 'translateY(2px) scale(0.95)';
+      powerButton.style.transform = 'scale(0.95)';
       setTimeout(() => {
         powerButton.style.transform = '';
       }, 150);
+    }
+
+    // Show system messages
+    function showSystemMessage(title, message) {
+      // This could be enhanced to show messages within the Mac interface
+      console.log(title + ': ' + message);
+    }
+
+    // Update Mac time in menu bar
+    function updateMacTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      const macTimeElement = document.getElementById('macTime');
+      if (macTimeElement) {
+        macTimeElement.textContent = timeStr;
+      }
+    }
+
+    // Handle app opening
+    function openApp(appName) {
+      const appWindow = document.getElementById('appWindow');
+      const windowContent = document.getElementById('windowContent');
+      
+      if (!appWindow || !windowContent) return;
+      
+      // App content based on type
+      const appContents = {
+        'finder': {
+          title: 'Finder',
+          content: `
+            <h3 style="margin:0; font-size:10px;">📁 Finder</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              📄 Document.txt<br>
+              📷 Photos<br>
+              🎵 Music<br>
+              📁 Downloads
+            </div>
+          `
+        },
+        'safari': {
+          title: 'Safari',
+          content: `
+            <h3 style="margin:0; font-size:10px;">🌐 Safari</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              🔍 Search or enter website<br>
+              📖 Bookmarks<br>
+              📰 Reading List
+            </div>
+          `
+        },
+        'mail': {
+          title: 'Mail',
+          content: `
+            <h3 style="margin:0; font-size:10px;">📧 Mail</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              📥 Inbox (3)<br>
+              📤 Sent<br>
+              📝 Drafts
+            </div>
+          `
+        },
+        'photos': {
+          title: 'Photos',
+          content: `
+            <h3 style="margin:0; font-size:10px;">📷 Photos</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              🖼️ All Photos<br>
+              ❤️ Favorites<br>
+              📱 iPhone
+            </div>
+          `
+        },
+        'music': {
+          title: 'Music',
+          content: `
+            <h3 style="margin:0; font-size:10px;">🎵 Apple Music</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              🎶 Now Playing<br>
+              📻 Radio<br>
+              💿 Library
+            </div>
+          `
+        },
+        'maps': {
+          title: 'Maps',
+          content: `
+            <h3 style="margin:0; font-size:10px;">🗺️ Maps</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              📍 Current Location<br>
+              🚗 Directions<br>
+              ⭐ Favorites
+            </div>
+          `
+        },
+        'settings': {
+          title: 'System Preferences',
+          content: `
+            <h3 style="margin:0; font-size:10px;">⚙️ System Preferences</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              🖥️ Displays<br>
+              🔊 Sound<br>
+              🌐 Network
+            </div>
+          `
+        },
+        'vscode': {
+          title: 'Visual Studio Code',
+          content: `
+            <h3 style="margin:0; font-size:10px;">💻 VS Code</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              📄 index.html<br>
+              🎨 style.css<br>
+              ⚡ script.js
+            </div>
+          `
+        },
+        'folder': {
+          title: 'Documents',
+          content: `
+            <h3 style="margin:0; font-size:10px;">📁 Documents</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              📄 Resume.pdf<br>
+              📊 Spreadsheet.xlsx<br>
+              📝 Notes.txt
+            </div>
+          `
+        },
+        'trash': {
+          title: 'Trash',
+          content: `
+            <h3 style="margin:0; font-size:10px;">🗑️ Trash</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              Empty
+            </div>
+          `
+        },
+        'file': {
+          title: 'TextEdit',
+          content: `
+            <h3 style="margin:0; font-size:10px;">📝 TextEdit</h3>
+            <div style="font-size:7px; margin-top:4px;">
+              Welcome to TextEdit!<br>
+              Start typing...
+            </div>
+          `
+        }
+      };
+      
+      const app = appContents[appName] || appContents['finder'];
+      windowContent.innerHTML = app.content;
+      appWindow.classList.add('active');
+      
+      // Auto-close after 3 seconds
+      setTimeout(() => {
+        closeWindow();
+      }, 3000);
+    }
+
+    function closeWindow() {
+      const appWindow = document.getElementById('appWindow');
+      if (appWindow) {
+        appWindow.classList.remove('active');
+      }
     }
 
     // Setup interactive keyboard functionality
