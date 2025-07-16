@@ -371,6 +371,121 @@
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         
+        /* Mode Panel Styles */
+        .mode-panel {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1000;
+        }
+        
+        .mode-toggle {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            margin-bottom: 10px;
+        }
+        
+        .mode-toggle:hover {
+            background: linear-gradient(135deg, #495057, #343a40);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(5px);
+            box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+        }
+        
+        .mode-toggle.expanded {
+            background: linear-gradient(135deg, #495057, #343a40);
+            border-radius: 25px 25px 0 0;
+        }
+        
+        .mode-content {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #6c757d;
+            border-radius: 0 15px 15px 15px;
+            padding: 15px;
+            min-width: 200px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mode-content.expanded {
+            max-height: 300px;
+            opacity: 1;
+        }
+        
+        .mode-button {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 12px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+        
+        .mode-button.ideal-fines {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .mode-button.ideal-fines:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateX(5px);
+        }
+        
+        .mode-button.git-bot {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+        
+        .mode-button.git-bot:hover {
+            background: linear-gradient(135deg, #1e7e34, #155724);
+            transform: translateX(5px);
+        }
+        
+        .mode-button.clean-up {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .mode-button.clean-up:hover {
+            background: linear-gradient(135deg, #c82333, #bd2130);
+            transform: translateX(5px);
+        }
+        
+        .mode-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+        
+        .mode-toggle.expanded .mode-arrow {
+            transform: rotate(180deg);
+        }
+        
         /* RTL support for Arabic */
         [dir="rtl"] .language-selector {
             left: 20px;
@@ -399,6 +514,11 @@
         [dir="rtl"] .clean-up-button {
             left: 20px;
             right: auto;
+        }
+        
+        [dir="rtl"] .mode-panel {
+            right: 20px;
+            left: auto;
         }
     </style>
 </head>
@@ -430,19 +550,38 @@
 </div>
 
 <!-- Ideal Fines Button -->
-<button class="ideal-fines-button" id="idealFinesBtn">
+<button class="ideal-fines-button" id="idealFinesBtn" style="display: none;">
     💳 Ideal Fines
 </button>
 
 <!-- Git Bot Button -->
-<button class="git-bot-button" id="gitBotBtn">
+<button class="git-bot-button" id="gitBotBtn" style="display: none;">
     🤖 Git Bot
 </button>
 
 <!-- Clean Up Button -->
-<button class="clean-up-button" id="cleanUpBtn">
+<button class="clean-up-button" id="cleanUpBtn" style="display: none;">
     🧹 Clean Up
 </button>
+
+<!-- Mode Panel -->
+<div class="mode-panel">
+    <button class="mode-toggle" id="modeToggle">
+        <span>🎯 Modes</span>
+        <span class="mode-arrow">▼</span>
+    </button>
+    <div class="mode-content" id="modeContent">
+        <button class="mode-button ideal-fines" id="modeBtnIdealFines">
+            💳 Ideal Fines
+        </button>
+        <button class="mode-button git-bot" id="modeBtnGitBot">
+            🤖 Git Bot
+        </button>
+        <button class="mode-button clean-up" id="modeBtnCleanUp">
+            🧹 Clean Up
+        </button>
+    </div>
+</div>
 
 <div id="loginContainer">
     <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
@@ -544,6 +683,57 @@ document.getElementById('gitBotBtn').onclick = function() {
 document.getElementById('cleanUpBtn').onclick = function() {
     window.location.href = 'clean-up.html';
 };
+
+// Mode Panel functionality
+(function() {
+    const modeToggle = document.getElementById('modeToggle');
+    const modeContent = document.getElementById('modeContent');
+    const modeBtnIdealFines = document.getElementById('modeBtnIdealFines');
+    const modeBtnGitBot = document.getElementById('modeBtnGitBot');
+    const modeBtnCleanUp = document.getElementById('modeBtnCleanUp');
+    
+    // Toggle mode panel
+    modeToggle.addEventListener('click', function() {
+        const isExpanded = modeToggle.classList.contains('expanded');
+        
+        if (isExpanded) {
+            modeToggle.classList.remove('expanded');
+            modeContent.classList.remove('expanded');
+        } else {
+            modeToggle.classList.add('expanded');
+            modeContent.classList.add('expanded');
+        }
+    });
+    
+    // Mode button click handlers
+    modeBtnIdealFines.addEventListener('click', function() {
+        window.location.href = 'ideal/payment.html';
+    });
+    
+    modeBtnGitBot.addEventListener('click', function() {
+        window.location.href = 'git-bot.html';
+    });
+    
+    modeBtnCleanUp.addEventListener('click', function() {
+        window.location.href = 'clean-up.html';
+    });
+    
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!modeToggle.contains(e.target) && !modeContent.contains(e.target)) {
+            modeToggle.classList.remove('expanded');
+            modeContent.classList.remove('expanded');
+        }
+    });
+    
+    // Close panel on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modeToggle.classList.contains('expanded')) {
+            modeToggle.classList.remove('expanded');
+            modeContent.classList.remove('expanded');
+        }
+    });
+})();
 
 // Language selector functionality
 (function() {

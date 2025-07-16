@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <me<body>
+
+<button id="done">✅ Done</button>
+
+<h1>Mark's Photo Cleaner</h1>charset="UTF-8">
   <title>Mark’s Photo Cleaner</title>
   <style>
     body {
@@ -35,6 +39,11 @@
       border: none;
       border-radius: 6px;
       font-weight: bold;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 20px;
     }
     #done:hover {
       background: #218838;
@@ -60,8 +69,6 @@
   <button onclick="restoreState(undoStack, redoStack)">Undo</button>
   <button onclick="restoreState(redoStack, undoStack)">Redo</button>
   <button id="save">Save to Apple Photos</button>
-  <br>
-  <button id="done">✅ Done</button>
 </div>
 
 <script>
