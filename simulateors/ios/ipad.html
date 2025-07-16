@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>iPad Pro M4 Simulator</title>
+  <style>
+    body { 
+      display:flex; 
+      flex-direction:column; 
+      align-items:center; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+      margin:0; 
+      padding:20px;
+      min-height: 100vh;
+    }
+    
+    h1 { 
+      color: white; 
+      text-align: center; 
+      font-weight: 300; 
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .ipad-container {
+      position: relative;
+      perspective: 1200px;
+      margin-bottom: 30px;
+    }
+    
+    .ipad-body {
+      width: 400px;
+      height: 550px;
+      background: linear-gradient(145deg, #e8e8e8, #f5f5f5);
+      border-radius: 25px;
+      position: relative;
+      box-shadow: 
+        0 25px 50px rgba(0,0,0,0.25),
+        inset 0 1px 3px rgba(255,255,255,0.8);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      padding: 15px;
+    }
+    
+    .ipad-body:hover {
+      transform: translateY(-8px) rotateX(2deg);
+      box-shadow: 
+        0 35px 70px rgba(0,0,0,0.3),
+        inset 0 1px 3px rgba(255,255,255,0.9);
+    }
+    
+    .home-indicator {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+    }
+    
+    .ipad-screen {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.6s ease;
+    }
+    
+    .screen-content {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      transition: all 0.6s ease;
+    }
+    
+    .status-bar {
+      height: 30px;
+      background: rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .time-status {
+      font-weight: bold;
+    }
+    
+    .battery-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .home-screen {
+      padding: 40px 30px;
+      height: calc(100% - 70px);
+      overflow-y: auto;
+    }
+    
+    .dock {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 10px 20px;
+      display: flex;
+      gap: 15px;
+    }
+    
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+    
+    .app-icon {
+      width: 55px;
+      height: 55px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: white;
+      font-weight: bold;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .app-icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .app-icon:hover {
+      transform: scale(1.1);
+      z-index: 10;
+    }
+    
+    .app-icon:hover::before {
+      opacity: 1;
+    }
+    
+    .app-icon:active {
+      transform: scale(0.95);
+    }
+    
+    .dock .app-icon {
+      width: 45px;
+      height: 45px;
+      font-size: 24px;
+    }
+    
+    /* App specific colors */
+    .safari { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .photos { background: linear-gradient(135deg, #fa709a, #fee140); }
+    .messages { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+    .mail { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .maps { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .music { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .notes { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+    .calendar { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+    .camera { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .settings { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .calculator { background: linear-gradient(135deg, #30334a, #24273a); }
+    .clock { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .weather { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+    .stocks { background: linear-gradient(135deg, #00b894, #00a085); }
+    .news { background: linear-gradient(135deg, #fd79a8, #e84393); }
+    .fitness { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+    .books { background: linear-gradient(135deg, #fd79a8, #e84393); }
+    .podcasts { background: linear-gradient(135deg, #6c5ce7, #74b9ff); }
+    
+    .app-label {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 10px;
+      text-align: center;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .folded {
+      transform: rotateX(120deg);
+      opacity: 0.7;
+    }
+    
+    .multitasking-view {
+      display: none;
+      padding: 30px;
+      background: rgba(0,0,0,0.8);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      backdrop-filter: blur(20px);
+    }
+    
+    .app-card {
+      width: 120px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      margin: 10px;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .app-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    .widget-area {
+      grid-column: span 2;
+      grid-row: span 2;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 20px;
+      color: white;
+    }
+    
+    .widget-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .widget-content {
+      font-size: 24px;
+      font-weight: 300;
+    }
+  </style>
+</head>
+<body>
+  <h1>📱 iPad Pro M4</h1>
+  
+  <div class="ipad-container">
+    <div class="ipad-body" id="ipadBody">
+      <div class="ipad-screen" id="ipadScreen">
+        <div class="screen-content" id="screenContent">
+          <div class="status-bar">
+            <div class="time-status" id="timeDisplay">9:41 AM</div>
+            <div class="battery-indicator">
+              <span>🔋</span>
+              <span id="batteryLevel">87%</span>
+            </div>
+          </div>
+          
+          <div class="home-screen" id="homeScreen">
+            <div class="app-grid" id="appGrid">
+              <div class="app-icon safari" data-app="safari">🌐<div class="app-label">Safari</div></div>
+              <div class="app-icon photos" data-app="photos">📷<div class="app-label">Photos</div></div>
+              <div class="app-icon messages" data-app="messages">💬<div class="app-label">Messages</div></div>
+              <div class="app-icon mail" data-app="mail">✉️<div class="app-label">Mail</div></div>
+              <div class="app-icon maps" data-app="maps">🗺️<div class="app-label">Maps</div></div>
+              <div class="app-icon music" data-app="music">🎵<div class="app-label">Music</div></div>
+              
+              <div class="widget-area">
+                <div class="widget-title">Today's Weather</div>
+                <div class="widget-content" id="weatherWidget">
+                  <div>☀️ 24°C</div>
+                  <div style="font-size: 14px; margin-top: 5px;">Mostly Sunny</div>
+                </div>
+              </div>
+              
+              <div class="app-icon notes" data-app="notes">📝<div class="app-label">Notes</div></div>
+              <div class="app-icon calendar" data-app="calendar">📅<div class="app-label">Calendar</div></div>
+              <div class="app-icon camera" data-app="camera">📸<div class="app-label">Camera</div></div>
+              <div class="app-icon settings" data-app="settings">⚙️<div class="app-label">Settings</div></div>
+              <div class="app-icon calculator" data-app="calculator">🔢<div class="app-label">Calculator</div></div>
+              <div class="app-icon clock" data-app="clock">⏰<div class="app-label">Clock</div></div>
+              <div class="app-icon weather" data-app="weather">🌤️<div class="app-label">Weather</div></div>
+              <div class="app-icon stocks" data-app="stocks">📈<div class="app-label">Stocks</div></div>
+              <div class="app-icon news" data-app="news">📰<div class="app-label">News</div></div>
+              <div class="app-icon fitness" data-app="fitness">💪<div class="app-label">Fitness</div></div>
+              <div class="app-icon books" data-app="books">📚<div class="app-label">Books</div></div>
+              <div class="app-icon podcasts" data-app="podcasts">🎧<div class="app-label">Podcasts</div></div>
+            </div>
+          </div>
+          
+          <div class="dock">
+            <div class="app-icon safari" data-app="safari">🌐</div>
+            <div class="app-icon messages" data-app="messages">💬</div>
+            <div class="app-icon mail" data-app="mail">✉️</div>
+            <div class="app-icon music" data-app="music">🎵</div>
+          </div>
+          
+          <div class="multitasking-view" id="multitaskingView">
+            <div class="app-card"></div>
+            <div class="app-card"></div>
+            <div class="app-card"></div>
+            <div class="app-card"></div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <script>
+    let folded = false;
+    let currentView = 'home';
+    let batteryLevel = 87;
+    
+    // Initialize iPad features
+    function initIPad() {
+      updateStatusBar();
+      setInterval(updateStatusBar, 1000);
+      updateWeatherWidget();
+      setupInteractions();
+      simulateBatteryDrain();
+    }
+    
+    function updateStatusBar() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      
+      document.getElementById('timeDisplay').textContent = timeStr;
+    }
+    
+    function updateWeatherWidget() {
+      const temperatures = [22, 23, 24, 25, 26];
+      const conditions = ['☀️ Sunny', '⛅ Partly Cloudy', '🌤️ Mostly Sunny', '🌥️ Cloudy'];
+      
+      setInterval(() => {
+        const temp = temperatures[Math.floor(Math.random() * temperatures.length)];
+        const condition = conditions[Math.floor(Math.random() * conditions.length)];
+        
+        const widget = document.getElementById('weatherWidget');
+        widget.innerHTML = `
+          <div>${condition.split(' ')[0]} ${temp}°C</div>
+          <div style="font-size: 14px; margin-top: 5px;">${condition.split(' ').slice(1).join(' ')}</div>
+        `;
+      }, 10000);
+    }
+    
+    function simulateBatteryDrain() {
+      setInterval(() => {
+        if (batteryLevel > 20) {
+          batteryLevel -= Math.random() > 0.7 ? 1 : 0;
+          document.getElementById('batteryLevel').textContent = batteryLevel + '%';
+        }
+      }, 30000);
+    }
+    
+    function setupInteractions() {
+      const ipadBody = document.getElementById('ipadBody');
+      const screenContent = document.getElementById('screenContent');
+      const homeScreen = document.getElementById('homeScreen');
+      const multitaskingView = document.getElementById('multitaskingView');
+      
+      // iPad body click - toggle fold
+      ipadBody.addEventListener('click', function(e) {
+        if (e.target === this && !folded) {
+          toggleFold();
+        }
+      });
+      
+      // App interactions
+      document.querySelectorAll('.app-icon').forEach(app => {
+        app.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const appType = this.getAttribute('data-app');
+          if (appType) {
+            launchApp(appType);
+          }
+        });
+      });
+      
+      // Swipe up gesture simulation (double-click home indicator)
+      document.querySelector('.home-indicator').addEventListener('dblclick', function(e) {
+        e.stopPropagation();
+        showMultitasking();
+      });
+      
+      // Multitasking view interactions
+      multitaskingView.addEventListener('click', function() {
+        hideMultitasking();
+      });
+      
+      // Touch and gesture simulation
+      let touchStartY = 0;
+      screenContent.addEventListener('touchstart', function(e) {
+        touchStartY = e.touches[0].clientY;
+      });
+      
+      screenContent.addEventListener('touchend', function(e) {
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaY = touchStartY - touchEndY;
+        
+        // Swipe up to show multitasking
+        if (deltaY > 50 && currentView === 'home') {
+          showMultitasking();
+        }
+      });
+    }
+    
+    function launchApp(appType) {
+      const screenContent = document.getElementById('screenContent');
+      const homeScreen = document.getElementById('homeScreen');
+      
+      // Create app launch animation
+      const appElement = document.querySelector(`[data-app="${appType}"]`);
+      if (appElement) {
+        appElement.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          appElement.style.transform = '';
+        }, 200);
+      }
+      
+      // Simulate app opening with color change
+      const colors = {
+        safari: 'linear-gradient(135deg, #4facfe, #00f2fe)',
+        photos: 'linear-gradient(135deg, #fa709a, #fee140)',
+        messages: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+        mail: 'linear-gradient(135deg, #667eea, #764ba2)',
+        maps: 'linear-gradient(135deg, #f093fb, #f5576c)',
+        music: 'linear-gradient(135deg, #4facfe, #00f2fe)',
+        notes: 'linear-gradient(135deg, #ffecd2, #fcb69f)',
+        camera: 'linear-gradient(135deg, #667eea, #764ba2)',
+        settings: 'linear-gradient(135deg, #667eea, #764ba2)'
+      };
+      
+      if (colors[appType]) {
+        screenContent.style.background = colors[appType];
+        homeScreen.style.opacity = '0';
+        
+        // Create simple app interface
+        setTimeout(() => {
+          homeScreen.innerHTML = `
+            <div style="color: white; text-align: center; padding: 50px;">
+              <h2 style="font-size: 32px; margin-bottom: 20px;">${appType.charAt(0).toUpperCase() + appType.slice(1)}</h2>
+              <p style="font-size: 18px; opacity: 0.8;">App is running...</p>
+              <button onclick="goHome()" style="background: rgba(255,255,255,0.3); border: none; color: white; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; margin-top: 30px;">← Back to Home</button>
+            </div>
+          `;
+          homeScreen.style.opacity = '1';
+        }, 300);
+      }
+    }
+    
+    function goHome() {
+      const screenContent = document.getElementById('screenContent');
+      const homeScreen = document.getElementById('homeScreen');
+      
+      screenContent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      
+      // Restore original home screen
+      location.reload();
+    }
+    
+    function showMultitasking() {
+      if (currentView !== 'multitasking') {
+        currentView = 'multitasking';
+        const homeScreen = document.getElementById('homeScreen');
+        const multitaskingView = document.getElementById('multitaskingView');
+        
+        homeScreen.style.transform = 'scale(0.8)';
+        homeScreen.style.opacity = '0.5';
+        multitaskingView.style.display = 'block';
+        
+        setTimeout(() => {
+          multitaskingView.style.opacity = '1';
+        }, 100);
+      }
+    }
+    
+    function hideMultitasking() {
+      if (currentView === 'multitasking') {
+        currentView = 'home';
+        const homeScreen = document.getElementById('homeScreen');
+        const multitaskingView = document.getElementById('multitaskingView');
+        
+        multitaskingView.style.opacity = '0';
+        setTimeout(() => {
+          multitaskingView.style.display = 'none';
+          homeScreen.style.transform = 'scale(1)';
+          homeScreen.style.opacity = '1';
+        }, 300);
+      }
+    }
+    
+    function toggleFold() {
+      const ipadBody = document.getElementById('ipadBody');
+      folded = !folded;
+      
+      if (folded) {
+        ipadBody.classList.add('folded');
+      } else {
+        ipadBody.classList.remove('folded');
+      }
+    }
+    
+    // Initialize when page loads
+    window.addEventListener('load', initIPad);
+  </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apple Watch Ultra Simulator</title>
+  <style>
+    body { 
+      display:flex; 
+      flex-direction:column; 
+      align-items:center; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+      margin:0; 
+      padding:20px;
+      min-height: 100vh;
+    }
+    
+    h1 { 
+      color: white; 
+      text-align: center; 
+      font-weight: 300; 
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .watch-container {
+      position: relative;
+      perspective: 1000px;
+      margin-bottom: 30px;
+    }
+    
+    .watch-body {
+      width: 200px;
+      height: 250px;
+      background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+      border-radius: 50px;
+      position: relative;
+      box-shadow: 
+        0 20px 40px rgba(0,0,0,0.3),
+        inset 0 1px 3px rgba(255,255,255,0.1);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    
+    .watch-body:hover {
+      transform: translateY(-5px) rotateX(5deg);
+      box-shadow: 
+        0 30px 60px rgba(0,0,0,0.4),
+        inset 0 1px 3px rgba(255,255,255,0.2);
+    }
+    
+    .digital-crown {
+      position: absolute;
+      right: -8px;
+      top: 50px;
+      width: 16px;
+      height: 40px;
+      background: linear-gradient(90deg, #ff6b35, #f7931e);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+    }
+    
+    .digital-crown:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 16px rgba(255,107,53,0.5);
+    }
+    
+    .side-button {
+      position: absolute;
+      right: -6px;
+      top: 110px;
+      width: 12px;
+      height: 25px;
+      background: linear-gradient(90deg, #3a3a3a, #2a2a2a);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .side-button:hover {
+      background: linear-gradient(90deg, #4a4a4a, #3a3a3a);
+    }
+    
+    .watch-screen {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 170px;
+      height: 220px;
+      background: #000;
+      border-radius: 35px;
+      overflow: hidden;
+      transition: all 0.6s ease;
+    }
+    
+    .screen-content {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      position: relative;
+      transition: all 0.6s ease;
+    }
+    
+    .time-display {
+      font-size: 28px;
+      font-weight: 200;
+      margin-bottom: 10px;
+      font-family: 'SF Pro Display', -apple-system, sans-serif;
+    }
+    
+    .date-display {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+    
+    .watch-face-apps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      padding: 20px;
+    }
+    
+    .app-icon {
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .app-icon:hover {
+      transform: scale(1.2);
+      z-index: 10;
+    }
+    
+    .app-icon:active {
+      transform: scale(0.9);
+    }
+    
+    .heart-rate { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+    .activity { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+    .weather { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+    .messages { background: linear-gradient(135deg, #00b894, #00a085); }
+    .maps { background: linear-gradient(135deg, #fd79a8, #e84393); }
+    .settings { background: linear-gradient(135deg, #636e72, #2d3436); }
+    
+    .watch-band {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 220px;
+      height: 300px;
+      background: linear-gradient(145deg, #ff6b35, #f7931e);
+      border-radius: 110px;
+      z-index: -1;
+      opacity: 0.3;
+    }
+    
+    .health-metrics {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      padding: 15px 25px;
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+      color: white;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .health-metrics:hover {
+      background: rgba(0,0,0,0.9);
+      transform: translateX(-50%) translateY(-5px);
+    }
+    
+    .metric {
+      display: inline-block;
+      margin: 0 15px;
+      font-size: 12px;
+    }
+    
+    .metric-value {
+      display: block;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ff6b35;
+    }
+    
+    .folded {
+      transform: rotateX(120deg);
+    }
+    
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .heartbeat {
+      animation: heartbeat 1s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <h1>⌚ Apple Watch Ultra</h1>
+  
+  <div class="watch-container">
+    <div class="watch-band"></div>
+    <div class="watch-body" id="watchBody">
+      <div class="digital-crown" id="digitalCrown" title="Digital Crown - Scroll and Navigate"></div>
+      <div class="side-button" id="sideButton" title="Side Button - Access Apps"></div>
+      
+      <div class="watch-screen" id="watchScreen">
+        <div class="screen-content" id="screenContent">
+          <div class="time-display" id="timeDisplay">10:09</div>
+          <div class="date-display" id="dateDisplay">Tuesday, July 16</div>
+          
+          <div class="watch-face-apps" id="appsGrid" style="display: none;">
+            <div class="app-icon heart-rate" data-app="heart" title="Heart Rate">❤️</div>
+            <div class="app-icon activity" data-app="activity" title="Activity">🏃</div>
+            <div class="app-icon weather" data-app="weather" title="Weather">🌤️</div>
+            <div class="app-icon messages" data-app="messages" title="Messages">💬</div>
+            <div class="app-icon maps" data-app="maps" title="Maps">🗺️</div>
+            <div class="app-icon settings" data-app="settings" title="Settings">⚙️</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="health-metrics">
+    <div class="metric">
+      <span class="metric-value" id="heartRate">72</span>
+      <span>BPM</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value" id="steps">8,247</span>
+      <span>Steps</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value" id="calories">420</span>
+      <span>Cal</span>
+    </div>
+  </div>
+
+  <script>
+    let folded = false;
+    let currentView = 'watchface';
+    let heartRateInterval;
+    
+    // Initialize real-time features
+    function initWatch() {
+      updateTime();
+      setInterval(updateTime, 1000);
+      startHeartRateSimulation();
+      setupInteractions();
+    }
+    
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+      const dateStr = now.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      document.getElementById('timeDisplay').textContent = timeStr;
+      document.getElementById('dateDisplay').textContent = dateStr;
+    }
+    
+    function startHeartRateSimulation() {
+      heartRateInterval = setInterval(() => {
+        const heartRate = Math.floor(Math.random() * (85 - 65) + 65);
+        const steps = Math.floor(Math.random() * (10000 - 7000) + 7000);
+        const calories = Math.floor(Math.random() * (500 - 350) + 350);
+        
+        document.getElementById('heartRate').textContent = heartRate;
+        document.getElementById('steps').textContent = steps.toLocaleString();
+        document.getElementById('calories').textContent = calories;
+        
+        // Add heartbeat animation to heart rate app
+        const heartApp = document.querySelector('.heart-rate');
+        if (heartApp) {
+          heartApp.classList.add('heartbeat');
+          setTimeout(() => heartApp.classList.remove('heartbeat'), 1000);
+        }
+      }, 3000);
+    }
+    
+    function setupInteractions() {
+      const watchBody = document.getElementById('watchBody');
+      const digitalCrown = document.getElementById('digitalCrown');
+      const sideButton = document.getElementById('sideButton');
+      const screenContent = document.getElementById('screenContent');
+      const appsGrid = document.getElementById('appsGrid');
+      
+      // Digital Crown interaction
+      digitalCrown.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (currentView === 'apps') {
+          showWatchface();
+        } else {
+          // Simulate crown scroll effect
+          this.style.transform = 'scale(0.9) rotate(45deg)';
+          setTimeout(() => {
+            this.style.transform = '';
+          }, 200);
+        }
+      });
+      
+      // Side button - show apps
+      sideButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (currentView === 'watchface') {
+          showApps();
+        } else {
+          showWatchface();
+        }
+        
+        // Button press animation
+        this.style.transform = 'scale(0.8)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+      
+      // Watch body - toggle fold
+      watchBody.addEventListener('click', function() {
+        if (!folded) {
+          toggleFold();
+        }
+      });
+      
+      // App interactions
+      document.querySelectorAll('.app-icon').forEach(app => {
+        app.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const appType = this.getAttribute('data-app');
+          launchApp(appType);
+        });
+      });
+    }
+    
+    function showApps() {
+      currentView = 'apps';
+      const timeDisplay = document.getElementById('timeDisplay');
+      const dateDisplay = document.getElementById('dateDisplay');
+      const appsGrid = document.getElementById('appsGrid');
+      
+      timeDisplay.style.display = 'none';
+      dateDisplay.style.display = 'none';
+      appsGrid.style.display = 'grid';
+      
+      // Animate apps appearing
+      const apps = document.querySelectorAll('.app-icon');
+      apps.forEach((app, index) => {
+        app.style.opacity = '0';
+        app.style.transform = 'scale(0.5)';
+        setTimeout(() => {
+          app.style.transition = 'all 0.3s ease';
+          app.style.opacity = '1';
+          app.style.transform = 'scale(1)';
+        }, index * 100);
+      });
+    }
+    
+    function showWatchface() {
+      currentView = 'watchface';
+      const timeDisplay = document.getElementById('timeDisplay');
+      const dateDisplay = document.getElementById('dateDisplay');
+      const appsGrid = document.getElementById('appsGrid');
+      
+      appsGrid.style.display = 'none';
+      timeDisplay.style.display = 'block';
+      dateDisplay.style.display = 'block';
+    }
+    
+    function launchApp(appType) {
+      const screenContent = document.getElementById('screenContent');
+      
+      // Simple app simulation
+      switch(appType) {
+        case 'heart':
+          screenContent.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a52)';
+          setTimeout(() => {
+            screenContent.style.background = 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)';
+            showWatchface();
+          }, 2000);
+          break;
+        case 'activity':
+          screenContent.style.background = 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+          setTimeout(() => {
+            screenContent.style.background = 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)';
+            showWatchface();
+          }, 2000);
+          break;
+        case 'weather':
+          screenContent.style.background = 'linear-gradient(135deg, #74b9ff, #0984e3)';
+          setTimeout(() => {
+            screenContent.style.background = 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)';
+            showWatchface();
+          }, 2000);
+          break;
+        default:
+          // Flash effect for other apps
+          screenContent.style.background = '#ffffff';
+          setTimeout(() => {
+            screenContent.style.background = 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)';
+          }, 300);
+      }
+    }
+    
+    function toggleFold() {
+      const watchBody = document.getElementById('watchBody');
+      folded = !folded;
+      
+      if (folded) {
+        watchBody.style.transform = 'rotateX(120deg)';
+        watchBody.style.opacity = '0.7';
+      } else {
+        watchBody.style.transform = 'rotateX(0deg)';
+        watchBody.style.opacity = '1';
+      }
+    }
+    
+    // Initialize when page loads
+    window.addEventListener('load', initWatch);
+  </script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MY MAC AIR 🌐</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+  <style>
+    body { background: #eef2f5; margin: 0; font-family: 'Segoe UI', sans-serif; color: #333; }
+    header { display: flex; align-items: center; font-size: 29px; padding: 10px 20px; }
+    header img { width: 28px; margin-right: 10px; }
+    #login, #main { padding: 20px; }
+    #login input { padding: 8px; width: 200px; margin-right: 10px; }
+    #main h2 { margin-top: 0; }
+    #macContainer { position: relative; width: 320px; margin: 15px auto; perspective: 1200px; }
+    #macWrapper { width: 100%; transform-origin: top center; transition: transform .6s ease-in-out; cursor: pointer; }
+    #macScreen {
+      display: block; width: 100%; border-radius: 6px;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.6s ease;
+      position: relative;
+      overflow: hidden;
+      height: 200px;
+    }
+    
+    #macScreen.screen-off {
+      background: #000;
+      opacity: 0.3;
+    }
+    
+    .macos-interface {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 10px;
+      color: white;
+    }
+    
+    .menu-bar {
+      height: 20px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 9px;
+      font-weight: 500;
+    }
+    
+    .menu-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .menu-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .desktop {
+      flex: 1;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="grad" cx="50%" cy="50%"><stop offset="0%" stop-color="%23667eea"/><stop offset="100%" stop-color="%23764ba2"/></radialGradient></defs><rect width="100" height="100" fill="url(%23grad)"/></svg>');
+      background-size: cover;
+      position: relative;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 40px);
+    }
+    
+    .desktop-icons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, 30px);
+      gap: 8px;
+      margin-top: 5px;
+    }
+    
+    .desktop-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 8px;
+      color: #333;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .desktop-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .dock {
+      height: 20px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(20px);
+      border-radius: 12px;
+      margin: 0 auto 5px;
+      padding: 2px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: fit-content;
+    }
+    
+    .dock-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+    }
+    
+    .dock-icon:hover {
+      transform: scale(1.5) translateY(-3px);
+    }
+    
+    .finder { background: linear-gradient(145deg, #4A90E2, #357ABD); }
+    .safari { background: linear-gradient(145deg, #0066CC, #004499); }
+    .mail { background: linear-gradient(145deg, #007AFF, #0056CC); }
+    .photos { background: linear-gradient(145deg, #FF9500, #FF6600); }
+    .music { background: linear-gradient(145deg, #FF3B30, #D70015); }
+    .maps { background: linear-gradient(145deg, #30D158, #28A745); }
+    .settings { background: linear-gradient(145deg, #8E8E93, #636366); }
+    .vscode { background: linear-gradient(145deg, #007ACC, #005a9e); }
+    
+    .window {
+      position: absolute;
+      top: 25px;
+      left: 15px;
+      width: 120px;
+      height: 80px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: none;
+      animation: windowOpen 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    .window.active {
+      display: block;
+    }
+    
+    @keyframes windowOpen {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .window-header {
+      height: 18px;
+      background: linear-gradient(180deg, #f6f6f6, #e8e8e8);
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+      border-bottom: 1px solid #d0d0d0;
+    }
+    
+    .traffic-lights {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .traffic-light {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .close { background: #ff5f57; }
+    .minimize { background: #ffbd2e; }
+    .maximize { background: #28ca42; }
+    
+    .window-content {
+      padding: 8px;
+      font-size: 8px;
+      color: #333;
+      height: calc(100% - 19px);
+      overflow: hidden;
+    }
+    
+    .power-button {
+      position: absolute;
+      top: -5px;
+      right: 20px;
+      width: 30px;
+      height: 8px;
+      background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .power-button:hover {
+      background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+      transform: translateY(-1px);
+    }
+    
+    .power-button:active {
+      background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+      transform: translateY(1px);
+    }
+    
+    #macInfo { text-align: center; margin-top: 8px; }
+    #container { display: none; } /* Hide the code editor container */
+    #editor, #preview { flex: 1; border-radius: 4px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+    .CodeMirror { height: 100%; }
+    #preview iframe { width:100%; height:100%; border:none; }
+    
+    /* Expanded welcome section */
+    #welcome {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 30px;
+      margin: 20px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button { padding: 8px 14px; margin: 5px 0; border:none; border-radius:4px; background:#007aff; color:#fff; cursor:pointer; }
+    button:hover { background:#005bb5; }
+    
+    /* Interactive Keyboard Styles */
+    .interactive-keyboard {
+      background: linear-gradient(145deg, #f0f0f0, #e6e6e6);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      margin: 10px auto;
+      max-width: 600px;
+      user-select: none;
+    }
+    
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+    
+    .key {
+      background: linear-gradient(145deg, #ffffff, #f5f5f5);
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px;
+      min-width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+      transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .key:hover {
+      background: linear-gradient(145deg, #f8f8f8, #eeeeee);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.9);
+    }
+    
+    .key:active, .key.pressed {
+      background: linear-gradient(145deg, #e8e8e8, #d5d5d5);
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Key press animation */
+    @keyframes keyPress {
+      0% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.8);
+      }
+      50% {
+        transform: translateY(2px) scale(0.95);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 3px 6px rgba(0,0,0,0.15);
+        background: linear-gradient(145deg, #e0e0e0, #c8c8c8);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.8);
+      }
+    }
+    
+    .key.animate {
+      animation: keyPress 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Special keys */
+    .key.space { min-width: 200px; }
+    .key.tab { min-width: 60px; }
+    .key.caps { min-width: 70px; }
+    .key.shift { min-width: 80px; }
+    .key.enter { min-width: 70px; }
+    .key.backspace { min-width: 70px; }
+    
+    /* Ripple effect */
+    .key::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(0, 123, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s;
+    }
+    
+    .key.ripple::before {
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <header id="head">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple logo" />
+    MY MAC AIR
+  </header>
+
+  <div id="login">
+    <input id="username" placeholder="Your name..." />
+    <button onclick="fakePay()">Pay $10 & Login</button>
+  </div>
+
+  <div id="main" style="display:none">
+    <!-- Interactive Keyboard moved to top -->
+    <div id="keyboard-container" class="interactive-keyboard">
+      <div class="keyboard-row">
+        <div class="key" data-key="`">~<br>`</div>
+        <div class="key" data-key="1">!<br>1</div>
+        <div class="key" data-key="2">@<br>2</div>
+        <div class="key" data-key="3">#<br>3</div>
+        <div class="key" data-key="4">$<br>4</div>
+        <div class="key" data-key="5">%<br>5</div>
+        <div class="key" data-key="6">^<br>6</div>
+        <div class="key" data-key="7">&<br>7</div>
+        <div class="key" data-key="8">*<br>8</div>
+        <div class="key" data-key="9">(<br>9</div>
+        <div class="key" data-key="0">)<br>0</div>
+        <div class="key" data-key="-">_<br>-</div>
+        <div class="key" data-key="=">+<br>=</div>
+        <div class="key backspace" data-key="Backspace">⌫</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key tab" data-key="Tab">⇥</div>
+        <div class="key" data-key="q">Q</div>
+        <div class="key" data-key="w">W</div>
+        <div class="key" data-key="e">E</div>
+        <div class="key" data-key="r">R</div>
+        <div class="key" data-key="t">T</div>
+        <div class="key" data-key="y">Y</div>
+        <div class="key" data-key="u">U</div>
+        <div class="key" data-key="i">I</div>
+        <div class="key" data-key="o">O</div>
+        <div class="key" data-key="p">P</div>
+        <div class="key" data-key="[">{<br>[</div>
+        <div class="key" data-key="]">}<br>]</div>
+        <div class="key" data-key="\\">|<br>\\</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key caps" data-key="CapsLock">⇪</div>
+        <div class="key" data-key="a">A</div>
+        <div class="key" data-key="s">S</div>
+        <div class="key" data-key="d">D</div>
+        <div class="key" data-key="f">F</div>
+        <div class="key" data-key="g">G</div>
+        <div class="key" data-key="h">H</div>
+        <div class="key" data-key="j">J</div>
+        <div class="key" data-key="k">K</div>
+        <div class="key" data-key="l">L</div>
+        <div class="key" data-key=";">:<br>;</div>
+        <div class="key" data-key="'">\"<br>'</div>
+        <div class="key enter" data-key="Enter">↵</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key shift" data-key="Shift">⇧</div>
+        <div class="key" data-key="z">Z</div>
+        <div class="key" data-key="x">X</div>
+        <div class="key" data-key="c">C</div>
+        <div class="key" data-key="v">V</div>
+        <div class="key" data-key="b">B</div>
+        <div class="key" data-key="n">N</div>
+        <div class="key" data-key="m">M</div>
+        <div class="key" data-key=","><br>,</div>
+        <div class="key" data-key=".">><br>.</div>
+        <div class="key" data-key="/">?<br>/</div>
+        <div class="key shift" data-key="Shift">⇧</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key" data-key="fn">fn</div>
+        <div class="key" data-key="Control">⌃</div>
+        <div class="key" data-key="Option">⌥</div>
+        <div class="key" data-key="Command">⌘</div>
+        <div class="key space" data-key=" ">Space</div>
+        <div class="key" data-key="Command">⌘</div>
+        <div class="key" data-key="Option">⌥</div>
+        <div class="key" data-key="←">←</div>
+        <div class="key" data-key="↑">↑</div>
+        <div class="key" data-key="↓">↓</div>
+        <div class="key" data-key="→">→</div>
+      </div>
+    </div>
+
+    <!-- Expanded Welcome Section -->
+    <h2 id="welcome" style="text-align: center;">
+      <div style="color: white; font-size: 28px; font-weight: 300;">
+        Welcome to MacBook Air Simulator
+        <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
+          Experience the power of Apple's M3 chip in this interactive environment
+        </div>
+        <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+          Click the MacBook below to toggle between M3 and M4 configurations
+        </div>
+      </div>
+    </h2>
+
+    <div id="macContainer">
+      <div id="macWrapper" onclick="toggleFold()">
+        <div class="power-button" id="powerButton" title="Power Button" onclick="toggleMacScreen(event)"></div>
+        <img id="macScreen" src="" alt="MacBook Air Screen" />
+      </div>
+    </div>
+    <p id="macInfo"></p>
+    <button onclick="signOut()">Sign Out</button>
+
+    <div id="container">
+      <div id="editor"><textarea id="code"></textarea></div>
+      <div id="preview"><iframe sandbox="allow-scripts"></iframe></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.js"></script>
+  <script>
+    const defaultMac = {
+      chip: 'M3', year: '2025',
+      img: 'https://www.apple.com/v/macbook-air/q/images/overview/hero_spacegray.jpg'
+    };
+    let editor, preview, folded = false;
+
+    function loadApp() {
+      const user = localStorage.getItem('macUser');
+      const mac = JSON.parse(localStorage.getItem('macData') || null);
+      const code = localStorage.getItem('macCode')
+                 || '<!DOCTYPE html><html><body><h1>Hello from Mac!</h1></body></html>';
+      user && mac ? showMain(user, mac, code) : showLogin();
+    }
+
+    function showLogin() {
+      head.style.display = 'flex';
+      login.style.display = 'block';
+      main.style.display = 'none';
+    }
+
+    function showMain(user, mac, code) {
+      head.style.display = 'none';
+      login.style.display = 'none';
+      main.style.display = 'block';
+
+      // Keyboard is now in HTML, just need to set up functionality
+      setupKeyboard();
+      
+      macScreen.src = mac.img;
+      macInfo.textContent = `MacBook Air — ${mac.chip}, ${mac.year}`;
+
+      macWrapper.onclick = () => {
+        mac.chip = mac.chip === 'M3' ? 'M4' : 'M3';
+        mac.year = mac.year === '2025' ? '2026' : '2025';
+        localStorage.setItem('macData', JSON.stringify(mac));
+        showMain(user, mac, editor ? editor.getValue() : '');
+      };
+
+      // Initialize editor but keep it hidden
+      initEditor(code);
+      updatePreview();
+    }
+
+    function fakePay() {
+      const name = username.value.trim();
+      if (!name) return alert('Enter your name.');
+      alert('Simulated $10 payment completed.');
+      const mac = {...defaultMac};
+      localStorage.setItem('macUser', name);
+      localStorage.
+      setItem('macData', JSON.stringify(mac));
+      const code = localStorage.getItem('macCode') || '<!DOCTYPE html><html><body><h1>Welcome!</h1></body></html>';
+      showMain(name, mac, code);
+    }
+
+    function signOut() {
+      localStorage.clear();
+      window.location.href = 'main.html';
+    }
+
+    function initEditor(initial) {
+      if (!editor) {
+        editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+          mode: 'htmlmixed',
+          lineNumbers: true
+        });
+        preview = document.querySelector('#preview iframe');
+        editor.on('change', () => {
+          const val = editor.getValue();
+          localStorage.setItem('macCode', val);
+          updatePreview();
+        });
+      }
+      editor.setValue(initial);
+    }
+
+    function updatePreview() {
+      if (preview) {
+        preview.srcdoc = editor.getValue();
+      }
+    }
+
+    function toggleFold() {
+      folded = !folded;
+      macWrapper.style.transform = folded ? 'rotateX(120deg)' : 'rotateX(0deg)';
+    }
+
+    // Mac screen power toggle functionality
+    let isMacScreenOn = true;
+    
+    function toggleMacScreen(event) {
+      event.stopPropagation(); // Prevent triggering the fold function
+      
+      const macScreen = document.getElementById('macScreen');
+      const welcomeDiv = document.querySelector('#welcome div');
+      
+      // Toggle screen state
+      isMacScreenOn = !isMacScreenOn;
+      
+      if (isMacScreenOn) {
+        // Turn screen on
+        macScreen.classList.remove('screen-off');
+        if (welcomeDiv) {
+          welcomeDiv.innerHTML = `
+            Welcome to MacBook Air Simulator
+            <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
+              Experience the power of Apple's M3 chip in this interactive environment
+            </div>
+            <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+              💻 MacBook Screen: ON | Click the power button to turn off
+            </div>
+          `;
+        }
+      } else {
+        // Turn screen off (black)
+        macScreen.classList.add('screen-off');
+        if (welcomeDiv) {
+          welcomeDiv.innerHTML = `
+            Welcome to MacBook Air Simulator
+            <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
+              Experience the power of Apple's M3 chip in this interactive environment
+            </div>
+            <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+              💻 MacBook Screen: OFF | Click the power button to turn on
+            </div>
+          `;
+        }
+      }
+      
+      // Power button press animation
+      const powerButton = document.getElementById('powerButton');
+      powerButton.style.transform = 'translateY(2px) scale(0.95)';
+      setTimeout(() => {
+        powerButton.style.transform = '';
+      }, 150);
+    }
+
+    // Setup interactive keyboard functionality
+    function setupKeyboard() {
+      const keys = document.querySelectorAll('.key');
+      let shiftPressed = false;
+      let capsLockOn = false;
+      
+      keys.forEach(key => {
+        key.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Add ripple effect
+          this.classList.add('ripple');
+          setTimeout(() => this.classList.remove('ripple'), 300);
+          
+          // Add key press animation
+          this.classList.add('animate');
+          setTimeout(() => this.classList.remove('animate'), 200);
+          
+          const keyValue = this.getAttribute('data-key');
+          
+          // Handle special keys
+          if (keyValue === 'Shift') {
+            shiftPressed = !shiftPressed;
+            this.style.background = shiftPressed ? 'linear-gradient(145deg, #007aff, #0056b3)' : '';
+            this.style.color = shiftPressed ? 'white' : '';
+            return;
+          }
+          
+          if (keyValue === 'CapsLock') {
+            capsLockOn = !capsLockOn;
+            this.style.background = capsLockOn ? 'linear-gradient(145deg, #007aff, #0056b3)' : '';
+            this.style.color = capsLockOn ? 'white' : '';
+            return;
+          }
+          
+          if (keyValue === 'Backspace') {
+            const currentCode = editor.getValue();
+            const newCode = currentCode.slice(0, -1);
+            editor.setValue(newCode);
+            updatePreview();
+            return;
+          }
+          
+          if (keyValue === 'Enter') {
+            insertIntoEditor('\\n');
+            return;
+          }
+          
+          if (keyValue === 'Tab') {
+            insertIntoEditor('    '); // 4 spaces for tab
+            return;
+          }
+          
+          // Handle modifier keys (do nothing for now)
+          if (['Control', 'Option', 'Command', 'fn', '←', '→', '↑', '↓'].includes(keyValue)) {
+            return;
+          }
+          
+          // Handle regular character input
+          let charToInsert = keyValue;
+          
+          // Handle letter case
+          if (keyValue.match(/^[a-z]$/)) {
+            if (shiftPressed || capsLockOn) {
+              charToInsert = keyValue.toUpperCase();
+            }
+          }
+          
+          // Handle shifted characters
+          const shiftMap = {
+            '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+            '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+            '-': '_', '=': '+', '[': '{', ']': '}',
+            '\\': '|', ';': ':', "'": '"', ',': '<',
+            '.': '>', '/': '?', '`': '~'
+          };
+          
+          if (shiftPressed && shiftMap[keyValue]) {
+            charToInsert = shiftMap[keyValue];
+          }
+          
+          insertIntoEditor(charToInsert);
+          
+          // Reset shift if it was pressed
+          if (shiftPressed) {
+            shiftPressed = false;
+            document.querySelectorAll('.key[data-key="Shift"]').forEach(shiftKey => {
+              shiftKey.style.background = '';
+              shiftKey.style.color = '';
+            });
+          }
+        });
+      });
+      
+      // Handle physical keyboard input
+      document.addEventListener('keydown', function(e) {
+        const physicalKey = document.querySelector(`.key[data-key="${e.key}"]`) || 
+                           document.querySelector(`.key[data-key="${e.key.toLowerCase()}"]`);
+        
+        if (physicalKey) {
+          physicalKey.classList.add('pressed');
+          physicalKey.click();
+        }
+      });
+      
+      document.addEventListener('keyup', function(e) {
+        const physicalKey = document.querySelector(`.key[data-key="${e.key}"]`) || 
+                           document.querySelector(`.key[data-key="${e.key.toLowerCase()}"]`);
+        
+        if (physicalKey) {
+          physicalKey.classList.remove('pressed');
+        }
+      });
+    }
+    
+    function insertIntoEditor(text) {
+      // Create a hidden textarea for text input since we removed the visible editor
+      let hiddenTextarea = document.getElementById('hiddenTextInput');
+      if (!hiddenTextarea) {
+        hiddenTextarea = document.createElement('textarea');
+        hiddenTextarea.id = 'hiddenTextInput';
+        hiddenTextarea.style.position = 'absolute';
+        hiddenTextarea.style.left = '-9999px';
+        hiddenTextarea.style.opacity = '0';
+        document.body.appendChild(hiddenTextarea);
+      }
+      
+      // Add text to hidden textarea
+      hiddenTextarea.value += text;
+      
+      // Store in localStorage
+      localStorage.setItem('macCode', hiddenTextarea.value);
+      
+      // Show visual feedback in welcome section
+      const currentLength = hiddenTextarea.value.length;
+      const welcomeDiv = document.querySelector('#welcome div');
+      if (welcomeDiv && isMacScreenOn) {
+        welcomeDiv.innerHTML = `
+          Welcome to MacBook Air Simulator
+          <div style="font-size: 16px; margin-top: 15px; opacity: 0.9;">
+            Experience the power of Apple's M3 chip in this interactive environment
+          </div>
+          <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+            You've typed ${currentLength} characters | 💻 Screen: ON
+          </div>
+        `;
+      }
+    }
+
+    window.onload = loadApp;
+  </script>
+</body>
+</html>

@@ -477,6 +477,16 @@
             transform: translateX(5px);
         }
         
+        .mode-button.my-ios {
+            background: linear-gradient(135deg, #000000, #333333);
+            color: white;
+        }
+        
+        .mode-button.my-ios:hover {
+            background: linear-gradient(135deg, #333333, #555555);
+            transform: translateX(5px);
+        }
+        
         .mode-arrow {
             transition: transform 0.3s ease;
             font-size: 0.8em;
@@ -579,6 +589,9 @@
         </button>
         <button class="mode-button clean-up" id="modeBtnCleanUp">
             🧹 Clean Up
+        </button>
+        <button class="mode-button my-ios" id="modeBtnMyIOS">
+            🍎 MY IOS
         </button>
     </div>
 </div>
@@ -691,6 +704,7 @@ document.getElementById('cleanUpBtn').onclick = function() {
     const modeBtnIdealFines = document.getElementById('modeBtnIdealFines');
     const modeBtnGitBot = document.getElementById('modeBtnGitBot');
     const modeBtnCleanUp = document.getElementById('modeBtnCleanUp');
+    const modeBtnMyIOS = document.getElementById('modeBtnMyIOS');
     
     // Toggle mode panel
     modeToggle.addEventListener('click', function() {
@@ -716,6 +730,10 @@ document.getElementById('cleanUpBtn').onclick = function() {
     
     modeBtnCleanUp.addEventListener('click', function() {
         window.location.href = 'clean-up.html';
+    });
+    
+    modeBtnMyIOS.addEventListener('click', function() {
+        window.location.href = 'simulateors/ios/main.html';
     });
     
     // Close panel when clicking outside
