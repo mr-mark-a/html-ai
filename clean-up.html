@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mark’s Photo Cleaner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 28px;
+      color: #333;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      cursor: crosshair;
+      max-width: 100%;
+    }
+    #controls {
+      margin-top: 15px;
+    }
+    button, select {
+      margin: 5px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #done {
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    #done:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Mark’s Photo Cleaner</h1>
+
+<input type="file" id="upload" accept="image/*"><br>
+<canvas id="canvas"></canvas>
+
+<div id="controls">
+  <label for="mode">Mode:</label>
+  <select id="mode">
+    <option value="manual">Usual</option>
+    <option value="magic">Magic Eraser</option>
+  </select>
+  <br>
+  <button id="send">Remove Object</button>
+  <button id="reset">Reset</button>
+  <button onclick="restoreState(undoStack, redoStack)">Undo</button>
+  <button onclick="restoreState(redoStack, undoStack)">Redo</button>
+  <button id="save">Save to Apple Photos</button>
+  <br>
+  <button id="done">✅ Done</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const upload = document.getElementById('upload');
+const send = document.getElementById('send');
+const reset = document.getElementById('reset');
+const save = document.getElementById('save');
+const modeSelector = document.getElementById('mode');
+
+let undoStack = [];
+let redoStack = [];
+let painting = false;
+let image = new Image();
+
+upload.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function (evt) {
+    image.onload = () => {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+      saveState();
+    };
+    image.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+canvas.addEventListener('mousedown', async (e) => {
+  if (modeSelector.value === 'magic') {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round(e.clientX - rect.left);
+    const y = Math.round(e.clientY - rect.top);
+    
+    // Simple magic eraser simulation - flood fill with background color
+    saveState();
+    magicErase(x, y);
+  } else {
+    painting = true;
+    saveState();
+  }
+});
+
+canvas.addEventListener('mouseup', () => painting = false);
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!painting || modeSelector.value !== 'manual') return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  ctx.fillStyle = 'black';
+  ctx.beginPath();
+  ctx.arc(x, y, 10, 0, Math.PI * 2);
+  ctx.fill();
+});
+
+reset.addEventListener('click', () => {
+  ctx.drawImage(image, 0, 0);
+  undoStack = [];
+  redoStack = [];
+  saveState();
+});
+
+send.addEventListener('click', async () => {
+  saveState();
+  
+  // Simple inpainting simulation - blur the masked areas
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  // Find black pixels (masked areas) and replace with surrounding colors
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const idx = (y * canvas.width + x) * 4;
+      const isBlack = data[idx] === 0 && data[idx + 1] === 0 && data[idx + 2] === 0;
+      
+      if (isBlack) {
+        // Simple content-aware fill - average surrounding pixels
+        const surroundingColor = getAverageColor(x, y, imageData);
+        data[idx] = surroundingColor.r;
+        data[idx + 1] = surroundingColor.g;
+        data[idx + 2] = surroundingColor.b;
+        data[idx + 3] = 255;
+      }
+    }
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
+});
+
+// Helper function to get average color of surrounding pixels
+function getAverageColor(x, y, imageData) {
+  const data = imageData.data;
+  const width = imageData.width;
+  const height = imageData.height;
+  let r = 0, g = 0, b = 0, count = 0;
+  
+  // Sample surrounding pixels in a 5x5 area
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      const nx = x + dx;
+      const ny = y + dy;
+      
+      if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+        const idx = (ny * width + nx) * 4;
+        const isBlack = data[idx] === 0 && data[idx + 1] === 0 && data[idx + 2] === 0;
+        
+        if (!isBlack) {
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      }
+    }
+  }
+  
+  if (count === 0) {
+    return { r: 128, g: 128, b: 128 }; // Default gray
+  }
+  
+  return {
+    r: Math.round(r / count),
+    g: Math.round(g / count),
+    b: Math.round(b / count)
+  };
+}
+
+// Magic eraser function using flood fill
+function magicErase(startX, startY) {
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  const targetColor = getPixelColor(startX, startY, data, width);
+  const fillColor = { r: 255, g: 255, b: 255, a: 0 }; // Transparent white
+  
+  if (colorsEqual(targetColor, fillColor)) return;
+  
+  const stack = [[startX, startY]];
+  const visited = new Set();
+  
+  while (stack.length > 0) {
+    const [x, y] = stack.pop();
+    const key = `${x},${y}`;
+    
+    if (x < 0 || x >= width || y < 0 || y >= height || visited.has(key)) {
+      continue;
+    }
+    
+    const currentColor = getPixelColor(x, y, data, width);
+    if (!colorsEqual(currentColor, targetColor)) {
+      continue;
+    }
+    
+    visited.add(key);
+    setPixelColor(x, y, fillColor, data, width);
+    
+    // Add neighboring pixels
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function getPixelColor(x, y, data, width) {
+  const idx = (y * width + x) * 4;
+  return {
+    r: data[idx],
+    g: data[idx + 1],
+    b: data[idx + 2],
+    a: data[idx + 3]
+  };
+}
+
+function setPixelColor(x, y, color, data, width) {
+  const idx = (y * width + x) * 4;
+  data[idx] = color.r;
+  data[idx + 1] = color.g;
+  data[idx + 2] = color.b;
+  data[idx + 3] = color.a;
+}
+
+function colorsEqual(c1, c2, tolerance = 30) {
+  return Math.abs(c1.r - c2.r) <= tolerance &&
+         Math.abs(c1.g - c2.g) <= tolerance &&
+         Math.abs(c1.b - c2.b) <= tolerance;
+}
+
+function saveState() {
+  undoStack.push(canvas.toDataURL());
+  if (undoStack.length > 20) undoStack.shift();
+  redoStack = [];
+}
+
+function restoreState(stackFrom, stackTo) {
+  if (stackFrom.length === 0) return;
+  const state = stackFrom.pop();
+  stackTo.push(canvas.toDataURL());
+
+  const img = new Image();
+  img.src = state;
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+}
+
+save.addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'cleaned-photo.png';
+  link.href = canvas.toDataURL();
+  link.click();
+});
+
+document.getElementById('done').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'z') {
+    restoreState(undoStack, redoStack);
+  } else if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+    restoreState(redoStack, undoStack);
+  }
+});
+</script>
+
+</body>
+</html>

@@ -335,6 +335,42 @@
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
         
+        .clean-up-button {
+            position: fixed;
+            right: 20px;
+            top: calc(50% + 80px);
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        .clean-up-button:hover {
+            background: linear-gradient(135deg, #c82333, #bd2130);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) translateX(-5px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+        }
+        
+        .clean-up-button:active {
+            transform: translateY(-50%) translateX(0px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
         /* RTL support for Arabic */
         [dir="rtl"] .language-selector {
             left: 20px;
@@ -356,6 +392,11 @@
         }
         
         [dir="rtl"] .git-bot-button {
+            left: 20px;
+            right: auto;
+        }
+        
+        [dir="rtl"] .clean-up-button {
             left: 20px;
             right: auto;
         }
@@ -396,6 +437,11 @@
 <!-- Git Bot Button -->
 <button class="git-bot-button" id="gitBotBtn">
     🤖 Git Bot
+</button>
+
+<!-- Clean Up Button -->
+<button class="clean-up-button" id="cleanUpBtn">
+    🧹 Clean Up
 </button>
 
 <div id="loginContainer">
@@ -492,6 +538,11 @@ document.getElementById('idealFinesBtn').onclick = function() {
 // Git Bot button functionality
 document.getElementById('gitBotBtn').onclick = function() {
     window.location.href = 'git-bot.html';
+};
+
+// Clean Up button functionality
+document.getElementById('cleanUpBtn').onclick = function() {
+    window.location.href = 'clean-up.html';
 };
 
 // Language selector functionality
