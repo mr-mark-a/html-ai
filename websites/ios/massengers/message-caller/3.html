@@ -1,0 +1,58 @@
+File 2
+
+const chatBox = document.getElementById("chat-box");
+const messageInput = document.getElementById("message");
+const fileInput = document.getElementById("file-input");
+
+function sendMessage() {
+  const messageText = messageInput.value.trim();
+  const files = fileInput.files;
+
+  if (!messageText && files.length === 0) {
+    alert("Please enter a message or select files.");
+    return;
+  }
+
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message");
+
+  if (messageText) {
+    const textNode = document.createTextNode(messageText);
+    messageDiv.appendChild(textNode);
+  }
+
+  if (files.length > 0) {
+    const filesContainer = document.createElement("div");
+    filesContainer.classList.add("files");
+
+    Array.from(files).forEach(file => {
+      const fileElement = document.createElement("div");
+      fileElement.classList.add("file");
+
+      if (file.type.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.width = 100;
+        img.title = file.name;
+        fileElement.appendChild(img);
+      } else {
+        const fileLink = document.createElement("a");
+        fileLink.href = URL.createObjectURL(file);
+        fileLink.download = file.name;
+        fileLink.textContent = file.name;
+        fileElement.appendChild(fileLink);
+      }
+
+      filesContainer.appendChild(fileElement);
+    });
+
+    messageDiv.appendChild(filesContainer);
+  }
+
+  chatBox.appendChild(messageDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Reset inputs
+  messageInput.value = "";
+  fileInput.value = "";
+}

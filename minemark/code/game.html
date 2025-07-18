@@ -1,0 +1,53 @@
+// Utility
+function distance(x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Power & Internet
+function isPowered(x, y) {
+  return electricityTowers.some(t => distance(x, y, t.x, t.y) <= 15);
+}
+
+function hasInternet(x, y) {
+  return internetTowers.some(t => distance(x, y, t.x, t.y) <= 15);
+}
+
+// Wireless Storage
+function canAccessWirelessStorage(x, y) {
+  return storageNetwork.unlocked && hasInternet(x, y);
+}
+
+// Waystone Teleportation
+function canTeleport(x, y) {
+  return waystones.some(w => distance(x, y, w.x, w.y) <= 5);
+}
+
+function teleportPlayer(player, targetX, targetY) {
+  if (canTeleport(player.x, player.y)) {
+    player.x = targetX;
+    player.y = targetY;
+    return true;
+  }
+  return false;
+}
+
+// UI Feedback Stubs
+function getUIStatus(x, y) {
+  return {
+    power: isPowered(x, y),
+    internet: hasInternet(x, y),
+    wirelessStorage: canAccessWirelessStorage(x, y),
+    nearWaystone: canTeleport(x, y)
+  };
+}
+
+// Data Setup
+const electricityTowers = [ { x: 10, y: 15 }, { x: 32, y: 45 } ];
+const internetTowers = [ { x: 5, y: 20 }, { x: 60, y: 60 } ];
+const waystones = [ { x: 25, y: 30 }, { x: 70, y: 75 } ];
+const storageNetwork = { unlocked: true };
+
+// Example
+const player = { x: 10, y: 15 };
+console.log(getUIStatus(player.x, player.y));
