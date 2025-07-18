@@ -1,37 +1,553 @@
-File 1 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Caller - Styles Demo</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #ff7eb3, #ff758c);
+      min-height: 100vh;
+    }
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f0f0f0;
-}
+    .demo-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
 
-#chat-box {
-  background: #fff;
-  padding: 10px;
-  height: 400px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-}
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2em;
+    }
 
-.message {
-  margin: 10px 0;
-  padding: 8px;
-  background: #e1f5fe;
-  border-radius: 5px;
-}
+    #chat-box {
+      background: #f8f9fa;
+      padding: 20px;
+      height: 300px;
+      overflow-y: auto;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+    }
 
-.files {
-  margin-top: 5px;
-}
+    .message {
+      margin: 15px 0;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      color: white;
+      border-radius: 18px;
+      max-width: 70%;
+      margin-left: auto;
+      box-shadow: 0 4px 15px rgba(255, 117, 140, 0.3);
+      animation: fadeIn 0.5s ease-out;
+    }
 
-.file {
-  margin-right: 10px;
-  display: inline-block;
-}
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-input, button {
-  margin: 5px 0;
-}
+    .files {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .file {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+      display: inline-block;
+    }
+
+    .file img {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .file a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    input, textarea, button {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 2px solid #e0e0e0;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #ff758c;
+      box-shadow: 0 0 0 3px rgba(255, 117, 140, 0.1);
+    }
+
+    button {
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(255, 117, 140, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 117, 140, 0.4);
+    }
+
+    .style-info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border-left: 4px solid #ff758c;
+    }
+
+    .style-info h3 {
+      margin-top: 0;
+      color: #ff758c;
+    }
+
+    .demo-message {
+      margin: 10px 0;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      color: white;
+      border-radius: 15px;
+      margin-left: auto;
+      max-width: 70%;
+    }
+
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Settings Button */
+    .settings-btn {
+      background: linear-gradient(135deg, #34495e, #2c3e50);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 15px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(52, 73, 94, 0.3);
+    }
+
+    .settings-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -350px;
+      width: 320px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .settings-panel.open {
+      right: 0;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 15px;
+    }
+
+    .settings-header h3 {
+      margin: 0;
+      color: #333;
+      font-size: 1.2em;
+    }
+
+    .close-settings {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .setting-section {
+      margin-bottom: 20px;
+    }
+
+    .setting-section h4 {
+      color: #ff758c;
+      margin-bottom: 12px;
+      font-size: 1em;
+      border-left: 3px solid #ff758c;
+      padding-left: 8px;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 6px;
+      border-radius: 6px;
+      background: #f8f9fa;
+    }
+
+    .setting-row label {
+      font-weight: 500;
+      color: #333;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 20px;
+      background: #ccc;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: #ff758c;
+    }
+
+    .toggle-switch::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch.active::before {
+      transform: translateX(20px);
+    }
+
+    .settings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 999;
+    }
+
+    .settings-overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="header-nav">
+      <button class="back-btn" onclick="window.location.href='main.html'">← Back to Main</button>
+      <h1>🎨 Message Caller Styles</h1>
+      <button class="settings-btn" onclick="toggleSettings()">⚙️ Settings</button>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-header">
+        <h3>🎨 Style Settings</h3>
+        <button class="close-settings" onclick="closeSettings()">×</button>
+      </div>
+
+      <div class="setting-section">
+        <h4>🎨 Theme Options</h4>
+        <div class="setting-row">
+          <label>Dark Theme</label>
+          <div class="toggle-switch" onclick="toggleDarkTheme(this)"></div>
+        </div>
+        <div class="setting-row">
+          <label>Animated Backgrounds</label>
+          <div class="toggle-switch active" onclick="toggleAnimations(this)"></div>
+        </div>
+        <div class="setting-row">
+          <label>Gradient Effects</label>
+          <div class="toggle-switch active" onclick="toggleGradients(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h4>🎯 Display Options</h4>
+        <div class="setting-row">
+          <label>Show Code Examples</label>
+          <div class="toggle-switch active" onclick="toggleCodeExamples(this)"></div>
+        </div>
+        <div class="setting-row">
+          <label>Demo Messages</label>
+          <div class="toggle-switch active" onclick="toggleDemoMessages(this)"></div>
+        </div>
+        <div class="setting-row">
+          <label>Feature Highlights</label>
+          <div class="toggle-switch active" onclick="toggleFeatures(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <h4>⚡ Performance</h4>
+        <div class="setting-row">
+          <label>Smooth Transitions</label>
+          <div class="toggle-switch active" onclick="toggleTransitions(this)"></div>
+        </div>
+        <div class="setting-row">
+          <label>Blur Effects</label>
+          <div class="toggle-switch active" onclick="toggleBlur(this)"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="chat-box">
+      <div class="demo-message">Welcome to the style demo! 🎉</div>
+      <div class="demo-message">This shows how messages look with our beautiful gradient theme.</div>
+      <div class="demo-message">
+        File attachments are supported:
+        <div class="files">
+          <div class="file">
+            <a href="#">📄 document.pdf</a>
+          </div>
+          <div class="file">
+            <a href="#">🖼️ image.jpg</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <textarea placeholder="Type your message here..." rows="3"></textarea>
+      <input type="file" multiple>
+      <button>Send Message 💌</button>
+    </div>
+
+    <div class="style-info">
+      <h3>🎨 Style Features</h3>
+      <ul>
+        <li><strong>iOS-inspired design</strong> with blur effects and gradients</li>
+        <li><strong>Responsive layout</strong> that works on all devices</li>
+        <li><strong>Smooth animations</strong> for message sending</li>
+        <li><strong>Modern color scheme</strong> with pink/coral gradients</li>
+        <li><strong>File upload styling</strong> with preview support</li>
+        <li><strong>Accessibility features</strong> with proper focus states</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Add some interactive demo functionality
+    const button = document.querySelector('button');
+    const textarea = document.querySelector('textarea');
+    const chatBox = document.getElementById('chat-box');
+
+    button.addEventListener('click', function() {
+      const message = textarea.value.trim();
+      if (message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'demo-message';
+        messageDiv.textContent = message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        textarea.value = '';
+      }
+    });
+
+    textarea.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        button.click();
+      }
+    });
+
+    // Settings Functions
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      const overlay = document.getElementById('settingsOverlay');
+      
+      panel.classList.toggle('open');
+      overlay.classList.toggle('show');
+    }
+
+    function closeSettings() {
+      const panel = document.getElementById('settingsPanel');
+      const overlay = document.getElementById('settingsOverlay');
+      
+      panel.classList.remove('open');
+      overlay.classList.remove('show');
+    }
+
+    function toggleDarkTheme(element) {
+      element.classList.toggle('active');
+      document.body.classList.toggle('dark-theme');
+      showNotification(element.classList.contains('active') ? 'Dark theme enabled' : 'Light theme enabled');
+    }
+
+    function toggleAnimations(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      document.body.style.setProperty('--animation-duration', enabled ? '0.5s' : '0s');
+      showNotification(enabled ? 'Animations enabled' : 'Animations disabled');
+    }
+
+    function toggleGradients(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      if (!enabled) {
+        document.documentElement.style.setProperty('--gradient-bg', 'solid #ff758c');
+      } else {
+        document.documentElement.style.setProperty('--gradient-bg', 'linear-gradient(135deg, #ff758c, #ff7eb3)');
+      }
+      showNotification(enabled ? 'Gradients enabled' : 'Gradients disabled');
+    }
+
+    function toggleCodeExamples(element) {
+      element.classList.toggle('active');
+      const codeSection = document.querySelector('.style-info');
+      if (codeSection) {
+        codeSection.style.display = element.classList.contains('active') ? 'block' : 'none';
+      }
+      showNotification(element.classList.contains('active') ? 'Code examples shown' : 'Code examples hidden');
+    }
+
+    function toggleDemoMessages(element) {
+      element.classList.toggle('active');
+      const demoMessages = document.querySelectorAll('.demo-message');
+      const display = element.classList.contains('active') ? 'block' : 'none';
+      demoMessages.forEach(msg => msg.style.display = display);
+      showNotification(element.classList.contains('active') ? 'Demo messages shown' : 'Demo messages hidden');
+    }
+
+    function toggleFeatures(element) {
+      element.classList.toggle('active');
+      showNotification(element.classList.contains('active') ? 'Feature highlights enabled' : 'Feature highlights disabled');
+    }
+
+    function toggleTransitions(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      document.body.style.setProperty('--transition-speed', enabled ? '0.3s' : '0s');
+      showNotification(enabled ? 'Smooth transitions enabled' : 'Smooth transitions disabled');
+    }
+
+    function toggleBlur(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      document.body.style.setProperty('--blur-amount', enabled ? 'blur(10px)' : 'none');
+      showNotification(enabled ? 'Blur effects enabled' : 'Blur effects disabled');
+    }
+
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        color: white;
+        font-weight: 500;
+        z-index: 2000;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 15px rgba(255, 117, 140, 0.3);
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 2500);
+    }
+
+    // Add dark theme styles
+    const darkThemeStyles = document.createElement('style');
+    darkThemeStyles.textContent = `
+      .dark-theme {
+        background: linear-gradient(135deg, #2c3e50, #34495e) !important;
+      }
+      .dark-theme .demo-container {
+        background: rgba(44, 62, 80, 0.95) !important;
+        color: #ecf0f1 !important;
+      }
+      .dark-theme .demo-message {
+        background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+      }
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(darkThemeStyles);
+  </script>
+</body>
+</html>

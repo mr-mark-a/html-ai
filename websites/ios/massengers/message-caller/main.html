@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Caller - iOS Messenger</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      color: #333;
+      font-size: 1.5em;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(135deg, #007AFF, #5856D6);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+    }
+
+    .nav-btn.secondary {
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      box-shadow: 0 2px 8px rgba(255, 117, 140, 0.3);
+    }
+
+    .nav-btn.secondary:hover {
+      box-shadow: 0 4px 12px rgba(255, 117, 140, 0.4);
+    }
+
+    /* Settings Button */
+    .settings-btn {
+      background: linear-gradient(135deg, #34495e, #2c3e50);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(52, 73, 94, 0.3);
+      margin-left: 10px;
+    }
+
+    .settings-btn:hover {
+      transform: rotate(45deg);
+      box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 350px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .settings-panel.open {
+      right: 0;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 15px;
+    }
+
+    .settings-header h2 {
+      margin: 0;
+      color: #333;
+      font-size: 1.4em;
+    }
+
+    .close-settings {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .setting-group {
+      margin-bottom: 25px;
+    }
+
+    .setting-group h3 {
+      color: #555;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      border-left: 3px solid #007AFF;
+      padding-left: 10px;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+
+    .setting-item label {
+      font-weight: 500;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: #007AFF;
+    }
+
+    .toggle-switch::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch.active::before {
+      transform: translateX(26px);
+    }
+
+    .setting-select, .setting-input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      color: #333;
+      min-width: 120px;
+    }
+
+    .setting-button {
+      background: linear-gradient(135deg, #007AFF, #5856D6);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .setting-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    }
+
+    .setting-button.danger {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    }
+
+    .setting-slider {
+      width: 120px;
+    }
+
+    .settings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      display: none;
+      z-index: 999;
+    }
+
+    .settings-overlay.show {
+      display: block;
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 800px;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    #chat-box {
+      flex: 1;
+      padding: 20px;
+      height: 400px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      scrollbar-width: thin;
+      scrollbar-color: #007AFF #f0f0f0;
+    }
+
+    #chat-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat-box::-webkit-scrollbar-track {
+      background: #f0f0f0;
+    }
+
+    #chat-box::-webkit-scrollbar-thumb {
+      background: #007AFF;
+      border-radius: 3px;
+    }
+
+    .message {
+      margin: 15px 0;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #007AFF, #5856D6);
+      color: white;
+      border-radius: 18px;
+      max-width: 70%;
+      margin-left: auto;
+      box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3);
+      word-wrap: break-word;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .files {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .file {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    .file img {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .file a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9em;
+    }
+
+    .file a:hover {
+      text-decoration: underline;
+    }
+
+    .input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .message-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    #message {
+      flex: 1;
+      border: 2px solid #e0e0e0;
+      border-radius: 20px;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    #message:focus {
+      border-color: #007AFF;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .file-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    #file-input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .send-button {
+      background: linear-gradient(135deg, #007AFF, #5856D6);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    }
+
+    .send-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+    }
+
+    .send-button:active {
+      transform: translateY(0);
+    }
+
+    .send-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .emoji-indicator {
+      text-align: center;
+      padding: 10px;
+      color: #666;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        margin: 10px;
+        border-radius: 15px;
+      }
+      
+      .message {
+        max-width: 85%;
+      }
+      
+      .input-container {
+        padding: 15px;
+      }
+      
+      .message-input-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📱 Message Caller</h1>
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="window.location.href='3.html'">💬 Chat Demo</button>
+      <button class="nav-btn secondary" onclick="window.location.href='2.html'">🎨 Switch Style</button>
+      <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <h2>⚙️ Settings</h2>
+      <button class="close-settings" onclick="closeSettings()">×</button>
+    </div>
+
+    <div class="setting-group">
+      <h3>🎨 Appearance</h3>
+      <div class="setting-item">
+        <label>Dark Mode</label>
+        <div class="toggle-switch" onclick="toggleDarkMode(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Theme</label>
+        <select class="setting-select" onchange="changeTheme(this.value)">
+          <option value="blue">Blue</option>
+          <option value="pink">Pink</option>
+          <option value="green">Green</option>
+          <option value="purple">Purple</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Font Size</label>
+        <input type="range" class="setting-slider" min="12" max="20" value="16" onchange="changeFontSize(this.value)">
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>🔊 Audio & Notifications</h3>
+      <div class="setting-item">
+        <label>Sound Effects</label>
+        <div class="toggle-switch active" onclick="toggleSounds(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Push Notifications</label>
+        <div class="toggle-switch active" onclick="toggleNotifications(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Notification Volume</label>
+        <input type="range" class="setting-slider" min="0" max="100" value="50" onchange="changeVolume(this.value)">
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>💬 Chat Settings</h3>
+      <div class="setting-item">
+        <label>Auto-scroll</label>
+        <div class="toggle-switch active" onclick="toggleAutoScroll(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Show Timestamps</label>
+        <div class="toggle-switch" onclick="toggleTimestamps(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Max File Size (MB)</label>
+        <input type="number" class="setting-input" value="10" min="1" max="100" onchange="changeMaxFileSize(this.value)">
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>🔐 Privacy & Security</h3>
+      <div class="setting-item">
+        <label>End-to-End Encryption</label>
+        <div class="toggle-switch active" onclick="toggleEncryption(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Save Chat History</label>
+        <div class="toggle-switch active" onclick="toggleHistory(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label>Auto-delete Messages</label>
+        <select class="setting-select" onchange="changeAutoDelete(this.value)">
+          <option value="never">Never</option>
+          <option value="24h">24 Hours</option>
+          <option value="7d">7 Days</option>
+          <option value="30d">30 Days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>🔧 Advanced</h3>
+      <div class="setting-item">
+        <label>Developer Mode</label>
+        <div class="toggle-switch" onclick="toggleDevMode(this)"></div>
+      </div>
+      <div class="setting-item">
+        <label></label>
+        <button class="setting-button" onclick="exportSettings()">📤 Export Settings</button>
+      </div>
+      <div class="setting-item">
+        <label></label>
+        <button class="setting-button" onclick="importSettings()">📥 Import Settings</button>
+      </div>
+      <div class="setting-item">
+        <label></label>
+        <button class="setting-button danger" onclick="resetSettings()">🔄 Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <div id="chat-box">
+      <div class="emoji-indicator">
+        💬 Start your conversation here...
+      </div>
+    </div>
+
+    <div class="input-container">
+      <div class="message-input-group">
+        <textarea id="message" placeholder="Type your message..." rows="2"></textarea>
+      </div>
+      
+      <div class="file-input-container">
+        <input type="file" id="file-input" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt">
+        <button class="send-button" onclick="sendMessage()">Send 📤</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const messageInput = document.getElementById("message");
+    const fileInput = document.getElementById("file-input");
+    const sendButton = document.querySelector(".send-button");
+
+    // Clear the initial indicator
+    let isFirstMessage = true;
+
+    function sendMessage() {
+      const messageText = messageInput.value.trim();
+      const files = fileInput.files;
+
+      if (!messageText && files.length === 0) {
+        alert("Please enter a message or select files.");
+        return;
+      }
+
+      // Clear indicator on first message
+      if (isFirstMessage) {
+        chatBox.innerHTML = '';
+        isFirstMessage = false;
+      }
+
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message");
+
+      if (messageText) {
+        const textNode = document.createTextNode(messageText);
+        messageDiv.appendChild(textNode);
+      }
+
+      if (files.length > 0) {
+        const filesContainer = document.createElement("div");
+        filesContainer.classList.add("files");
+
+        Array.from(files).forEach(file => {
+          const fileElement = document.createElement("div");
+          fileElement.classList.add("file");
+
+          if (file.type.startsWith("image/")) {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.width = 150;
+            img.style.maxWidth = "100%";
+            img.title = file.name;
+            img.alt = file.name;
+            fileElement.appendChild(img);
+          } else if (file.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.src = URL.createObjectURL(file);
+            video.width = 200;
+            video.style.maxWidth = "100%";
+            video.controls = true;
+            video.title = file.name;
+            fileElement.appendChild(video);
+          } else if (file.type.startsWith("audio/")) {
+            const audio = document.createElement("audio");
+            audio.src = URL.createObjectURL(file);
+            audio.controls = true;
+            audio.title = file.name;
+            fileElement.appendChild(audio);
+          } else {
+            const fileLink = document.createElement("a");
+            fileLink.href = URL.createObjectURL(file);
+            fileLink.download = file.name;
+            fileLink.textContent = `📎 ${file.name}`;
+            fileElement.appendChild(fileLink);
+          }
+
+          filesContainer.appendChild(fileElement);
+        });
+
+        messageDiv.appendChild(filesContainer);
+      }
+
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Reset inputs
+      messageInput.value = "";
+      fileInput.value = "";
+      
+      // Add a small delay to show the message was sent
+      sendButton.disabled = true;
+      sendButton.textContent = "Sent ✅";
+      setTimeout(() => {
+        sendButton.disabled = false;
+        sendButton.textContent = "Send 📤";
+      }, 1000);
+    }
+
+    // Allow Enter key to send message (Shift+Enter for new line)
+    messageInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Auto-resize textarea
+    messageInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+
+    // Settings Functions
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      const overlay = document.getElementById('settingsOverlay');
+      
+      panel.classList.toggle('open');
+      overlay.classList.toggle('show');
+    }
+
+    function closeSettings() {
+      const panel = document.getElementById('settingsPanel');
+      const overlay = document.getElementById('settingsOverlay');
+      
+      panel.classList.remove('open');
+      overlay.classList.remove('show');
+    }
+
+    function toggleDarkMode(element) {
+      element.classList.toggle('active');
+      document.body.classList.toggle('dark-mode');
+      showSettingsNotification(element.classList.contains('active') ? 'Dark mode enabled' : 'Dark mode disabled', 'success');
+    }
+
+    function changeTheme(theme) {
+      const themes = {
+        blue: { primary: '#007AFF', secondary: '#5856D6' },
+        pink: { primary: '#ff758c', secondary: '#ff7eb3' },
+        green: { primary: '#34c759', secondary: '#30d158' },
+        purple: { primary: '#af52de', secondary: '#bf5af2' }
+      };
+      
+      if (themes[theme]) {
+        document.documentElement.style.setProperty('--primary-color', themes[theme].primary);
+        document.documentElement.style.setProperty('--secondary-color', themes[theme].secondary);
+        showSettingsNotification(`Theme changed to ${theme}`, 'success');
+      }
+    }
+
+    function changeFontSize(size) {
+      document.body.style.fontSize = size + 'px';
+      showSettingsNotification(`Font size set to ${size}px`, 'success');
+    }
+
+    function toggleSounds(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Sound effects enabled' : 'Sound effects disabled', 'success');
+    }
+
+    function toggleNotifications(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      if (enabled && 'Notification' in window) {
+        Notification.requestPermission();
+      }
+      showSettingsNotification(enabled ? 'Notifications enabled' : 'Notifications disabled', 'success');
+    }
+
+    function changeVolume(volume) {
+      showSettingsNotification(`Volume set to ${volume}%`, 'success');
+    }
+
+    function toggleAutoScroll(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Auto-scroll enabled' : 'Auto-scroll disabled', 'success');
+    }
+
+    function toggleTimestamps(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Timestamps enabled' : 'Timestamps disabled', 'success');
+    }
+
+    function changeMaxFileSize(size) {
+      showSettingsNotification(`Max file size set to ${size}MB`, 'success');
+    }
+
+    function toggleEncryption(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Encryption enabled' : 'Encryption disabled', enabled ? 'success' : 'warning');
+    }
+
+    function toggleHistory(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Chat history saving enabled' : 'Chat history saving disabled', 'success');
+    }
+
+    function changeAutoDelete(period) {
+      showSettingsNotification(`Auto-delete set to: ${period}`, 'success');
+    }
+
+    function toggleDevMode(element) {
+      element.classList.toggle('active');
+      const enabled = element.classList.contains('active');
+      showSettingsNotification(enabled ? 'Developer mode enabled' : 'Developer mode disabled', 'success');
+    }
+
+    function exportSettings() {
+      const settings = {
+        darkMode: document.querySelector('.toggle-switch').classList.contains('active'),
+        theme: document.querySelector('.setting-select').value,
+        fontSize: document.querySelector('.setting-slider').value,
+        timestamp: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'message-caller-settings.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showSettingsNotification('Settings exported successfully!', 'success');
+    }
+
+    function importSettings() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const settings = JSON.parse(e.target.result);
+              showSettingsNotification('Settings imported successfully!', 'success');
+            } catch (error) {
+              showSettingsNotification('Error importing settings', 'error');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    }
+
+    function resetSettings() {
+      if (confirm('Are you sure you want to reset all settings? This cannot be undone.')) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    function showSettingsNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 2000;
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      `;
+      
+      const colors = {
+        success: 'linear-gradient(135deg, #00b894, #00a085)',
+        error: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+        warning: 'linear-gradient(135deg, #fdcb6e, #e17055)',
+        info: 'linear-gradient(135deg, #74b9ff, #0984e3)'
+      };
+      
+      notification.style.background = colors[type] || colors.info;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+
+</body>
+</html>
