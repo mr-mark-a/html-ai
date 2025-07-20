@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Caller - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .app-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            margin: 20px 0;
+            position: relative;
+            color: #999;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 15px;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .social-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .signup-link {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .signup-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .success-message {
+            background: #51cf66;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        /* Settings Button */
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(45deg);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        .settings-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .close-settings {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h4 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1em;
+            border-left: 3px solid #667eea;
+            padding-left: 8px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .setting-row label {
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #667eea;
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::before {
+            transform: translateX(20px);
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            z-index: 999;
+        }
+
+        .settings-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .app-title {
+                font-size: 1.8em;
+            }
+
+            .settings-panel {
+                width: 280px;
+                right: -280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h3>🔐 Login Settings</h3>
+            <button class="close-settings" onclick="closeSettings()">×</button>
+        </div>
+
+        <div class="settings-section">
+            <h4>🔒 Security Options</h4>
+            <div class="setting-row">
+                <label>Remember Me</label>
+                <div class="toggle-switch" onclick="toggleRememberMe(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Two-Factor Auth</label>
+                <div class="toggle-switch" onclick="toggleTwoFactor(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Biometric Login</label>
+                <div class="toggle-switch" onclick="toggleBiometric(this)"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>🎨 Appearance</h4>
+            <div class="setting-row">
+                <label>Dark Mode</label>
+                <div class="toggle-switch" onclick="toggleDarkMode(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Animated Background</label>
+                <div class="toggle-switch active" onclick="toggleAnimatedBg(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Blur Effects</label>
+                <div class="toggle-switch active" onclick="toggleBlurEffects(this)"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>🌐 Accessibility</h4>
+            <div class="setting-row">
+                <label>High Contrast</label>
+                <div class="toggle-switch" onclick="toggleHighContrast(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Large Text</label>
+                <div class="toggle-switch" onclick="toggleLargeText(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Screen Reader</label>
+                <div class="toggle-switch" onclick="toggleScreenReader(this)"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>🔧 Advanced</h4>
+            <div class="setting-row">
+                <label>Auto-fill Demo</label>
+                <div class="toggle-switch active" onclick="toggleAutoFill(this)"></div>
+            </div>
+            <div class="setting-row">
+                <label>Captcha</label>
+                <div class="toggle-switch" onclick="toggleCaptcha(this)"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="logo">📱</div>
+        <h1 class="app-title">Message Caller</h1>
+        <p class="subtitle">Sign in to access premium messaging features</p>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label for="email">Email or Username</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="login-btn">Sign In 🚀</button>
+        </form>
+
+        <a href="#" class="forgot-password" onclick="forgotPassword()">Forgot your password?</a>
+
+        <div class="divider">
+            <span>or continue with</span>
+        </div>
+
+        <div class="social-login">
+            <button class="social-btn" onclick="socialLogin('google')">🔍</button>
+            <button class="social-btn" onclick="socialLogin('apple')">🍎</button>
+            <button class="social-btn" onclick="socialLogin('facebook')">📘</button>
+        </div>
+
+        <div class="signup-link">
+            Don't have an account? <a href="#" onclick="showSignup()">Sign up here</a>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            // Navigate back to marks-games.html
+            window.location.href = '../../../../marks-games.html';
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            // Hide previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Simple validation
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+
+            // Simulate login process
+            const loginBtn = document.querySelector('.login-btn');
+            loginBtn.textContent = 'Signing in...';
+            loginBtn.disabled = true;
+
+            setTimeout(() => {
+                // Demo credentials
+                if (email === 'demo@messagecaller.com' && password === 'demo123') {
+                    showSuccess('Login successful! Redirecting to messenger...');
+                    setTimeout(() => {
+                        window.location.href = 'main.html';
+                    }, 2000);
+                } else {
+                    showError('Invalid email or password. Try demo@messagecaller.com / demo123');
+                    loginBtn.textContent = 'Sign In 🚀';
+                    loginBtn.disabled = false;
+                }
+            }, 1500);
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+        }
+
+        function forgotPassword() {
+            alert('Password reset functionality would be implemented here.\n\nFor demo purposes, use:\nEmail: demo@messagecaller.com\nPassword: demo123');
+        }
+
+        function socialLogin(provider) {
+            showSuccess(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login would be implemented here. Redirecting to messenger...`);
+            setTimeout(() => {
+                window.location.href = 'main.html';
+            }, 2000);
+        }
+
+        function showSignup() {
+            alert('Sign up functionality would redirect to a registration page.\n\nFor demo purposes, use the login:\nEmail: demo@messagecaller.com\nPassword: demo123');
+        }
+
+        // Auto-fill demo credentials after 3 seconds
+        setTimeout(() => {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            if (!emailInput.value && !passwordInput.value) {
+                emailInput.value = 'demo@messagecaller.com';
+                passwordInput.value = 'demo123';
+                
+                showSuccess('Demo credentials filled! Click "Sign In" to continue.');
+            }
+        }, 3000);
+
+        // Add Enter key support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const form = document.getElementById('loginForm');
+                if (form) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        // Settings functionality
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const overlay = document.getElementById('settingsOverlay');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPanel').style.display = 'none';
+            document.getElementById('settingsOverlay').style.display = 'none';
+        }
+
+        // Settings toggles
+        function toggleRememberMe(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '✅ Remember Me enabled' : '❌ Remember Me disabled');
+        }
+
+        function toggleTwoFactor(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '🔐 Two-Factor Auth enabled' : '🔓 Two-Factor Auth disabled');
+        }
+
+        function toggleBiometric(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '👆 Biometric Login enabled' : '🚫 Biometric Login disabled');
+        }
+
+        function toggleDarkMode(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            document.body.style.filter = isActive ? 'invert(1) hue-rotate(180deg)' : 'none';
+            showNotification(isActive ? '🌙 Dark Mode enabled' : '☀️ Light Mode enabled');
+        }
+
+        function toggleAnimatedBg(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            const container = document.querySelector('.container');
+            if (isActive) {
+                container.style.animation = 'float 6s ease-in-out infinite';
+            } else {
+                container.style.animation = 'none';
+            }
+            showNotification(isActive ? '✨ Animated Background enabled' : '🚫 Animations disabled');
+        }
+
+        function toggleBlurEffects(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            const container = document.querySelector('.container');
+            if (isActive) {
+                container.style.backdropFilter = 'blur(10px)';
+                container.style.webkitBackdropFilter = 'blur(10px)';
+            } else {
+                container.style.backdropFilter = 'none';
+                container.style.webkitBackdropFilter = 'none';
+            }
+            showNotification(isActive ? '🌫️ Blur Effects enabled' : '🔍 Blur Effects disabled');
+        }
+
+        function toggleHighContrast(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            document.body.style.filter = isActive ? 'contrast(2) saturate(0.5)' : 'none';
+            showNotification(isActive ? '⚫ High Contrast enabled' : '🎨 Normal Contrast restored');
+        }
+
+        function toggleLargeText(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            document.body.style.fontSize = isActive ? '120%' : '100%';
+            showNotification(isActive ? '🔤 Large Text enabled' : '📝 Normal Text size');
+        }
+
+        function toggleScreenReader(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '🔊 Screen Reader support enabled' : '🔇 Screen Reader support disabled');
+        }
+
+        function toggleAutoFill(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '🤖 Auto-fill Demo enabled' : '✋ Manual entry only');
+        }
+
+        function toggleCaptcha(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            showNotification(isActive ? '🤖 Captcha verification enabled' : '🚫 Captcha disabled');
+        }
+
+        // Notification system
+        function showNotification(message) {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 25px;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 10000;
+                transform: translateX(300px);
+                transition: all 0.3s ease;
+                font-size: 14px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Remove after delay
+            setTimeout(() => {
+                notification.style.transform = 'translateX(300px)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Initialize default settings
+        window.addEventListener('load', function() {
+            // Set default active states for toggles that should be on by default
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.settings-section');
+                if (sections.length > 1) {
+                    // Animated Background toggle (2nd section, 2nd row)
+                    const animatedBgToggle = sections[1].querySelector('.setting-row:nth-child(2) .toggle-switch');
+                    // Blur Effects toggle (2nd section, 3rd row)
+                    const blurToggle = sections[1].querySelector('.setting-row:nth-child(3) .toggle-switch');
+                    
+                    if (animatedBgToggle) animatedBgToggle.classList.add('active');
+                    if (blurToggle) blurToggle.classList.add('active');
+                }
+                
+                if (sections.length > 3) {
+                    // Auto-fill Demo toggle (4th section, 1st row)
+                    const autoFillToggle = sections[3].querySelector('.setting-row:nth-child(1) .toggle-switch');
+                    if (autoFillToggle) autoFillToggle.classList.add('active');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

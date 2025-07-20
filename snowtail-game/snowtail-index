@@ -1,0 +1,81 @@
+<!DOCTYPE html><html><head><meta charset="utf8"><title>Whiskers’ Magic Snow Quest</title>
+<style>body{margin:0;overflow:hidden;background:#000}#msg{position:absolute;top:0;color:#aaf;padding:10px;font:16px sans-serif}</style></head>
+<body><div id="msg">Whiskers seeks magic snow…</div><script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script><script>
+const d=document,c=d.getElementById("msg"),s=new THREE.Scene(),
+cam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000),
+r=new THREE.WebGLRenderer({antialias:1});r.setSize(innerWidth,innerHeight);d.body.appendChild(r.domElement);
+s.add(new THREE.AmbientLight(0x8888ff,.6));
+const L=new THREE.PointLight(0xffffff,1,50);L.position.set(5,10,5);s.add(L);
+const g=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshPhongMaterial({color:0x111122}));
+g.rotation.x=-Math.PI/2;g.position.y=-1;s.add(g);
+
+const w=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0x222,color:"#222",emissive:0x111111}));
+w.position.y=0.5;s.add(w);
+
+const spots=[],goal=3;let found=0;
+for(let i=0;i<goal;i++){
+ const sp=new THREE.Mesh(new THREE.CircleGeometry(1.5,16),new THREE.MeshBasicMaterial({color:0x88ccff,opacity:0.5,transparent:1}));
+ sp.rotation.x=-Math.PI/2;
+ sp.position.set(Math.random()*40-20,-0.99,Math.random()*40-20);
+ s.add(sp);spots.push(sp);
+}
+
+const FG=new THREE.BufferGeometry(),FN=400,fp=[];
+for(let i=0;i<FN;i++)fp.push((Math.random()-.5)*50,Math.random()*10,(Math.random()-.5)*50);
+FG.setAttribute("position",new THREE.Float32BufferAttribute(fp,3));
+const fs=new THREE.Points(FG,new THREE.PointsMaterial({color:0x88ccff,size:0.1,transparent:1,opacity:0.4}));
+s.add(fs);
+
+const orbiters=[],orbData=[];
+for(let i=0;i<30;i++){
+ const o=new THREE.Mesh(new THREE.SphereGeometry(0.05),new THREE.MeshBasicMaterial({color:0x44ddff}));
+ s.add(o);orbiters.push(o);
+ orbData.push({r:1+Math.random()*2,a:Math.random()*2*Math.PI,s:0.3+Math.random()*0.7});
+}
+
+const metro=new THREE.Mesh(new THREE.BoxGeometry(4,1,1),new THREE.MeshLambertMaterial({color:0x3333ff}));
+metro.position.set(0,-0.5,50);metro.visible=false;s.add(metro);
+
+cam.position.set(5,4,7);cam.lookAt(w.position);
+
+// Add keyboard controls
+const keys = {};
+document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+function updatePlayer() {
+ const speed = 0.1;
+ if (keys['w'] || keys['arrowup']) w.position.z -= speed;
+ if (keys['s'] || keys['arrowdown']) w.position.z += speed;
+ if (keys['a'] || keys['arrowleft']) w.position.x -= speed;
+ if (keys['d'] || keys['arrowright']) w.position.x += speed;
+ 
+ // Update camera to follow player
+ cam.position.x = w.position.x + 5;
+ cam.position.z = w.position.z + 7;
+ cam.lookAt(w.position);
+}
+
+animate= t=>{requestAnimationFrame(animate);
+ updatePlayer();
+ w.rotation.y+=0.01;
+ let p=FG.attributes.position.array;
+ for(let i=1;i<p.length;i+=3){p[i]-=0.025;if(p[i]<-1)p[i]=10;}
+ FG.attributes.position.needsUpdate=1;
+ orbiters.forEach((o,i)=>{orbData[i].a+=0.02*orbData[i].s;
+  o.position.set(Math.cos(orbData[i].a)*orbData[i].r+w.position.x,
+                 1.5,Math.sin(orbData[i].a)*orbData[i].r+w.position.z);});
+ spots.forEach((sp,i)=>{if(sp.visible && w.position.distanceTo(sp.position)<1){
+  sp.visible=false; found++;
+  c.innerText=`Secret found! (${found}/${goal})`;
+  if(found===goal){
+    c.innerText="You hear a hum… the metro emerges";metro.visible=true;
+  }
+ }});
+ if(metro.visible && w.position.distanceTo(metro.position)<2){
+   c.innerText="Whiskers boards the metro…";w.visible=false;
+ }
+ r.render(s,cam);
+};
+animate();
+</script></body></html>
