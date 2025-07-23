@@ -1032,14 +1032,14 @@
         function updatePlayer() {
             let isMoving = false;
             const oldPosition = w.position.clone();
-            
+
             // Check both keyboard and virtual controls
             const isUpPressed = keys['w'] || keys['arrowup'] || virtualKeys['w'];
             const isDownPressed = keys['s'] || keys['arrowdown'] || virtualKeys['s'];
             const isLeftPressed = keys['a'] || keys['arrowleft'] || virtualKeys['a'];
             const isRightPressed = keys['d'] || keys['arrowright'] || virtualKeys['d'];
-            
-            // Movement controls with dynamic speed
+
+            // Movement controls with fixed speed (never increases by holding key)
             if (isUpPressed) {
                 w.position.z -= catSpeed;
                 isMoving = true;
@@ -1056,25 +1056,25 @@
                 w.position.x += catSpeed;
                 isMoving = true;
             }
-            
+
             // Add paw prints when moving (if enabled)
             if (isMoving && gameSettings.pawPrintsEnabled && w.position.distanceTo(lastPawPrintPosition) > 1) {
                 addPawPrint(w.position);
                 lastPawPrintPosition.copy(w.position);
             }
-            
+
             // Cat walking animation with speed-based intensity
             if (isMoving) {
-                // More intense movement at higher speeds
+                // Animation intensity only depends on catSpeed from slider
                 const animationIntensity = Math.min(catSpeed * 10, 2);
                 w.position.y = 0.2 + Math.sin(Date.now() * 0.01 * animationIntensity) * 0.05 * animationIntensity;
-                
+
                 // Tail swishing faster at higher speeds
                 const tail = w.children.find(child => child.geometry && child.geometry.type === 'CylinderGeometry' && child.position.z < 0);
                 if (tail) {
                     tail.rotation.z = Math.sin(Date.now() * 0.008 * animationIntensity) * 0.3;
                 }
-                
+
                 // Ear twitching faster at higher speeds
                 const ears = w.children.filter(child => child.geometry && child.geometry.type === 'ConeGeometry');
                 ears.forEach((ear, index) => {

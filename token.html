@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Mini Data Holder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{background:#f5f5f5;padding:20px}
+#load,#login,#app,#pin-login{display:none}
+h2{margin:10px 0}input,button{padding:10px;margin:5px 0;width:100%}
+img{max-width:100%;margin-top:10px}ul{list-style:none;padding:0}
+.bar{width:100%;height:10px;background:#ccc;margin-top:10px}
+.fill{height:10px;width:0;background:#4caf50}
+.msg{font-size:14px;margin-top:5px}
+.screen{background:brown;width:260px;height:60px;margin:10px auto 20px auto;padding:10px;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.display{background:black;color:white;font-size:30px;font-weight:bold;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.pin-pad{display:grid;grid-template-columns:repeat(4,50px);grid-gap:6px;justify-content:center}
+.pin-pad button{width:50px;height:50px;font-size:20px;border:none;border-radius:8px;background:#ddd;cursor:pointer;transition:0.2s}
+.pin-pad button:hover{background:#ccc}
+</style>
+</head><body>
+
+<div id="load">
+  <h2>Loading...</h2>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div class="msg" id="msg">Starting...</div>
+</div>
+
+<div id="login">
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <button onclick="showPinLogin()" style="margin-top:10px;background:#bfa;">PIN Login</button>
+</div>
+
+<div id="pin-login">
+  <h2>PIN Login</h2>
+  <div class="screen"><div class="display" id="pin-display"></div></div>
+  <div class="pin-pad">
+    <button onclick="pinPress('1')">1</button><button onclick="pinPress('2')">2</button><button onclick="pinPress('3')">3</button><button onclick="pinAddSame()">+</button>
+    <button onclick="pinPress('4')">4</button><button onclick="pinPress('5')">5</button><button onclick="pinPress('6')">6</button><button disabled></button>
+    <button onclick="pinPress('7')">7</button><button onclick="pinPress('8')">8</button><button onclick="pinPress('9')">9</button><button disabled></button>
+    <button onclick="pinPress('*')">*</button><button onclick="pinPress('0')">0</button><button onclick="pinPress('#')">#</button><button onclick="pinClear()">C</button>
+  </div>
+  <button onclick="show('login')" style="margin-top:10px;">Back</button>
+</div>
+
+<div id="app">
+  <h2>Image Saver</h2>
+  <input id="imgUrl" placeholder="Paste Image URL">
+  <button onclick="saveImg()">Save</button>
+  <img id="preview"><ul id="list"></ul>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+// --- PIN Login logic ---
+let pinCurrent = '';
+const pinDisplay = { set textContent(v) { document.getElementById('pin-display').textContent = v; } };
+function pinPress(v) {
+  if (v === '#') {
+    if (pinCurrent.length >= 2 && pinCurrent.length <= 4) {
+      setToken();
+      show('app');
+      loadImgs();
+    }
+    return;
+  }
+  if (!/^\d$/.test(v)) return;
+  if (pinCurrent.length < 4) {
+    pinCurrent += v;
+    pinDisplay.textContent = pinCurrent;
+  }
+}
+function pinAddSame() {
+  if (pinCurrent.length === 1) {
+    pinCurrent += pinCurrent;
+    pinDisplay.textContent = pinCurrent;
+  }
+}
+function pinClear() {
+  pinCurrent = '';
+  pinDisplay.textContent = '';
+}
+function showPinLogin() {
+  pinClear();
+  show('pin-login');
+}
+const TOKEN = 'token', DATA = 'images', EXPIRE = 1800000;
+
+function now(){return new Date().getTime();}
+function getToken(){return JSON.parse(localStorage.getItem(TOKEN)||'null');}
+function isValid(){let t=getToken();return t&&t.expires>now();}
+function setToken(){localStorage.setItem(TOKEN,JSON.stringify({value:'tok'+Math.random(),expires:now()+EXPIRE}))}
+function login(){
+  if(email.value&&pass.value){setToken();show('app');loadImgs();}
+}
+function logout(){
+  localStorage.removeItem(TOKEN);
+  show('login');
+}
+function saveImg(){
+  let url=imgUrl.value;if(!url)return;
+  let d=JSON.parse(localStorage.getItem(DATA)||'[]');
+  d.push(url);localStorage.setItem(DATA,JSON.stringify(d));
+  preview.src=url;imgUrl.value='';loadImgs();
+}
+function loadImgs(){
+  let d=JSON.parse(localStorage.getItem(DATA)||'[]');
+  list.innerHTML='';d.forEach(u=>{let li=document.createElement('li');li.textContent=u;list.appendChild(li);});
+}
+function show(id){
+  ['load','login','app','pin-login'].forEach(s=>document.getElementById(s).style.display='none');
+  document.getElementById(id).style.display='block';
+}
+let step=0,msgs=["Checking token...","Loading UI...","Verifying data...","Starting app..."];
+function loadBar(){
+  if(step>=msgs.length){next();}
+  else{
+    fill.style.width=((step+1)*25)+"%";
+    msg.textContent=msgs[step++];
+    setTimeout(loadBar,1000);
+  }
+}
+function next(){
+  if(isValid()){show('app');loadImgs();}
+  else{show('login');}
+}
+show('load');loadBar();
+</script>
+</body></html>

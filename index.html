@@ -593,6 +593,9 @@
         <button class="mode-button my-ios" id="modeBtnMyIOS">
             🍎 MY IOS
         </button>
+        <button class="mode-button accounts" id="modeBtnAccounts">
+            👤 Accounts
+        </button>
     </div>
 </div>
 
@@ -603,12 +606,31 @@
 
 <div id="gameArea" style="margin-top: 100px;">
     <!-- Game area content -->
+    <button id="account10x10Btn" style="width:10em;height:10em;font-size:2em;display:flex;align-items:center;justify-content:center;border-radius:2em;background:#ffc107;color:#333;border:none;box-shadow:0 4px 16px rgba(0,0,0,0.12);margin:2em auto;cursor:pointer;">
+        👤 Account
+    </button>
 </div>
 
 <div style="position: fixed; left: 0; right: 0; bottom: 32px; display: flex; justify-content: center; z-index: 20; pointer-events: none;">
     <button id="tryFreeBtn" style="pointer-events: auto; background: #1976d2; color: #fff; border: none; border-radius: 8px; padding: 0.7em 2.2em; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.10); cursor: pointer; letter-spacing: 1px; transition: background 0.2s;">Try for Free</button>
 </div>
 <script>
+// Account 10x10 button navigation
+document.getElementById('account10x10Btn').onclick = function() {
+    // Clear any active search inputs on the page
+    try {
+        const searchInputs = document.querySelectorAll('input[type="search"], input[name*="search"], input[placeholder*="search"], input[placeholder*="Search"]');
+        searchInputs.forEach(input => {
+            input.value = '';
+        });
+        if (window.find) {
+            window.find(''); // Attempt to clear browser's find-in-page
+        }
+    } catch (error) {
+        console.log('Could not clear search inputs:', error);
+    }
+    window.location.href = 'select.html';
+};
 // Add random cats and mice emojis to the background
 (function() {
     const EMOJIS = ['🐱','🐭','🐱','🐭','🐱','🐭'];
@@ -705,6 +727,7 @@ document.getElementById('cleanUpBtn').onclick = function() {
     const modeBtnGitBot = document.getElementById('modeBtnGitBot');
     const modeBtnCleanUp = document.getElementById('modeBtnCleanUp');
     const modeBtnMyIOS = document.getElementById('modeBtnMyIOS');
+    const modeBtnAccounts = document.getElementById('modeBtnAccounts');
     
     // Toggle mode panel
     modeToggle.addEventListener('click', function() {
@@ -736,6 +759,24 @@ document.getElementById('cleanUpBtn').onclick = function() {
         window.location.href = 'simulateors/ios/main.html';
     });
     
+    // Accounts button click handler
+    modeBtnAccounts.addEventListener('click', function() {
+        // Clear any active search inputs on the page
+        try {
+            const searchInputs = document.querySelectorAll('input[type="search"], input[name*="search"], input[placeholder*="search"], input[placeholder*="Search"]');
+            searchInputs.forEach(input => {
+                input.value = '';
+            });
+            if (window.find) {
+                window.find(''); // Attempt to clear browser's find-in-page
+            }
+        } catch (error) {
+            console.log('Could not clear search inputs:', error);
+        }
+        // Navigate to the external select.html page
+        window.location.href = 'https://mr-mark-a.github.io/html-ai/select.html';
+    });
+
     // Close panel when clicking outside
     document.addEventListener('click', function(e) {
         if (!modeToggle.contains(e.target) && !modeContent.contains(e.target)) {
