@@ -1,0 +1,2863 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Whiskers' Magic Snow Quest</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #4682B4 50%, #2F4F4F 100%);
+            font-family: Arial, sans-serif;
+        }
+        #msg {
+            position: absolute;
+            top: 0;
+            color: #aaf;
+            padding: 10px;
+            font: 16px sans-serif;
+            z-index: 100;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #aaf;
+            font: 12px sans-serif;
+            z-index: 100;
+        }
+        
+        /* Settings Button */
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 101;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        /* Settings Panel */
+        .settings-panel {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            min-width: 250px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .settings-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFB84D;
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 5px 0;
+        }
+        
+        .setting-label {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: #333;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #4CAF50;
+        }
+        
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active::before {
+            transform: translateX(20px);
+        }
+        
+        /* Hint Arrow Styles */
+        .hint-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid #FF6B35;
+            z-index: 50;
+            animation: bounce 1.5s infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.8));
+        /* Add a stem below the arrow */
+        display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hint-arrow::after {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 30px;
+            background: #FF6B35;
+            margin: 0 auto;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* Loading Screen Styles */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .loading-logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .loading-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #FFB84D;
+        }
+        
+        .progress-container {
+            width: 400px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+        
+        .progress-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .loading-status {
+            font-size: 14px;
+            color: #ccc;
+            min-height: 20px;
+            animation: loadingDots 1.5s infinite;
+        }
+        
+        @keyframes loadingDots {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        
+        .loading-tips {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            max-width: 300px;
+        }
+        
+        /* Speed Control Bar */
+        .speed-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 99;
+            transition: all 0.3s ease;
+            transform: translateX(0);
+        }
+        
+        .speed-control.collapsed {
+            transform: translateX(calc(100% - 50px));
+        }
+        
+        .speed-toggle {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 165, 0, 0.9);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .speed-toggle:hover {
+            background: rgba(255, 140, 0, 1);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .speed-header {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFB84D;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .speed-slider {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            margin: 10px 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #FF6B35, #FFB84D);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .speed-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.8);
+        }
+        
+        .speed-value {
+            font-size: 12px;
+            color: #ccc;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .original-speed {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            margin-top: 3px;
+            font-style: italic;
+        }
+        
+        /* Virtual Arrow Controls */
+        .virtual-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            z-index: 98;
+        }
+        
+        .virtual-arrow {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+            backdrop-filter: blur(5px);
+            user-select: none;
+        }
+        
+        .virtual-arrow:hover {
+            background: rgba(255, 107, 53, 0.3);
+            border-color: rgba(255, 107, 53, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .virtual-arrow:active,
+        .virtual-arrow.pressed {
+            background: rgba(255, 107, 53, 0.8);
+            border-color: rgba(255, 140, 0, 1);
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .virtual-arrow.empty {
+            visibility: hidden;
+        }
+        
+        /* Ultra High Frame Rate Indicator */
+        .fps-counter {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            z-index: 100;
+        }
+        /* Levitate Bar Styles */
+        .levitate-bar-container {
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            width: 320px;
+            height: 28px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+        }
+        .levitate-bar-label {
+            color: #FFB84D;
+            font-size: 14px;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+        .levitate-bar {
+            flex: 1;
+            height: 12px;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+        .levitate-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B35, #FFB84D);
+            border-radius: 8px;
+            transition: width 0.2s;
+        }
+        .levitate-bar-value {
+            color: #fff;
+            font-size: 13px;
+            min-width: 40px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">🐱🏙️</div>
+        <div class="loading-title">Whiskers' NYC Adventure</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+        <div class="loading-status" id="loadingStatus">Initializing game...</div>
+        <div class="loading-tips">
+            💡 Use WASD to move Whiskers around the city<br>
+            🎯 Find glowing treasures to win the game<br>
+            ⚙️ Check settings for hints and customization
+        </div>
+    </div>
+    
+    <div id="msg">🐱 Whiskers prowls the bright New York streets... Use WASD or Arrow Keys to explore! 🏙️</div>
+    <div id="controls">Controls: WASD or Arrow Keys to move Whiskers • Find glowing spots in the city! 🌟</div>
+    
+    <!-- FPS Counter -->
+    <div class="fps-counter" id="fpsCounter">FPS: 9000000</div>
+    
+    <!-- Settings Button -->
+    <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    
+    <!-- Speed Control Bar -->
+    <div class="speed-control" id="speedControl">
+        <button class="speed-toggle" onclick="toggleSpeedControl()">🏃</button>
+        <div class="speed-header">
+            <span>🐾 Whiskers Speed</span>
+        </div>
+        <input type="range" class="speed-slider" id="speedSlider" min="0.01" max="2" step="0.01" value="0.1">
+        <div class="speed-value" id="speedValue">Normal (0.10)</div>
+        <div class="original-speed" id="originalSpeed">Original Speed: Trotting (0.12)</div>
+    </div>
+    
+    <!-- Virtual Arrow Controls -->
+    <div class="virtual-controls" id="virtualControls">
+        <div class="virtual-arrow empty"></div>
+        <div class="virtual-arrow" data-key="w">↑</div>
+        <div class="virtual-arrow empty"></div>
+        <div class="virtual-arrow" data-key="a">←</div>
+        <div class="virtual-arrow" data-key="s">↓</div>
+        <div class="virtual-arrow" data-key="d">→</div>
+        <div class="virtual-arrow empty"></div>
+        <div class="virtual-arrow empty"></div>
+        <div class="virtual-arrow empty"></div>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">🎮 Game Settings</div>
+        
+        <div class="setting-row">
+            <span class="setting-label">🧭 Hint Arrows</span>
+            <div class="toggle-switch" id="hintsToggle" onclick="toggleHints()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">🎵 Sound Effects</span>
+            <div class="toggle-switch" id="soundToggle" onclick="toggleSound()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">🐾 Paw Prints</span>
+            <div class="toggle-switch active" id="pawsToggle" onclick="togglePawPrints()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">♾️ Never Remove Paw Prints</span>
+            <div class="toggle-switch" id="permanentPawsToggle" onclick="togglePermanentPawPrints()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">❄️ Snow on Ground</span>
+            <div class="toggle-switch active" id="snowToggle" onclick="toggleSnow()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">✨ Particles</span>
+            <div class="toggle-switch active" id="particlesToggle" onclick="toggleParticles()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">📷 Auto Camera</span>
+            <div class="toggle-switch active" id="cameraToggle" onclick="toggleAutoCamera()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">🌟 Enhanced Graphics</span>
+            <div class="toggle-switch active" id="graphicsToggle" onclick="toggleGraphics()"></div>
+        </div>
+        
+        <div class="setting-row">
+            <span class="setting-label">🎯 Show Objectives</span>
+            <div class="toggle-switch active" id="objectivesToggle" onclick="toggleObjectives()"></div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+    <script>
+        // Loading System
+        let loadingProgress = 0;
+        let isGameLoaded = false;
+        const loadingSteps = [
+            'Initializing Three.js engine...',
+            'Creating NYC skyline...',
+            'Spawning Whiskers the cat...',
+            'Setting up street lighting...',
+            'Placing city treasures...',
+            'Adding magical particles...',
+            'Configuring game settings...',
+            'Loading sound system...',
+            'Finalizing game world...',
+            'Ready to play!'
+        ];
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;
+                updateLoadingProgress(currentStep, progress);
+                currentStep++;
+                
+                if (currentStep >= totalSteps) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        initializeGame();
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+        
+        // Initialize game after loading
+        function initializeGame() {
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎮 Welcome to NYC! Press ⚙️ for settings!');
+            }, 1000);
+        }
+        
+        // Start loading immediately
+        startLoading();
+        
+        const d = document;
+        const c = d.getElementById("msg");
+        const s = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+        const r = new THREE.WebGLRenderer({ antialias: true });
+        
+        r.setSize(innerWidth, innerHeight);
+        d.body.appendChild(r.domElement);
+        
+        // Batch create all geometries and materials for faster loading
+        const geometries = {
+            plane: new THREE.PlaneGeometry(200, 200),
+            streetLine: new THREE.PlaneGeometry(2, 200),
+            building: new THREE.BoxGeometry(1, 1, 1), // Will be scaled
+            window: new THREE.PlaneGeometry(0.5, 0.5),
+            lampPost: new THREE.CylinderGeometry(0.1, 0.1, 8),
+            lampGlow: new THREE.SphereGeometry(0.5),
+            catBody: new THREE.BoxGeometry(1.2, 0.6, 0.8),
+            catHead: new THREE.SphereGeometry(0.4, 16, 16),
+            catEar: new THREE.ConeGeometry(0.15, 0.3, 8),
+            catTail: new THREE.CylinderGeometry(0.05, 0.1, 1, 8),
+            catEye: new THREE.SphereGeometry(0.06, 8, 8),
+            catLeg: new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8),
+            treasure: new THREE.CircleGeometry(1.5, 16),
+            orbiter: new THREE.SphereGeometry(0.05),
+            metro: new THREE.BoxGeometry(6, 2, 2),
+            pawPrint: new THREE.CircleGeometry(0.15, 8),
+            snowFlake: new THREE.CircleGeometry(0.05, 6),
+            snowPile: new THREE.SphereGeometry(0.2, 8, 6)
+        };
+        
+        const materials = {
+            ground: new THREE.MeshPhongMaterial({ color: 0x666666, shininess: 10, specular: 0x333333 }),
+            streetLine: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 }),
+            building: new THREE.MeshLambertMaterial({ color: 0x8B7355 }), // Will be modified per building
+            window: new THREE.MeshBasicMaterial({ color: 0xFFFF88, emissive: 0x444422, transparent: true, opacity: 0.8 }),
+            lampPost: new THREE.MeshLambertMaterial({ color: 0x333333 }),
+            lampGlow: new THREE.MeshBasicMaterial({ color: 0xFFAA44, emissive: 0x664422, transparent: true, opacity: 0.6 }),
+            catParts: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, emissive: 0x111111 }),
+            catEyes: new THREE.MeshBasicMaterial({ color: 0x00ff88, emissive: 0x004422 }),
+            treasure: new THREE.MeshBasicMaterial({ color: 0xFFAA33, opacity: 0.8, transparent: true, emissive: 0x884422 }),
+            orbiter: new THREE.MeshBasicMaterial({ color: 0xFFBB44, emissive: 0x663322 }),
+            metro: new THREE.MeshLambertMaterial({ color: 0x4169E1, emissive: 0x112244 }),
+            pawPrint: new THREE.MeshBasicMaterial({ color: 0x333333, opacity: 0.7, transparent: true }),
+            snow: new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 }),
+            snowPile: new THREE.MeshLambertMaterial({ color: 0xF0F8FF, emissive: 0x222244 })
+        };
+        
+        // Lighting - New York City lighting
+        s.add(new THREE.AmbientLight(0xFFDDAA, 0.8)); // Warm city ambient light
+        
+        // Main street light
+        const L = new THREE.PointLight(0xFFAA44, 3, 120);
+        L.position.set(5, 25, 5);
+        L.castShadow = true;
+        s.add(L);
+        
+        // Street lighting - 80% intensity
+        const streetLight1 = new THREE.DirectionalLight(0xFFBB66, 0.8);
+        streetLight1.position.set(15, 30, 15);
+        streetLight1.target.position.set(0, -1, 0);
+        streetLight1.castShadow = true;
+        s.add(streetLight1);
+        s.add(streetLight1.target);
+        
+        const streetLight2 = new THREE.DirectionalLight(0xFFCC77, 0.8);
+        streetLight2.position.set(-15, 30, -15);
+        streetLight2.target.position.set(0, -1, 0);
+        s.add(streetLight2);
+        s.add(streetLight2.target);
+        
+        // City skyline lighting
+        const skylineLight = new THREE.HemisphereLight(0xFFEECC, 0x444455, 0.7);
+        s.add(skylineLight);
+        
+        // Add some neon-style accent lighting
+        const neonLight1 = new THREE.PointLight(0xFF3366, 0.5, 50);
+        neonLight1.position.set(20, 5, 20);
+        s.add(neonLight1);
+        
+        const neonLight2 = new THREE.PointLight(0x3366FF, 0.5, 50);
+        neonLight2.position.set(-20, 5, -20);
+        s.add(neonLight2);
+        
+        // Ground - New York Street
+        const g = new THREE.Mesh(geometries.plane, materials.ground);
+        g.rotation.x = -Math.PI / 2;
+        g.position.y = -1;
+        s.add(g);
+        
+        // Add street lines (batch create)
+        const streetLines = [];
+        for (let i = -100; i <= 100; i += 20) {
+            const line = new THREE.Mesh(geometries.streetLine, materials.streetLine);
+            line.rotation.x = -Math.PI / 2;
+            line.position.set(i, -0.99, 0);
+            s.add(line);
+            streetLines.push(line);
+        }
+        
+        // Add snow on the ground (scattered snow piles and flakes)
+        const snowElements = [];
+        
+        // Snow piles scattered around
+        for (let i = 0; i < 100; i++) {
+            const snowPile = new THREE.Mesh(geometries.snowPile, materials.snowPile);
+            snowPile.position.set(
+                (Math.random() - 0.5) * 180,
+                -0.8 + Math.random() * 0.2,
+                (Math.random() - 0.5) * 180
+            );
+            snowPile.scale.set(
+                0.5 + Math.random() * 1.5,
+                0.3 + Math.random() * 0.7,
+                0.5 + Math.random() * 1.5
+            );
+            s.add(snowPile);
+            snowElements.push(snowPile);
+        }
+        
+        // Scattered snow flakes on ground
+        for (let i = 0; i < 200; i++) {
+            const snowFlake = new THREE.Mesh(geometries.snowFlake, materials.snow);
+            snowFlake.rotation.x = -Math.PI / 2;
+            snowFlake.position.set(
+                (Math.random() - 0.5) * 190,
+                -0.97,
+                (Math.random() - 0.5) * 190
+            );
+            snowFlake.scale.set(
+                0.5 + Math.random() * 2,
+                0.5 + Math.random() * 2,
+                1
+            );
+            s.add(snowFlake);
+            snowElements.push(snowFlake);
+        }
+        
+        // Create New York buildings (optimized)
+        const buildings = [];
+        for (let i = 0; i < 50; i++) {
+            const height = 5 + Math.random() * 25;
+            const width = 3 + Math.random() * 8;
+            const depth = 3 + Math.random() * 8;
+            
+            // Clone and scale building geometry
+            const buildingMaterial = materials.building.clone();
+            buildingMaterial.color.setHSL(0.1, 0.2, 0.4 + Math.random() * 0.3);
+            
+            const building = new THREE.Mesh(geometries.building, buildingMaterial);
+            building.scale.set(width, height, depth);
+            
+            // Position buildings around the perimeter
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 60 + Math.random() * 40;
+            building.position.set(
+                Math.cos(angle) * radius,
+                height / 2,
+                Math.sin(angle) * radius
+            );
+            
+            s.add(building);
+            buildings.push(building);
+            
+            // Add windows to buildings (optimized)
+            const windowsPerFloor = Math.floor(width / 2);
+            const floors = Math.floor(height / 3);
+            
+            for (let floor = 0; floor < floors; floor++) {
+                for (let window = 0; window < windowsPerFloor; window++) {
+                    if (Math.random() > 0.3) { // 70% chance of lit window
+                        const windowLight = new THREE.Mesh(geometries.window, materials.window);
+                        windowLight.position.set(
+                            building.position.x + (window - windowsPerFloor/2) * 2,
+                            building.position.y - height/2 + (floor + 0.5) * 3,
+                            building.position.z + depth/2 + 0.1
+                        );
+                        s.add(windowLight);
+                    }
+                }
+            }
+        }
+        
+        // Add street lamps (optimized)
+        for (let i = -80; i <= 80; i += 25) {
+            for (let j = -80; j <= 80; j += 25) {
+                if (Math.abs(i) > 20 || Math.abs(j) > 20) { // Don't place in center play area
+                    const lampPost = new THREE.Mesh(geometries.lampPost, materials.lampPost);
+                    lampPost.position.set(i, 4, j);
+                    s.add(lampPost);
+                    
+                    const lampLight = new THREE.PointLight(0xFFAA44, 1, 15);
+                    lampLight.position.set(i, 8, j);
+                    s.add(lampLight);
+                    
+                    const lampGlow = new THREE.Mesh(geometries.lampGlow, materials.lampGlow);
+                    lampGlow.position.set(i, 8, j);
+                    s.add(lampGlow);
+                }
+            }
+        }
+        
+        // Player (Whiskers) - Black Cat (optimized)
+        const catGroup = new THREE.Group();
+        
+        // Cat body
+        const catBody = new THREE.Mesh(geometries.catBody, materials.catParts);
+        catBody.position.y = 0.3;
+        
+        // Cat head
+        const catHead = new THREE.Mesh(geometries.catHead, materials.catParts);
+        catHead.position.set(0, 0.7, 0.5);
+        
+        // Cat ears
+        const leftEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        leftEar.position.set(-0.2, 0.95, 0.4);
+        
+        const rightEar = new THREE.Mesh(geometries.catEar, materials.catParts);
+        rightEar.position.set(0.2, 0.95, 0.4);
+        
+        // Cat tail
+        const catTail = new THREE.Mesh(geometries.catTail, materials.catParts);
+        catTail.position.set(0, 0.5, -0.7);
+        catTail.rotation.x = Math.PI / 4;
+        
+        // Cat eyes (glowing)
+        const leftEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        leftEye.position.set(-0.15, 0.75, 0.75);
+        
+        const rightEye = new THREE.Mesh(geometries.catEye, materials.catEyes);
+        rightEye.position.set(0.15, 0.75, 0.75);
+        
+        // Cat legs
+        const frontLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontLeftLeg.position.set(-0.3, 0.1, 0.3);
+        
+        const frontRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        frontRightLeg.position.set(0.3, 0.1, 0.3);
+        
+        const backLeftLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backLeftLeg.position.set(-0.3, 0.1, -0.1);
+        
+        const backRightLeg = new THREE.Mesh(geometries.catLeg, materials.catParts);
+        backRightLeg.position.set(0.3, 0.1, -0.1);
+        
+        // Add all parts to cat group
+        catGroup.add(catBody, catHead, leftEar, rightEar, catTail, leftEye, rightEye, frontLeftLeg, frontRightLeg, backLeftLeg, backRightLeg);
+        
+        // Position the cat group
+        catGroup.position.y = 0.2;
+        
+        // Use catGroup as our player object (w)
+        const w = catGroup;
+        s.add(w);
+        
+        // Magic treasures (optimized)
+        const spots = [];
+        const goal = 3;
+        let found = 0;
+        
+        for (let i = 0; i < goal; i++) {
+            const sp = new THREE.Mesh(geometries.treasure, materials.treasure);
+            sp.rotation.x = -Math.PI / 2;
+            sp.position.set(
+                Math.random() * 40 - 20,
+                -0.99,
+                Math.random() * 40 - 20
+            );
+            s.add(sp);
+            spots.push(sp);
+        }
+        
+        // Floating city particles (optimized batch creation)
+        const FG = new THREE.BufferGeometry();
+        const FN = 300;
+        const fp = new Float32Array(FN * 3); // Pre-allocate array
+        
+        for (let i = 0; i < FN * 3; i += 3) {
+            fp[i] = (Math.random() - 0.5) * 60;     // x
+            fp[i + 1] = Math.random() * 15;         // y
+            fp[i + 2] = (Math.random() - 0.5) * 60; // z
+        }
+        
+        FG.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3));
+        const fs = new THREE.Points(
+            FG,
+            new THREE.PointsMaterial({
+                color: 0xFFDD88,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        s.add(fs);
+        
+        // Orbiters around player (optimized)
+        const orbiters = [];
+        const orbData = [];
+        for (let i = 0; i < 30; i++) {
+            const o = new THREE.Mesh(geometries.orbiter, materials.orbiter);
+            s.add(o);
+            orbiters.push(o);
+            orbData.push({
+                r: 1 + Math.random() * 2,
+                a: Math.random() * 2 * Math.PI,
+                s: 0.3 + Math.random() * 0.7
+            });
+        }
+        // Levitate balls
+        const levitateBalls = [];
+        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 5; i++) {
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
+            ball.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+            ball.userData.isLevitateBall = true;
+            s.add(ball);
+            levitateBalls.push(ball);
+        }
+        // Levitate state
+        let isLevitating = false;
+        let levitateHeight = 0;
+        let levitateBarDiv = null;
+        
+        function updateLoadingProgress(step, percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            loadingProgress = percentage;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = Math.round(percentage) + '%';
+            loadingStatus.textContent = loadingSteps[step] || 'Loading...';
+        }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                isGameLoaded = true;
+            }, 500);
+        }
+        
+        // Start loading simulation
+        function startLoading() {
+            let currentStep = 0;
+            const totalSteps = loadingSteps.length;
+            const stepDuration = 400; // 400ms per step = ~4 seconds total
+            
+            const loadingInterval = setInterval(() => {
+                const progress = ((currentStep + 1) / totalSteps) * 100;

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Selector</title>
+  <style>
+    body { font-family: sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 0 10px #ccc; padding: 20px; }
+    input, button { width: 100%; margin: 8px 0; padding: 10px; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+    li:last-child { border-bottom: none; }
+    .selected { background: #e0f7fa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Select Account</h2>
+    <div style="position:sticky;top:0;background:#fff;z-index:2;padding-bottom:8px;">
+      <input type="text" id="searchInput" placeholder="Search accounts..." oninput="renderAccounts()">
+      <input type="text" id="addName" placeholder="Name">
+      <input type="email" id="addEmail" placeholder="Email">
+      <input type="password" id="addPassword" placeholder="Password">
+      <button onclick="createAccount()">Create Account</button>
+    </div>
+    <ul id="accountList"></ul>
+    <div id="selectedAccount" style="margin-top:15px;color:#00796b;"></div>
+    <div id="accountMenu" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:8px;box-shadow:0 0 10px #ccc;padding:20px;z-index:10;"></div>
+  </div>
+  <script>
+    function getAccounts() {
+      return JSON.parse(localStorage.getItem('accounts') || '[]');
+    }
+    function setAccounts(arr) {
+      localStorage.setItem('accounts', JSON.stringify(arr));
+    }
+    function renderAccounts() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const accounts = getAccounts();
+      const ul = document.getElementById('accountList');
+      ul.innerHTML = '';
+      accounts.filter(a => a.name.toLowerCase().includes(search) || a.email.toLowerCase().includes(search)).forEach(acc => {
+        const li = document.createElement('li');
+        li.textContent = acc.name + ' (' + acc.email + ')';
+        li.onclick = () => loginPrompt(acc);
+        li.ondblclick = () => showAccountMenu(acc);
+        if (selected && acc.email === selected.email) li.className = 'selected';
+        ul.appendChild(li);
+      });
+    }
+    function createAccount() {
+      const name = document.getElementById('addName').value.trim();
+      const email = document.getElementById('addEmail').value.trim();
+      const password = document.getElementById('addPassword').value;
+      if (!name || !email || !password) return alert('Fill all fields');
+      let accounts = getAccounts();
+      if (accounts.some(a => a.email === email)) return alert('Email already exists');
+      accounts.push({ name, email, password });
+      setAccounts(accounts);
+      document.getElementById('addName').value = '';
+      document.getElementById('addEmail').value = '';
+      document.getElementById('addPassword').value = '';
+      renderAccounts();
+    }
+    let selected = null;
+    function loginPrompt(acc) {
+      const pwd = prompt('Enter password for ' + acc.name + ':');
+      if (pwd === acc.password) {
+        selected = acc;
+        document.getElementById('selectedAccount').textContent = 'Logged in: ' + acc.name;
+      } else {
+        alert('Wrong password');
+      }
+      renderAccounts();
+    }
+    function showAccountMenu(acc) {
+      const menu = document.getElementById('accountMenu');
+      menu.innerHTML = `<h3>${acc.name}</h3>
+        <button onclick="editAccount('${acc.email}')">Edit Account</button><br>
+        <button onclick="deleteAccountPrompt('${acc.email}')">Delete Account</button><br>
+        <button onclick="closeMenu()">Cancel</button>`;
+      menu.style.display = 'block';
+    }
+    function closeMenu() {
+      document.getElementById('accountMenu').style.display = 'none';
+    }
+    function editAccount(email) {
+      const accounts = getAccounts();
+      const acc = accounts.find(a => a.email === email);
+      const pwd = prompt('Enter current password:');
+      const em = prompt('Enter current email:');
+      if (pwd !== acc.password || em !== acc.email) return alert('Wrong credentials');
+      const newName = prompt('New name:', acc.name);
+      const newEmail = prompt('New email:', acc.email);
+      const newPassword = prompt('New password:', acc.password);
+      acc.name = newName;
+      acc.email = newEmail;
+      acc.password = newPassword;
+      setAccounts(accounts);
+      closeMenu();
+      renderAccounts();
+    }
+    function deleteAccountPrompt(email) {
+      const accounts = getAccounts();
+      const acc = accounts.find(a => a.email === email);
+      const pwd = prompt('Enter password:');
+      const em = prompt('Enter email:');
+      if (pwd !== acc.password || em !== acc.email) return alert('Wrong credentials');
+      if (confirm('Delete account ' + acc.name + '?')) {
+        setAccounts(accounts.filter(a => a.email !== email));
+        closeMenu();
+        renderAccounts();
+      }
+    }
+    renderAccounts();
+  </script>
+</body>
+</html>

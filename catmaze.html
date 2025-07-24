@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>catMAZZZZZZZE</title>
+<style>
+body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #eee; margin: 0; padding: 20px; }
+h1 { font-size: 28px; margin: 10px; }
+input, button { margin: 5px 0; padding: 10px; width: 100%; max-width: 300px; }
+#game { display: none; flex-direction: column; align-items: center; }
+#levels { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; max-width: 420px; }
+.level, .quit { width: 40px; height: 40px; text-align: center; line-height: 40px; border-radius: 5px; cursor: pointer; }
+.unlocked { background: lightgreen; }
+.locked { background: tan; color: red; position: relative; }
+.locked::after { content: '🔒'; position: absolute; left: 10px; top: 8px; }
+.quit { width: 100%; background: #f55; color: white; font-weight: bold; margin-bottom: 5px; }
+canvas { margin-top: 10px; border: 2px solid #333; background: white; }
+</style></head>
+<body>
+
+<div style="position:fixed;top:18px;left:18px;z-index:1001;">
+  <button onclick="window.location.href='marks-games.html'" style="background:#1976d2;color:#fff;padding:10px 22px;border:none;border-radius:6px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px #1976d233;">Games Menu</button>
+</div>
+<h1>catMAZZZZZZZE</h1>
+
+<div id="login">
+  <input id="email" placeholder="Email" type="email">
+  <input id="pass" placeholder="Password" type="password">
+  <button onclick="login()">Login / Register</button>
+  <p id="msg" style="color:red;"></p>
+</div>
+
+<div id="game">
+  <button onclick="levelsEl.style.display = levelsEl.style.display === 'none' ? 'flex' : 'none'">Toggle Levels</button>
+  <div id="levels"></div>
+  <canvas id="c" width="400" height="400"></canvas>
+</div>
+
+<script>
+const c = document.getElementById("c"), ctx = c.getContext("2d");
+const loginEl = document.getElementById("login"), game = document.getElementById("game"), emailEl = document.getElementById("email"), passEl = document.getElementById("pass"), msg = document.getElementById("msg"), levelsEl = document.getElementById("levels");
+let user = "", unlocked = 1, level = 1, grid = 10, cat = {x:0,y:0}, levels = [];
+
+function login() {
+  let email = emailEl.value.trim().toLowerCase(), pass = passEl.value, users = JSON.parse(localStorage.users || "{}");
+  if (!email || !pass) return msg.textContent = "Fill in both fields.";
+  if (users[email] && users[email].pass !== pass) return msg.textContent = "Wrong password!";
+  if (!users[email]) users[email] = {pass, unlocked:1};
+  localStorage.users = JSON.stringify(users);
+  user = email; unlocked = users[email].unlocked; loginEl.style.display = "none"; game.style.display = "flex";
+  gen(); draw(level); renderLevels();
+}
+
+function logout() {
+  user = ""; emailEl.value = passEl.value = msg.textContent = ""; loginEl.style.display = "block"; game.style.display = "none";
+}
+
+function save() {
+  let users = JSON.parse(localStorage.users); users[user].unlocked = unlocked;
+  localStorage.users = JSON.stringify(users);
+}
+
+function gen() {
+  levels = [];
+  for (let i = 0; i < 100; i++) {
+    let m = Array.from({length:grid}, () => Array(grid).fill(0));
+    for (let y = 0; y < grid; y++) for (let x = 0; x < grid; x++) if (Math.random()<.2) m[y][x]=1;
+    m[0][0] = m[grid-1][grid-1] = 0;
+    levels.push(m);
+  }
+}
+
+function draw(lv) {
+  level = lv; cat = {x:0,y:0}; let m = levels[lv-1];
+  ctx.clearRect(0,0,c.width,c.height);
+  for (let y=0; y<grid; y++) for (let x=0; x<grid; x++) {
+    ctx.fillStyle = m[y][x] ? "#444" : "#fff";
+    ctx.fillRect(x*40,y*40,40,40); ctx.strokeRect(x*40,y*40,40,40);
+  }
+  drawCat();
+}
+
+function drawCat() {
+  ctx.fillStyle = "orange";
+  ctx.beginPath();
+  ctx.arc(cat.x*40+20, cat.y*40+20, 13, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function renderLevels() {
+  levelsEl.innerHTML = "";
+  let quit = document.createElement("div");
+  quit.className = "quit"; quit.textContent = "Quit Game"; quit.onclick = logout;
+  levelsEl.appendChild(quit);
+  for (let i=1;i<=100;i++) {
+    let d = document.createElement("div");
+    d.textContent = i;
+    d.className = "level " + (i<=unlocked?"unlocked":"locked");
+    if (i <= unlocked) d.onclick = () => draw(i);
+    levelsEl.appendChild(d);
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (!user) return;
+  let m = levels[level-1], {x,y} = cat;
+  if (e.key==="ArrowUp" && y>0 && !m[y-1][x]) y--;
+  if (e.key==="ArrowDown" && y<grid-1 && !m[y+1][x]) y++;
+  if (e.key==="ArrowLeft" && x>0 && !m[y][x-1]) x--;
+  if (e.key==="ArrowRight" && x<grid-1 && !m[y][x+1]) x++;
+  cat = {x,y}; draw(level);
+  // Win condition
+  if (x===grid-1 && y===grid-1) {
+    if (level===unlocked && unlocked<100) { unlocked++; save(); renderLevels(); }
+    setTimeout(()=>{ alert("Level complete!"); draw(level+1); }, 100);
+  }
+});
+</script>
+</body></html>

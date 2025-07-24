@@ -175,8 +175,31 @@
     100% { transform: translateY(-50%) translateX(0) rotate(0deg); }
   }
 </style>
+  <style>
+    .logout-fixed {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 1002;
+      background: #e53935;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 22px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #b71c1c33;
+      transition: background 0.2s;
+    }
+    .logout-fixed:hover {
+      background: #b71c1c;
+    }
+  </style>
 </head>
+
 <body>
+<button class="logout-fixed" onclick="logoutGames()">Log Out</button>
 
 
 <div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
@@ -206,10 +229,11 @@
       <button onclick="window.location.href='lod2.html'">Lod2 Cat and Mouse Game</button>
       <button onclick="window.location.href='marks-race.html'">Mark's Race</button>
       <button onclick="window.location.href='new-york-adventure.html'">New York Adventure</button>
-      <button onclick="window.location.href='whiskers-ny-city-adventure.html'">Whisker's NY City Adventure</button>
+      <button onclick="window.location.href='snowtail-game/snowtail-index.html'">Whisker's NY City Adventure</button>
       <button onclick="window.location.href='tests/map.html'">Map Test</button>
       <button onclick="window.location.href='translate/all.html'">Translation Tool</button>
       <button onclick="window.location.href='minemark/code/game.html'">Utility Game System</button>
+      <button onclick="window.location.href='catmaze.html'" style="background:#ff9800;color:#222;font-weight:bold;">Cat Maze</button>
     </div>
 
   </div>
@@ -253,6 +277,12 @@ document.addEventListener('keydown', function(e) {
         });
     }
 });
+
+function logoutGames() {
+  // Example: clear user session or redirect
+  localStorage.removeItem('currentUser');
+  window.location.href = 'select.html';
+}
 </script>
 
 </body>

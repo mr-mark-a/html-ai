@@ -1,665 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-translate-title="metro_title">Metro</title>
-    <script src="translations.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-image: url('metro imagees/back.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            min-height: 100vh;
-        }
-        
-        .from-text-bar {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .from-text-bar:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        .from-input {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            outline: none;
-            display: none;
-        }
-        
-        .from-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .to-text-bar {
-            position: absolute;
-            top: 20px;
-            left: 200px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .to-text-bar:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        .to-input {
-            position: absolute;
-            top: 20px;
-            left: 200px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            outline: none;
-            display: none;
-        }
-        
-        .to-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .suggestions {
-            position: absolute;
-            top: 60px;
-            left: 20px;
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            z-index: 1000;
-            min-width: 200px;
-        }
-        
-        .to-suggestions {
-            position: absolute;
-            top: 60px;
-            left: 200px;
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            z-index: 1000;
-            min-width: 200px;
-        }
-        
-        .suggestion-item {
-            padding: 10px 15px;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .suggestion-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-        
-        .navigate-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0, 120, 215, 0.8);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .navigate-button:hover {
-            background-color: rgba(0, 120, 215, 1);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        
-        .navigate-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .select-map-button {
-            position: absolute;
-            top: 70px;
-            background-color: rgba(34, 139, 34, 0.8);
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            display: none;
-            z-index: 1001;
-        }
-        
-        .select-map-button:hover {
-            background-color: rgba(34, 139, 34, 1);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
-        
-        .select-map-button.from-map {
-            left: 20px;
-        }
-        
-        .select-map-button.to-map {
-            left: 200px;
-        }
-        
-        .back-button {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background-color: rgba(108, 117, 125, 0.9);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 25px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 1000;
-        }
-        
-        .back-button:hover {
-            background-color: rgba(108, 117, 125, 1);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        
-        .back-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Paris Metro Map with Login</title>
+  <style>
+    body { font-family: sans-serif; background: #f2f2f2; padding: 0; margin: 0; }
+    .hidden { display: none; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #aaa; margin-top: 30px; }
+    input, button { margin: 10px 0; padding: 10px; width: 100%; }
+    h2 { text-align: center; }
+    iframe { width: 100%; height: 600px; border: none; margin-top: 20px; }
+  </style>
 </head>
 <body>
-<div id="languageSelectorContainer"></div>
-    <div class="from-text-bar" onclick="showInput()">From</div>
-    <input type="text" class="from-input" placeholder="Enter station name..." onblur="hideInput()" onkeypress="handleKeyPress(event)" oninput="showSuggestions(this.value)">
-    <div class="suggestions" id="suggestions"></div>
-    
-    <div class="to-text-bar" onclick="showToInput()">To</div>
-    <input type="text" class="to-input" placeholder="Enter destination..." onblur="hideToInput()" onkeypress="handleToKeyPress(event)" oninput="showToSuggestions(this.value)">
-    <div class="to-suggestions" id="to-suggestions"></div>
-    
-    <button class="navigate-button" onclick="navigate()">Navigate</button>
-    
-    <button class="select-map-button from-map" id="from-map-btn" onclick="selectOnMap('from')">📍 Select on Map</button>
-    <button class="select-map-button to-map" id="to-map-btn" onclick="selectOnMap('to')">📍 Select on Map</button>
-    
-    <a href="nav/marksnav.html" class="back-button">
-        ← Back to Navigation
-    </a>
-    
-    <script>
-        // Sample metro stations - you can replace with your actual station list
-        const metroStations = [
-            "Union Station",
-            "Dupont Circle",
-            "Woodley Park",
-            "Foggy Bottom",
-            "McPherson Square",
-            "Capitol South",
-            "Gallery Place",
-            "U Street",
-            "Columbia Heights",
-            "Pentagon",
-            "Crystal City",
-            "Ronald Reagan Airport",
-            "Vienna",
-            "East Falls Church",
-            "Ballston",
-            "Wiehle-Reston East",
-            "Spring Hill",
-            "Tysons Corner",
-            "Metro Center",
-            "Farragut North",
-            "Farragut West",
-            "Smithsonian",
-            "L'Enfant Plaza",
-            "Federal Triangle",
-            "Archives",
-            "Judiciary Square",
-            "Gallery Place-Chinatown",
-            "Mount Vernon Square",
-            "Shaw-Howard University",
-            "Cardozo",
-            "Georgia Avenue",
-            "Petworth",
-            "Takoma",
-            "Silver Spring",
-            "Forest Glen",
-            "Wheaton",
-            "Glenmont"
-        ];
-        
-        function showInput() {
-            document.querySelector('.from-text-bar').style.display = 'none';
-            const input = document.querySelector('.from-input');
-            input.style.display = 'block';
-            input.value = ''; // Clear any existing value
-            input.focus();
-            hideSuggestions();
-            
-            // Show "Select on Map" button
-            document.getElementById('from-map-btn').style.display = 'block';
-        }
-        
-        function hideInput() {
-            const input = document.querySelector('.from-input');
-            const textBar = document.querySelector('.from-text-bar');
-            
-            setTimeout(() => {
-                if (input.value.trim() !== '') {
-                    textBar.textContent = input.value;
-                } else {
-                    textBar.textContent = 'From';
-                }
-                
-                input.style.display = 'none';
-                textBar.style.display = 'block';
-                hideSuggestions();
-                
-                // Hide "Select on Map" button
-                document.getElementById('from-map-btn').style.display = 'none';
-            }, 150);
-        }
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                document.querySelector('.from-input').blur();
-            }
-        }
-        
-        function showSuggestions(query) {
-            const suggestionsDiv = document.getElementById('suggestions');
-            
-            if (query.length < 1) {
-                hideSuggestions();
-                return;
-            }
-            
-            const filteredStations = metroStations.filter(station => 
-                station.toLowerCase().includes(query.toLowerCase())
-            );
-            
-            if (filteredStations.length === 0) {
-                hideSuggestions();
-                return;
-            }
-            
-            suggestionsDiv.innerHTML = '';
-            filteredStations.slice(0, 6).forEach(station => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.textContent = station;
-                div.onclick = () => selectSuggestion(station);
-                suggestionsDiv.appendChild(div);
-            });
-            
-            suggestionsDiv.style.display = 'block';
-        }
-        
-        function selectSuggestion(station) {
-            const input = document.querySelector('.from-input');
-            input.value = station;
-            hideSuggestions();
-            input.blur();
-        }
-        
-        function hideSuggestions() {
-            document.getElementById('suggestions').style.display = 'none';
-        }
-        
-        // Functions for "To" field
-        function showToInput() {
-            document.querySelector('.to-text-bar').style.display = 'none';
-            const input = document.querySelector('.to-input');
-            input.style.display = 'block';
-            input.value = ''; // Clear any existing value
-            input.focus();
-            hideToSuggestions();
-            
-            // Show "Select on Map" button
-            document.getElementById('to-map-btn').style.display = 'block';
-        }
-        
-        function hideToInput() {
-            const input = document.querySelector('.to-input');
-            const textBar = document.querySelector('.to-text-bar');
-            
-            setTimeout(() => {
-                if (input.value.trim() !== '') {
-                    textBar.textContent = input.value;
-                } else {
-                    textBar.textContent = 'To';
-                }
-                
-                input.style.display = 'none';
-                textBar.style.display = 'block';
-                hideToSuggestions();
-                
-                // Hide "Select on Map" button
-                document.getElementById('to-map-btn').style.display = 'none';
-            }, 150);
-        }
-        
-        function handleToKeyPress(event) {
-            if (event.key === 'Enter') {
-                document.querySelector('.to-input').blur();
-            }
-        }
-        
-        function showToSuggestions(query) {
-            const suggestionsDiv = document.getElementById('to-suggestions');
-            
-            if (query.length < 1) {
-                hideToSuggestions();
-                return;
-            }
-            
-            const filteredStations = metroStations.filter(station => 
-                station.toLowerCase().includes(query.toLowerCase())
-            );
-            
-            if (filteredStations.length === 0) {
-                hideToSuggestions();
-                return;
-            }
-            
-            suggestionsDiv.innerHTML = '';
-            filteredStations.slice(0, 6).forEach(station => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.textContent = station;
-                div.onclick = () => selectToSuggestion(station);
-                suggestionsDiv.appendChild(div);
-            });
-            
-            suggestionsDiv.style.display = 'block';
-        }
-        
-        function selectToSuggestion(station) {
-            const input = document.querySelector('.to-input');
-            input.value = station;
-            hideToSuggestions();
-            input.blur();
-        }
-        
-        function hideToSuggestions() {
-            document.getElementById('to-suggestions').style.display = 'none';
-        }
-        
-        function navigate() {
-            const fromValue = document.querySelector('.from-text-bar').textContent;
-            const toValue = document.querySelector('.to-text-bar').textContent;
-            
-            if (fromValue === 'From' || toValue === 'To') {
-                alert('Please select both origin and destination stations before navigating.');
-                return;
-            }
-            
-            // Calculate the fastest route with minimal line changes
-            const route = calculateOptimalRoute(fromValue, toValue);
-            displayRoute(route);
-        }
-        
-        function calculateOptimalRoute(from, to) {
-            // Metro line definitions - you can expand this with your actual metro system
-            const metroLines = {
-                'Red': ['Union Station', 'Dupont Circle', 'Woodley Park'],
-                'Blue': ['Foggy Bottom', 'McPherson Square', 'Capitol South', 'Metro Center'],
-                'Green': ['Gallery Place', 'U Street', 'Columbia Heights', 'Gallery Place-Chinatown'],
-                'Yellow': ['Pentagon', 'Crystal City', 'Ronald Reagan Airport'],
-                'Orange': ['Vienna', 'East Falls Church', 'Ballston', 'Metro Center'],
-                'Silver': ['Wiehle-Reston East', 'Spring Hill', 'Tysons Corner', 'Metro Center']
-            };
-            
-            // Transfer stations (where multiple lines intersect)
-            const transferStations = {
-                'Metro Center': ['Blue', 'Orange', 'Silver'],
-                'Gallery Place-Chinatown': ['Green', 'Yellow'],
-                'L\'Enfant Plaza': ['Blue', 'Yellow', 'Green', 'Orange']
-            };
-            
-            // Find which lines each station belongs to
-            let fromLines = [];
-            let toLines = [];
-            
-            for (const [line, stations] of Object.entries(metroLines)) {
-                if (stations.includes(from)) fromLines.push(line);
-                if (stations.includes(to)) toLines.push(line);
-            }
-            
-            // Check if both stations are on the same line (no transfer needed)
-            const sameLine = fromLines.find(line => toLines.includes(line));
-            if (sameLine) {
-                const stations = metroLines[sameLine];
-                const fromIndex = stations.indexOf(from);
-                const toIndex = stations.indexOf(to);
-                const distance = Math.abs(toIndex - fromIndex);
-                
-                return {
-                    type: 'direct',
-                    line: sameLine,
-                    stations: getStationsBetween(stations, fromIndex, toIndex),
-                    transfers: 0,
-                    estimatedTime: distance * 2, // 2 minutes per station
-                    distance: distance
-                };
-            }
-            
-            // Find optimal route with one transfer
-            let bestRoute = null;
-            let minTime = Infinity;
-            
-            for (const [transferStation, lines] of Object.entries(transferStations)) {
-                const fromToTransfer = findRouteOnSameLine(from, transferStation, metroLines);
-                const transferToDestination = findRouteOnSameLine(transferStation, to, metroLines);
-                
-                if (fromToTransfer && transferToDestination) {
-                    const totalTime = fromToTransfer.time + transferToDestination.time + 3; // 3 min transfer time
-                    
-                    if (totalTime < minTime) {
-                        minTime = totalTime;
-                        bestRoute = {
-                            type: 'transfer',
-                            segments: [fromToTransfer, transferToDestination],
-                            transferStation: transferStation,
-                            transfers: 1,
-                            estimatedTime: totalTime,
-                            distance: fromToTransfer.distance + transferToDestination.distance
-                        };
-                    }
-                }
-            }
-            
-            return bestRoute || {
-                type: 'error',
-                message: 'No direct route found. Please check station names.',
-                estimatedTime: 0,
-                distance: 0
-            };
-        }
-        
-        function findRouteOnSameLine(from, to, metroLines) {
-            for (const [line, stations] of Object.entries(metroLines)) {
-                const fromIndex = stations.indexOf(from);
-                const toIndex = stations.indexOf(to);
-                
-                if (fromIndex !== -1 && toIndex !== -1) {
-                    const distance = Math.abs(toIndex - fromIndex);
-                    return {
-                        line: line,
-                        stations: getStationsBetween(stations, fromIndex, toIndex),
-                        time: distance * 2,
-                        distance: distance
-                    };
-                }
-            }
-            return null;
-        }
-        
-        function getStationsBetween(stations, fromIndex, toIndex) {
-            const start = Math.min(fromIndex, toIndex);
-            const end = Math.max(fromIndex, toIndex);
-            return stations.slice(start, end + 1);
-        }
-        
-        function displayRoute(route) {
-            if (route.type === 'error') {
-                alert(route.message);
-                return;
-            }
-            
-            let routeText = `🚇 FASTEST ROUTE (${route.estimatedTime} min, ${route.transfers} transfer${route.transfers !== 1 ? 's' : ''})\n\n`;
-            
-            if (route.type === 'direct') {
-                routeText += `${route.line} Line (${route.distance} stops):\n`;
-                routeText += route.stations.join(' → ');
-            } else if (route.type === 'transfer') {
-                routeText += `${route.segments[0].line} Line (${route.segments[0].distance} stops):\n`;
-                routeText += route.segments[0].stations.join(' → ');
-                routeText += `\n\n🔄 TRANSFER at ${route.transferStation} (3 min)\n\n`;
-                routeText += `${route.segments[1].line} Line (${route.segments[1].distance} stops):\n`;
-                routeText += route.segments[1].stations.join(' → ');
-            }
-            
-            routeText += `\n\n⏱️ Total Time: ${route.estimatedTime} minutes`;
-            routeText += `\n📍 Total Distance: ${route.distance} stops`;
-            
-            alert(routeText);
-        }
-        
-        function selectOnMap(type) {
-            // Hide the map button and show a selection interface
-            const mapBtn = document.getElementById(`${type}-map-btn`);
-            mapBtn.style.display = 'none';
-            
-            // Create a temporary selection interface
-            showMapSelection(type);
-        }
-        
-        function showMapSelection(type) {
-            // This simulates opening a map where you can click on stations
-            const mapStations = [
-                { name: "Union Station", x: 150, y: 100 },
-                { name: "Dupont Circle", x: 120, y: 150 },
-                { name: "Woodley Park", x: 100, y: 200 },
-                { name: "Metro Center", x: 200, y: 180 },
-                { name: "Foggy Bottom", x: 80, y: 180 },
-                { name: "Pentagon", x: 250, y: 300 },
-                { name: "Crystal City", x: 270, y: 320 },
-                { name: "Gallery Place", x: 210, y: 160 }
-            ];
-            
-            // Create map selection prompt with clickable options
-            let mapText = `🗺️ SELECT ${type.toUpperCase()} STATION ON MAP\n\n`;
-            mapText += `Click on a station to select it as your ${type === 'from' ? 'starting point' : 'destination'}:\n\n`;
-            
-            mapStations.forEach((station, index) => {
-                mapText += `${index + 1}. ${station.name}\n`;
-            });
-            
-            mapText += `\nEnter the number (1-${mapStations.length}) of the station you want to select:`;
-            
-            const selection = prompt(mapText);
-            const stationIndex = parseInt(selection) - 1;
-            
-            if (stationIndex >= 0 && stationIndex < mapStations.length) {
-                const selectedStation = mapStations[stationIndex].name;
-                setStationFromMap(type, selectedStation);
-            } else if (selection !== null) {
-                alert('Invalid selection. Please try again.');
-                // Show the map button again if invalid selection
-                document.getElementById(`${type}-map-btn`).style.display = 'block';
-            } else {
-                // User cancelled, show the map button again
-                document.getElementById(`${type}-map-btn`).style.display = 'block';
-            }
-        }
-        
-        function setStationFromMap(type, stationName) {
-            // Set the selected station in the appropriate field
-            if (type === 'from') {
-                document.querySelector('.from-text-bar').textContent = stationName;
-                document.querySelector('.from-input').style.display = 'none';
-                document.querySelector('.from-text-bar').style.display = 'block';
-                document.getElementById('from-map-btn').style.display = 'none';
-            } else {
-                document.querySelector('.to-text-bar').textContent = stationName;
-                document.querySelector('.to-input').style.display = 'none';
-                document.querySelector('.to-text-bar').style.display = 'block';
-                document.getElementById('to-map-btn').style.display = 'none';
-            }
-            
-            // Show confirmation
-            alert(`✅ ${type.toUpperCase()} station set to: ${stationName}`);
-        }
-    </script>
-    <!-- Your content goes here -->
+  <!-- Login / Create Account -->
+  <div class="container" id="loginContainer">
+    <h2>Paris Metro Map</h2>
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <label><input type="checkbox" id="humanCheck"> I am human</label>
+    <button onclick="login()">Login</button>
+    <button onclick="noAccount()">Don't have an account?</button>
+  </div>
+
+  <!-- Metro Map Panel -->
+  <div class="container hidden" id="mapContainer">
+    <h2>Welcome, <span id="usernameDisplay"></span>!</h2>
+    <p>Last location: <strong><span id="lastLocation">None</span></strong></p>
+    <p>Favorites: <strong><span id="favorites">None</span></strong></p>
+    <button onclick="setFavorite()">Add Favorite</button>
+    <button onclick="setLocation()">Set Current Location</button>
+    <button onclick="logout()">Logout</button>
+
+    <!-- Embedded Official RATP Metro Map -->
+    <iframe src="https://www.ratp.fr/plan-metro" title="Paris Metro Map"></iframe>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function login() {
+      const name = document.getElementById('nameInput').value.trim();
+      const isHuman = document.getElementById('humanCheck').checked;
+
+      if (!name || !isHuman) {
+        alert("Please enter your name and confirm you're human.");
+        return;
+      }
+
+      const userData = localStorage.getItem(name);
+      if (userData) {
+        currentUser = JSON.parse(userData);
+        showMap();
+      } else {
+        alert("No account found for '" + name + "'. Please create a new account.");
+      }
+    }
+
+    function noAccount() {
+      const name = prompt("Welcome! What's your name?");
+      if (!name) return;
+      const user = {
+        name: name,
+        lastLocation: "Unknown",
+        favorites: []
+      };
+      localStorage.setItem(name, JSON.stringify(user));
+      currentUser = user;
+      showMap();
+    }
+
+    function showMap() {
+      document.getElementById('loginContainer').classList.add('hidden');
+      document.getElementById('mapContainer').classList.remove('hidden');
+      document.getElementById('usernameDisplay').innerText = currentUser.name;
+      document.getElementById('lastLocation').innerText = currentUser.lastLocation;
+      document.getElementById('favorites').innerText = currentUser.favorites.join(", ") || "None";
+    }
+
+    function setFavorite() {
+      const fav = prompt("Enter favorite station:");
+      if (fav) {
+        currentUser.favorites.push(fav);
+        saveUser();
+        showMap();
+      }
+    }
+
+    function setLocation() {
+      const loc = prompt("Enter your current station:");
+      if (loc) {
+        currentUser.lastLocation = loc;
+        saveUser();
+        showMap();
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('mapContainer').classList.add('hidden');
+      document.getElementById('loginContainer').classList.remove('hidden');
+    }
+
+    function saveUser() {
+      localStorage.setItem(currentUser.name, JSON.stringify(currentUser));
+    }
+  </script>
 </body>
 </html>
