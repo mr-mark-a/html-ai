@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Computer Only Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      background-color: #f0f0f0;
+    }
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border: 2px solid black;
+      z-index: 10;
+    }
+    #gameCanvas {
+      display: block;
+      background: #222;
+    }
+  </style>
+</head>
+
+<body>
+<div id="startMessage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;align-items:center;justify-content:center;z-index:100;font-size:2em;flex-direction:column;">
+  <div>DEVICE MUST BE COMPUTER</div>
+  <button id="startBtn" style="margin-top:30px;padding:1em 2em;font-size:1em;">Continue</button>
+</div>
+
+<div id="instructions" style="display:none;">
+  <strong>COMPUTER GAME ONLY<br>DEVICE MUST BE COMPUTER</strong><br><br>
+  <img src="A_digital_photograph_with_text_and_graphic_element.png" width="250"><br><br>
+  <img src="A_digital_instructional_image_features_instruction.png" width="250"><br>
+  <br>
+  <button id="playBtn" style="padding:1em 2em;font-size:1em;">Play Game</button>
+</div>
+
+<canvas id="gameCanvas" width="800" height="600" style="display:none;"></canvas>
+
+<script>
+  const startMessage = document.getElementById('startMessage');
+  const instructions = document.getElementById('instructions');
+  const gameCanvas = document.getElementById('gameCanvas');
+  const startBtn = document.getElementById('startBtn');
+  const playBtn = document.getElementById('playBtn');
+
+  startBtn.onclick = () => {
+    startMessage.style.display = 'none';
+    instructions.style.display = 'block';
+  };
+
+  playBtn.onclick = () => {
+    instructions.style.display = 'none';
+    gameCanvas.style.display = 'block';
+    startGame();
+  };
+
+  function startGame() {
+    const canvas = gameCanvas;
+    const ctx = canvas.getContext('2d');
+
+    let player = {
+      x: 100,
+      y: 300,
+      size: 50,
+      color: 'skyblue',
+      speed: 5,
+      vy: 0,
+      gravity: 0.5,
+      flying: false,
+      alive: true
+    };
+
+    let enemyRockets = [];
+    let bombs = [];
+    let score = 0;
+    let gameOver = false;
+    let paused = false;
+    let items = {
+      bomb: 3,
+      fireball: 2,
+      shield: 1
+    };
+    let selectedItem = 'bomb';
+    let dottedLine = null;
+    let dottedAngle = 0;
+    let dottedActive = false;
+    let waves = 0;
+    let winShown = false;
+
+    // Pause menu
+    const pauseMenu = document.createElement('div');
+    pauseMenu.style.position = 'fixed';
+    pauseMenu.style.top = '50%';
+    pauseMenu.style.left = '50%';
+    pauseMenu.style.transform = 'translate(-50%,-50%)';
+    pauseMenu.style.background = '#222';
+    pauseMenu.style.color = '#fff';
+    pauseMenu.style.padding = '32px';
+    pauseMenu.style.borderRadius = '16px';
+    pauseMenu.style.zIndex = 9999;
+    pauseMenu.style.display = 'none';
+    pauseMenu.style.textAlign = 'center';
+    pauseMenu.innerHTML = `<h2>Paused</h2>
+      <div>
+        <button id='itemBomb'>Bomb (${items.bomb})</button>
+        <button id='itemFireball'>Fireball (${items.fireball})</button>
+        <button id='itemShield'>Shield (${items.shield})</button>
+      </div>
+      <div style='margin-top:16px;'>Select item and close menu to use</div>
+      <button id='resumeBtn' style='margin-top:24px;'>Resume</button>`;
+    document.body.appendChild(pauseMenu);
+
+    function updatePauseMenu() {
+      pauseMenu.querySelector('#itemBomb').textContent = `Bomb (${items.bomb})`;
+      pauseMenu.querySelector('#itemFireball').textContent = `Fireball (${items.fireball})`;
+      pauseMenu.querySelector('#itemShield').textContent = `Shield (${items.shield})`;
+    }
+    pauseMenu.querySelector('#itemBomb').onclick = () => { selectedItem = 'bomb'; };
+    pauseMenu.querySelector('#itemFireball').onclick = () => { selectedItem = 'fireball'; };
+    pauseMenu.querySelector('#itemShield').onclick = () => { selectedItem = 'shield'; };
+    pauseMenu.querySelector('#resumeBtn').onclick = () => {
+      paused = false;
+      pauseMenu.style.display = 'none';
+      requestAnimationFrame(update);
+    };
+
+    function drawRocket(obj, isEnemy = false) {
+      ctx.save();
+      ctx.translate(obj.x + obj.size/2, obj.y + obj.size/2);
+      ctx.rotate(isEnemy ? Math.PI : 0);
+      ctx.beginPath();
+      ctx.moveTo(0, -obj.size/2); // tip
+      ctx.lineTo(-obj.size/3, obj.size/2);
+      ctx.lineTo(obj.size/3, obj.size/2);
+      ctx.closePath();
+      ctx.fillStyle = isEnemy ? 'red' : obj.color;
+      ctx.fill();
+      // Window
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.size/6, 0, Math.PI*2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      // Flames if flying
+      if (!isEnemy && obj.flying) {
+        ctx.beginPath();
+        ctx.moveTo(-obj.size/6, obj.size/2);
+        ctx.lineTo(0, obj.size/2 + 20);
+        ctx.lineTo(obj.size/6, obj.size/2);
+        ctx.closePath();
+        ctx.fillStyle = 'orange';
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBomb(bomb) {
+      ctx.save();
+      ctx.translate(bomb.x, bomb.y);
+      ctx.beginPath();
+      ctx.arc(0, 0, bomb.size, 0, Math.PI*2);
+      ctx.fillStyle = 'yellow';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function spawnEnemyRocket() {
+      const y = Math.random() * (canvas.height - 100) + 50;
+      enemyRockets.push({
+        x: canvas.width - 100,
+        y: y,
+        size: 40,
+        bombCooldown: 0
+      });
+    }
+
+    function launchBomb(enemy) {
+      bombs.push({
+        x: enemy.x,
+        y: enemy.y + enemy.size/2,
+        size: 12,
+        vx: -6,
+        vy: (player.y + player.size/2 - (enemy.y + enemy.size/2)) / 80
+      });
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (paused) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Paused', canvas.width/2, canvas.height/2);
+        return;
+      }
+
+      if (!player.alive) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over!', canvas.width/2, canvas.height/2);
+        ctx.font = '32px Arial';
+        ctx.fillText('Score: ' + score, canvas.width/2, canvas.height/2+50);
+        return;
+      }
+
+      // Win condition
+      if (score >= 10000000 && !winShown) {
+        winShown = true;
+        showWinMenu();
+        return;
+      }
+
+      // Gravity and flying
+      if (player.flying) {
+        player.vy = -6;
+      } else {
+        player.vy += player.gravity;
+      }
+      player.y += player.vy;
+      if (player.y + player.size > canvas.height) {
+        player.y = canvas.height - player.size;
+        player.vy = 0;
+      }
+      if (player.y < 0) {
+        player.y = 0;
+        player.vy = 0;
+      }
+
+      drawRocket(player);
+
+      // Dotted line selection
+      if (dottedActive && dottedLine) {
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.setLineDash([6,6]);
+        ctx.beginPath();
+        ctx.arc(player.x+player.size/2, player.y+player.size/2, player.size+20, 0, 2*Math.PI);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+        // Draw rotating line
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(player.x+player.size/2, player.y+player.size/2);
+        ctx.lineTo(player.x+player.size/2 + Math.cos(dottedAngle)*80, player.y+player.size/2 + Math.sin(dottedAngle)*80);
+        ctx.stroke();
+        ctx.restore();
+        dottedAngle += 0.03;
+      }
+
+      // Enemy rockets
+      enemyRockets.forEach(enemy => {
+        drawRocket(enemy, true);
+        enemy.bombCooldown--;
+        if (enemy.bombCooldown <= 0) {
+          launchBomb(enemy);
+          enemy.bombCooldown = Math.floor(Math.random()*60)+60;
+        }
+      });
+      // Bombs
+      bombs.forEach(bomb => {
+        bomb.x += bomb.vx;
+        bomb.y += bomb.vy;
+        drawBomb(bomb);
+      });
+      // Remove bombs off screen
+      bombs = bombs.filter(bomb => bomb.x > 0 && bomb.y > 0 && bomb.y < canvas.height);
+
+      // Collision detection
+      bombs.forEach(bomb => {
+        const dx = (player.x + player.size/2) - bomb.x;
+        const dy = (player.y + player.size/2) - bomb.y;
+        if (Math.sqrt(dx*dx + dy*dy) < player.size/2 + bomb.size) {
+          player.alive = false;
+        }
+      });
+
+      // Score
+      score++;
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px Arial';
+      ctx.fillText('Score: ' + score, 100, 40);
+      ctx.fillText('Wave: ' + waves, 100, 70);
+      ctx.fillText('Bombs: ' + items.bomb + ' Fireballs: ' + items.fireball + ' Shields: ' + items.shield, 100, 100);
+
+      requestAnimationFrame(update);
+    }
+
+    // Controls
+    let keys = {};
+    document.addEventListener('keydown', function(e) {
+      keys[e.key] = true;
+      if (e.key === "ArrowUp") player.flying = true;
+      if (e.key === "ArrowLeft") player.x -= player.speed;
+      if (e.key === "ArrowRight") player.x += player.speed;
+      if (e.key === "ArrowDown") player.y += player.speed;
+      if (e.key === " ") { // Space launches selected item if dottedActive
+        if (dottedActive && selectedItem && items[selectedItem] > 0) {
+          launchPlayerItem(selectedItem);
+          items[selectedItem]--;
+          updatePauseMenu();
+          dottedActive = false;
+        }
+      }
+    });
+    document.addEventListener('keyup', function(e) {
+      keys[e.key] = false;
+      if (e.key === "ArrowUp") player.flying = false;
+    });
+
+    // Mouse controls
+    canvas.addEventListener('click', (e) => {
+      if (dottedActive) return;
+      if (e.button === 0 && keys['Control']) {
+        // Left click + scroll (simulate with Control)
+        dottedActive = true;
+        dottedLine = true;
+        dottedAngle = 0;
+      } else {
+        player.flying = true;
+        setTimeout(()=>{player.flying=false;},200);
+      }
+    });
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      player.color = player.color === 'skyblue' ? 'orange' : 'skyblue';
+    });
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 1) {  // Middle button
+        paused = !paused;
+        pauseMenu.style.display = paused ? 'block' : 'none';
+        updatePauseMenu();
+      }
+    });
+
+    // Launch item from player
+    function launchPlayerItem(type) {
+      let angle = dottedAngle;
+      let px = player.x+player.size/2;
+      let py = player.y+player.size/2;
+      if (type === 'bomb') {
+        bombs.push({
+          x: px,
+          y: py,
+          size: 16,
+          vx: Math.cos(angle)*8,
+          vy: Math.sin(angle)*8
+        });
+      } else if (type === 'fireball') {
+        bombs.push({
+          x: px,
+          y: py,
+          size: 24,
+          vx: Math.cos(angle)*12,
+          vy: Math.sin(angle)*12,
+          color: 'red'
+        });
+      } else if (type === 'shield') {
+        // Shield logic: temporary invincibility
+        player.shielded = true;
+        setTimeout(()=>{player.shielded=false;},2000);
+      }
+    }
+
+    // Spawn enemies and waves
+    setInterval(() => {
+      if (player.alive && !paused) {
+        spawnEnemyRocket();
+        if (score > 0 && score % 1000000 === 0) waves++;
+      }
+    }, 2000);
+
+    // Win menu and fireworks
+    function showWinMenu() {
+      pauseMenu.style.display = 'none';
+      const winDiv = document.createElement('div');
+      winDiv.style.position = 'fixed';
+      winDiv.style.top = '20%';
+      winDiv.style.left = '50%';
+      winDiv.style.transform = 'translate(-50%,0)';
+      winDiv.style.background = '#222';
+      winDiv.style.color = '#fff';
+      winDiv.style.padding = '48px';
+      winDiv.style.borderRadius = '24px';
+      winDiv.style.zIndex = 10000;
+      winDiv.style.textAlign = 'center';
+      winDiv.innerHTML = `<h1>🎉 YOU WIN! 🎉</h1><div style='font-size:2em;margin:16px;'>Score: ${score}</div><div style='font-size:1.5em;'>Waves: ${waves}</div>`;
+      document.body.appendChild(winDiv);
+      showFireworks();
+    }
+    function showFireworks() {
+      const fireworkCanvas = document.createElement('canvas');
+      fireworkCanvas.width = window.innerWidth;
+      fireworkCanvas.height = window.innerHeight;
+      fireworkCanvas.style.position = 'fixed';
+      fireworkCanvas.style.left = '0';
+      fireworkCanvas.style.top = '0';
+      fireworkCanvas.style.zIndex = 99999;
+      fireworkCanvas.style.pointerEvents = 'none';
+      document.body.appendChild(fireworkCanvas);
+      const ctx = fireworkCanvas.getContext('2d');
+      let fireworks = [];
+      function randomColor() {
+        const colors = ['#ff5252','#ffd600','#00e676','#2979ff','#ff9800','#fff'];
+        return colors[Math.floor(Math.random()*colors.length)];
+      }
+      function spawnFirework() {
+        const x = Math.random() * fireworkCanvas.width * 0.8 + fireworkCanvas.width * 0.1;
+        const y = Math.random() * fireworkCanvas.height * 0.3 + fireworkCanvas.height * 0.1;
+        const color = randomColor();
+        const particles = [];
+        for (let i = 0; i < 32; i++) {
+          const angle = (i / 32) * 2 * Math.PI;
+          const speed = 2 + Math.random() * 2;
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color
+          });
+        }
+        fireworks.push({particles});
+      }
+      function drawFireworks() {
+        ctx.clearRect(0,0,fireworkCanvas.width,fireworkCanvas.height);
+        for (let f = fireworks.length-1; f >= 0; f--) {
+          const fw = fireworks[f];
+          let allGone = true;
+          for (const p of fw.particles) {
+            if (p.alpha > 0.05) {
+              allGone = false;
+              ctx.globalAlpha = p.alpha;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 4, 0, 2*Math.PI);
+              ctx.fillStyle = p.color;
+              ctx.fill();
+              p.x += p.vx;
+              p.y += p.vy;
+              p.vx *= 0.97;
+              p.vy *= 0.97;
+              p.vy += 0.04;
+              p.alpha *= 0.96;
+            }
+          }
+          if (allGone) fireworks.splice(f,1);
+        }
+        ctx.globalAlpha = 1;
+      }
+      setInterval(() => { spawnFirework(); }, 700);
+      function animate() {
+        drawFireworks();
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    update();
+  }
+</script>
+
+</body>
+</html>

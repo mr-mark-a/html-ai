@@ -1,165 +1,62 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Mini Browser</title>
+  <title>Copilot</title>
   <style>
-    body { font-family: sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 0 10px #ccc; padding: 20px; }
-    .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
-    .tab { padding: 8px 16px; background: #eee; border-radius: 5px 5px 0 0; cursor: pointer; }
-    .tab.active { background: #2196f3; color: #fff; }
-    .tab-close { margin-left: 8px; color: #f44336; cursor: pointer; }
-    .tab-content { min-height: 120px; background: #fafafa; border-radius: 0 0 8px 8px; padding: 20px; }
-    .btn { padding: 8px 16px; margin: 8px 0; }
-    .hidden { display: none; }
-    .pin-input { width: 100%; padding: 10px; margin: 8px 0; }
+    body { font-family: sans-serif; margin: 0; background: #000; }
+    nav { display: flex; background: #444; color: white; }
+    nav button { flex: 1; padding: 1em; border: none; background: #444; color: white; cursor: pointer; }
+    nav button.active { background: #222; }
+    section { display: none; padding: 1em; }
+    section.active { display: block; }
+    input, textarea { width: 100%; margin: 0.5em 0; }
   </style>
 </head>
 <body>
-  <div class="container" id="pinPage">
-    <h2>Enter PIN to open browser</h2>
-    <input type="password" id="pinInput" class="pin-input" placeholder="Enter PIN">
-    <button class="btn" onclick="checkPin()">Open Browser</button>
-    <button class="btn" onclick="showSetPin()">Do not have browser?</button>
-    <div id="pinError" style="color:red;"></div>
-  </div>
-  <div class="container hidden" id="setPinPage">
-    <h2>Set New PIN</h2>
-    <input type="password" id="newPinInput" class="pin-input" placeholder="Set new PIN">
-    <button class="btn" onclick="setPin()">Set PIN</button>
-    <button class="btn" onclick="showPinPage()">Back</button>
-    <div id="setPinError" style="color:red;"></div>
-  </div>
-  <div class="container hidden" id="browserPage">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2 style="margin:0;">Mini Browser</h2>
-      <button class="btn" onclick="logout()">Logout</button>
-    </div>
-    <div class="tabs" id="tabs"></div>
-    <button class="btn" onclick="addTab()">+ New Tab</button>
-    <div class="tab-content" id="tabContent"></div>
-  </div>
+  <nav>
+    <button onclick="switchPage('copilot')" id="btn-copilot">Copilot</button>
+    <button onclick="switchPage('page1')" id="btn-page1">Page 1</button>
+    <button onclick="switchPage('page2')" id="btn-page2">Page 2</button>
+  </nav>
+
+  <section id="copilot" class="active">
+    <h2>Copilot</h2>
+    <textarea id="copilotData" placeholder="Type something..."></textarea>
+    <button onclick="save('copilotData')">Save</button>
+  </section>
+
+  <section id="page1">
+    <h2>Page 1</h2>
+    <input id="page1Input" placeholder="Enter data">
+    <button onclick="save('page1Input')">Save</button>
+  </section>
+
+  <section id="page2">
+    <h2>Page 2</h2>
+    <input id="page2Input" placeholder="Something else">
+    <button onclick="save('page2Input')">Save</button>
+  </section>
+
   <script>
-    // PIN logic
-    function getPin() { return localStorage.getItem('browser_pin'); }
-    function setPinValue(pin) { localStorage.setItem('browser_pin', pin); }
-    function checkPin() {
-      const pin = document.getElementById('pinInput').value;
-      if (pin === getPin()) {
-        showBrowser();
-      } else {
-        document.getElementById('pinError').textContent = 'Incorrect PIN.';
-      }
-    }
-    function showSetPin() {
-      document.getElementById('pinPage').classList.add('hidden');
-      document.getElementById('setPinPage').classList.remove('hidden');
-      document.getElementById('setPinError').textContent = '';
-      document.getElementById('newPinInput').value = '';
-    }
-    function showPinPage() {
-      document.getElementById('setPinPage').classList.add('hidden');
-      document.getElementById('pinPage').classList.remove('hidden');
-      document.getElementById('pinError').textContent = '';
-      document.getElementById('pinInput').value = '';
-    }
-    function setPin() {
-      const newPin = document.getElementById('newPinInput').value;
-      if (!newPin) {
-        document.getElementById('setPinError').textContent = 'PIN cannot be empty.';
-        return;
-      }
-      setPinValue(newPin);
-      localStorage.setItem('browser_tabs', JSON.stringify([]));
-      localStorage.setItem('browser_activeTab', '0');
-      showPinPage();
-      alert('PIN set! Now enter it to open the browser.');
-    }
-    function logout() {
-      document.getElementById('browserPage').classList.add('hidden');
-      document.getElementById('pinPage').classList.remove('hidden');
-      document.getElementById('pinInput').value = '';
-    }
-    // Browser logic
-    function getTabs() {
-      return JSON.parse(localStorage.getItem('browser_tabs') || '[]');
-    }
-    function setTabs(tabs) {
-      localStorage.setItem('browser_tabs', JSON.stringify(tabs));
-    }
-    function getActiveTab() {
-      return parseInt(localStorage.getItem('browser_activeTab') || '0', 10);
-    }
-    function setActiveTab(idx) {
-      localStorage.setItem('browser_activeTab', idx);
-    }
-    function showBrowser() {
-      document.getElementById('pinPage').classList.add('hidden');
-      document.getElementById('setPinPage').classList.add('hidden');
-      document.getElementById('browserPage').classList.remove('hidden');
-      renderTabs();
-    }
-    function renderTabs() {
-      let tabs = getTabs();
-      if (tabs.length === 0) {
-        tabs = [''];
-        setTabs(tabs);
-        setActiveTab(0);
-      }
-      const active = getActiveTab();
-      const tabsDiv = document.getElementById('tabs');
-      tabsDiv.innerHTML = '';
-      tabs.forEach((tab, i) => {
-        const tabDiv = document.createElement('div');
-        tabDiv.className = 'tab' + (i === active ? ' active' : '');
-        tabDiv.textContent = 'Tab ' + (i + 1);
-        tabDiv.onclick = () => { setActiveTab(i); renderTabs(); };
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'tab-close';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(i); };
-        tabDiv.appendChild(closeBtn);
-        tabsDiv.appendChild(tabDiv);
+    const switchPage = id => {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.getElementById('btn-' + id).classList.add('active');
+    };
+
+    const save = id => {
+      localStorage.setItem(id, document.getElementById(id).value);
+    };
+
+    window.onload = () => {
+      ['copilotData', 'page1Input', 'page2Input'].forEach(id => {
+        const val = localStorage.getItem(id);
+        if (val) document.getElementById(id).value = val;
       });
-      renderTabContent();
-    }
-    function renderTabContent() {
-      const tabs = getTabs();
-      const active = getActiveTab();
-      const contentDiv = document.getElementById('tabContent');
-      contentDiv.innerHTML = '';
-      if (tabs[active] !== undefined) {
-        const textarea = document.createElement('textarea');
-        textarea.style.width = '100%';
-        textarea.style.height = '100px';
-        textarea.value = tabs[active];
-        textarea.oninput = function() {
-          tabs[active] = textarea.value;
-          setTabs(tabs);
-        };
-        contentDiv.appendChild(textarea);
-      }
-    }
-    function addTab() {
-      const tabs = getTabs();
-      tabs.push('');
-      setTabs(tabs);
-      setActiveTab(tabs.length - 1);
-      renderTabs();
-    }
-    function closeTab(idx) {
-      let tabs = getTabs();
-      if (tabs.length === 1) return; // Always keep at least one tab
-      tabs.splice(idx, 1);
-      setTabs(tabs);
-      let active = getActiveTab();
-      if (active >= tabs.length) active = tabs.length - 1;
-      setActiveTab(active);
-      renderTabs();
-    }
-    // On load, show PIN page
-    document.getElementById('pinPage').classList.remove('hidden');
+    };
   </script>
 </body>
 </html>

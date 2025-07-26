@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Health Scanner</title>
+  <!-- Include html5-qrcode library from CDN -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
+    h1 { margin-bottom: 20px; }
+    /* Controls */
+    .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .controls input, .controls button { padding: 10px; font-size: 1em; }
+    @media (max-width: 600px) { .controls { flex-direction: column; } }
+    /* Scanner overlay */
+    #scanner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+               background: rgba(0,0,0,0.8); color: white; align-items: center; justify-content: center; flex-direction: column; }
+    #qr-reader { width: 300px; max-width: 90%; margin-bottom: 10px; }
+    #cancel-scan { padding: 10px 20px; font-size: 1em; }
+    /* Result overlay */
+    #result { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+              background: #fff; align-items: center; justify-content: center; flex-direction: column; }
+    .categories { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; margin-bottom: 20px; }
+    .category { width: 80%; padding: 10px; margin: 5px 0; border-radius: 5px;
+                font-size: 1em; font-weight: bold; text-align: center; color: white; transition: all 0.3s; }
+    /* Category colors */
+    #cat-A { background: #2ecc71; }
+    #cat-B { background: #f1c40f; color: black; }
+    #cat-C { background: #e67e22; }
+    #cat-D { background: #82e0aa; }
+    #cat-E { background: #8e44ad; }
+    /* Highlight active category */
+    .active { font-size: 1.2em; padding: 20px; transform: scale(1.05); }
+    /* Done button */
+    #done-btn { padding: 10px 20px; font-size: 1em; }
+    /* Premium modal */
+    #premium-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+                     background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+    .modal-content { background: #fff; padding: 20px; border-radius: 5px; width: 90%; max-width: 300px; }
+    .modal-content h2 { margin-top: 0; }
+    .modal-content button { margin: 10px 5px 0; padding: 10px 15px; }
+  </style>
+</head>
+<body>
+
+  <h1>Product Health Scanner</h1>
+  <div class="controls">
+    <button id="scan-btn">Scan Barcode</button>
+    <input id="code-input" type="text" placeholder="Enter Barcode">
+    <button id="search-btn">Search Product</button>
+  </div>
+
+  <!-- Scanner overlay (hidden by default) -->
+  <div id="scanner" class="flex-container">
+    <div id="qr-reader"></div>
+    <button id="cancel-scan">Cancel Scan</button>
+  </div>
+
+  <!-- Result overlay (hidden by default) -->
+  <div id="result" class="flex-container">
+    <div class="categories">
+      <div class="category" id="cat-A">A</div>
+      <div class="category" id="cat-B">B</div>
+      <div class="category" id="cat-C">C</div>
+      <div class="category" id="cat-D">D</div>
+      <div class="category" id="cat-E">E</div>
+    </div>
+    <button id="done-btn">Done</button>
+  </div>
+
+  <!-- Premium access modal -->
+  <div id="premium-modal" class="flex-container">
+    <div class="modal-content">
+      <h2>Premium Required</h2>
+      <p>Scanning and product search require a premium subscription.</p>
+      <button id="subscribe-monthly">$10 / month</button>
+      <button id="subscribe-yearly">$100 / year</button>
+      <button id="modal-close">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    let premiumActive = false;
+    let html5QrcodeScanner = null;
+
+    const scannerOverlay = document.getElementById('scanner');
+    const resultOverlay  = document.getElementById('result');
+    const modalOverlay   = document.getElementById('premium-modal');
+    const scanBtn        = document.getElementById('scan-btn');
+    const searchBtn      = document.getElementById('search-btn');
+    const cancelScanBtn  = document.getElementById('cancel-scan');
+    const doneBtn        = document.getElementById('done-btn');
+    const subscribeMonthly = document.getElementById('subscribe-monthly');
+    const subscribeYearly  = document.getElementById('subscribe-yearly');
+    const modalClose     = document.getElementById('modal-close');
+    const codeInput      = document.getElementById('code-input');
+
+    // Show premium modal
+    function showModal() {
+      modalOverlay.style.display = 'flex';
+    }
+
+    // Scan button handler
+    scanBtn.onclick = () => {
+      if (!premiumActive) {
+        showModal();
+        return;
+      }
+      // Show scanner overlay
+      scannerOverlay.style.display = 'flex';
+      // Initialize html5-qrcode scanner
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+      }
+      html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", { fps: 10, qrbox: 250 }
+      );
+      html5QrcodeScanner.render(onScanSuccess, onScanError);
+    };
+
+    // Search button handler (manual code input)
+    searchBtn.onclick = () => {
+      if (!premiumActive) {
+        showModal();
+        return;
+      }
+      const code = codeInput.value.trim();
+      if (code) fetchProduct(code);
+    };
+
+    // Cancel scan
+    cancelScanBtn.onclick = () => {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }
+      scannerOverlay.style.display = 'none';
+    };
+
+    // Scan success callback
+    function onScanSuccess(decodedText, decodedResult) {
+      // Stop scanner
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }
+      scannerOverlay.style.display = 'none';
+      // Use the decoded barcode text
+      fetchProduct(decodedText);
+    }
+    function onScanError(error) {
+      console.warn('Scan error:', error);
+    }
+
+    // Fetch product data from OpenFoodFacts
+    function fetchProduct(code) {
+      fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 1) {
+            const product = data.product;
+            const name = product.product_name || 'Unknown Product';
+            // Get nutrition grade (A–E)
+            let grade = (product.nutrition_grade_fr || product.nutrition_grades || 'e').toUpperCase();
+            if (!['A','B','C','D','E'].includes(grade)) grade = 'E';
+            // Map grade to a numeric score
+            let score = 0;
+            switch (grade) {
+              case 'A': score = 90; break;
+              case 'B': score = 65; break;
+              case 'C': score = 40; break;
+              case 'D': score = 25; break;
+              case 'E': score = 10; break;
+            }
+            // Reset all categories
+            ['A','B','C','D','E'].forEach(letter => {
+              const elem = document.getElementById('cat-' + letter);
+              elem.classList.remove('active');
+              elem.textContent = letter;
+            });
+            // Highlight the matching category
+            const activeElem = document.getElementById('cat-' + grade);
+            activeElem.classList.add('active');
+            activeElem.textContent = `${grade}: ${name} – ${score}%`;
+            // Show result overlay
+            resultOverlay.style.display = 'flex';
+          } else {
+            alert('Product not found.');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Error fetching product data.');
+        });
+    }
+
+    // Done button hides results
+    doneBtn.onclick = () => {
+      resultOverlay.style.display = 'none';
+    };
+
+    // Premium modal buttons
+    subscribeMonthly.onclick = () => {
+      premiumActive = true;
+      modalOverlay.style.display = 'none';
+    };
+    subscribeYearly.onclick = () => {
+      premiumActive = true;
+      modalOverlay.style.display = 'none';
+    };
+    modalClose.onclick = () => {
+      modalOverlay.style.display = 'none';
+    };
+  </script>
+</body>
+</html>
