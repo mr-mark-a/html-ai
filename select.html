@@ -68,6 +68,7 @@
       if (pwd === acc.password) {
         selected = acc;
         document.getElementById('selectedAccount').textContent = 'Logged in: ' + acc.name;
+        window.location = 'marks-games.html';
       } else {
         alert('Wrong password');
       }

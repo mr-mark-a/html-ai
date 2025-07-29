@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jedi 3D Game Save & Login</title>
+<style>
+  body,html { margin:0; padding:0; overflow:hidden; background:#000; }
+  #ui {
+    position: fixed; top: 10px; left: 10px;
+    color: white; font-family: monospace;
+    user-select: none; z-index: 10;
+  }
+  #ui > div { margin-bottom: 6px; }
+  #playButtonContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+  }
+  #playButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+    border-radius: 50%;
+    box-shadow: 0 0 16px #000a;
+    transition: transform 0.1s;
+  }
+  #playButton:active {
+    transform: scale(0.96);
+  }
+  #newGameBtn {
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: #004400;
+    border: none; color: #aaffaa;
+    font-family: monospace;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div id="ui" style="display:none;">
+  <div>Player: <span id="playerNameDisplay"></span></div>
+  <div>Health: <span id="healthValue">100</span></div>
+  <div>Force Energy: <span id="forceValue">100</span></div>
+  <div>Controls: WASD Move, Mouse Look, LeftClick Swing, F Force Push, G Force Pull, Space Jump</div>
+  <button id="newGameBtn">New Game</button>
+</div>
+<div id="playButtonContainer">
+  <button id="playButton" aria-label="Play Game">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="60" fill="#f00"/>
+      <polygon points="48,35 90,60 48,85" fill="#fff"/>
+    </svg>
+  </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/PointerLockControls.js"></script>
+
+<script>
+(function(){
+  var scene, camera, renderer, controls;
+  var clock = new THREE.Clock();
+  var player, enemies = [];
+  var input = { forward:false, backward:false, left:false, right:false, jump:false, swing:false, forcePush:false, forcePull:false, cameraYaw:0 };
+  var healthValueElem = document.getElementById('healthValue');
+  var forceValueElem = document.getElementById('forceValue');
+  var ui = document.getElementById('ui');
+  var playerNameDisplay = document.getElementById('playerNameDisplay');
+  var newGameBtn = document.getElementById('newGameBtn');
+  var playButtonContainer = document.getElementById('playButtonContainer');
+  var playButton = document.getElementById('playButton');
+  var currentPlayerName = null;
+
+  // Player constructor
+  function Player(){
+    this.group = new THREE.Group();
+    var bodyGeo = new THREE.CapsuleGeometry(0.4,1.2,4,8);
+    var bodyMat = new THREE.MeshStandardMaterial({color:0x2233ee});
+    this.body = new THREE.Mesh(bodyGeo,bodyMat);
+    this.body.castShadow = true;
+    this.body.position.y=1;
+    this.group.add(this.body);
+
+    var saberGeo = new THREE.CylinderGeometry(0.04,0.04,1.8,12);
+    var saberMat = new THREE.MeshStandardMaterial({color:0x00ff00,emissive:0x00ff00,emissiveIntensity:1.5});
+    this.lightsaber = new THREE.Mesh(saberGeo,saberMat);
+    this.lightsaber.castShadow = true;
+    this.lightsaber.position.set(0.4,1.1,0);
+    this.lightsaber.rotation.z = Math.PI/2;
+    this.group.add(this.lightsaber);
+
+    this.velocity = new THREE.Vector3();
+    this.speed = 4.5;
+    this.jumpVelocity = 7;
+    this.gravity = -20;
+    this.canJump = false;
+    this.health = 100;
+    this.forceEnergy = 100;
+    this.swinging = false;
+    this.swingTimer = 0;
+    this.swingDuration = 0.5;
+    this.forcePushCooldown = false;
+    this.forcePullCooldown = false;
+    this.direction = new THREE.Vector3();
+    this.group.position.set(0,0,0);
+    scene.add(this.group);
+  }
+
+  Player.prototype.update = function(delta, input, enemies){
+    this.direction.set(0,0,0);
+    if(input.forward) this.direction.z -= 1;
+    if(input.backward) this.direction.z += 1;
+    if(input.left) this.direction.x -= 1;
+    if(input.right) this.direction.x += 1;
+    this.direction.normalize();
+
+    if(this.direction.length() > 0){
+      var angle = Math.atan2(this.direction.x,this.direction.z);
+      var cameraYaw = input.cameraYaw;
+      this.group.rotation.y = angle + cameraYaw;
+    }
+
+    var moveDir = new THREE.Vector3(this.direction.x,0,this.direction.z);
+    moveDir.applyAxisAngle(new THREE.Vector3(0,1,0),input.cameraYaw);
+    moveDir.multiplyScalar(this.speed * delta);
+    this.group.position.add(moveDir);
+
+    this.velocity.y += this.gravity * delta;
+    this.group.position.y += this.velocity.y * delta;
+    if(this.group.position.y < 0){
+      this.group.position.y = 0;
+      this.velocity.y = 0;
+      this.canJump = true;
+    }
+    if(input.jump && this.canJump){
+      this.velocity.y = this.jumpVelocity;
+      this.canJump = false;
+    }
+
+    // Swing lightsaber
+    if(input.swing && !this.swinging){
+      this.swinging = true;
+      this.swingTimer = 0;
+    }
+    if(this.swinging){
+      this.swingTimer += delta;
+      var flicker = Math.sin((this.swingTimer/this.swingDuration)*Math.PI*8)*0.5+0.5;
+      this.lightsaber.material.emissiveIntensity = 1.5 + flicker;
+      if(this.swingTimer >= this.swingDuration){
+        this.swinging = false;
+        this.lightsaber.material.emissiveIntensity = 1.5;
+        this.checkSwingHit(enemies);
+      }
+    }
+
+    // Force Push
+    if(input.forcePush && !this.forcePushCooldown && this.forceEnergy >= 20){
+      this.forcePushCooldown = true;
+      this.forceEnergy -= 20;
+      this.doForcePush(enemies);
+      setTimeout(function(){ this.forcePushCooldown = false; }.bind(this),3000);
+    }
+    // Force Pull
+    if(input.forcePull && !this.forcePullCooldown && this.forceEnergy >= 15){
+      this.forcePullCooldown = true;
+      this.forceEnergy -= 15;
+      this.doForcePull(enemies);
+      setTimeout(function(){ this.forcePullCooldown = false; }.bind(this),3000);
+    }
+    // Regenerate force
+    this.forceEnergy += 10 * delta;
+    if(this.forceEnergy > 100) this.forceEnergy = 100;
+
+    // Update UI
+    healthValueElem.textContent = Math.floor(this.health);
+    forceValueElem.textContent = Math.floor(this.forceEnergy);
+  };
+
+  Player.prototype.checkSwingHit = function(enemies){
+    var hitRange = 2.5;
+    var forward = new THREE.Vector3(0,0,-1).applyQuaternion(this.group.quaternion);
+    for(var i=0; i<enemies.length; i++){
+      var enemy = enemies[i];
+      var toEnemy = new THREE.Vector3().subVectors(enemy.group.position,this.group.position);
+      var dist = toEnemy.length();
+      if(dist < hitRange){
+        var angle = forward.angleTo(toEnemy.normalize());
+        if(angle < Math.PI/4){
+          enemy.takeDamage(25);
+        }
+      }
+    }
+  };
+  Player.prototype.doForcePush = function(enemies){
+    var pushRange = 6;
+    var pushPower = 8;
+    var forward = new THREE.Vector3(0,0,-1).applyQuaternion(this.group.quaternion);
+    for(var i=0; i<enemies.length; i++){
+      var enemy = enemies[i];
+      var toEnemy = new THREE.Vector3().subVectors(enemy.group.position,this.group.position);
+      var dist = toEnemy.length();
+      if(dist < pushRange){
+        var dir = toEnemy.normalize();
+        enemy.velocity.add(dir.multiplyScalar(pushPower));
+      }
+    }
+  };
+  Player.prototype.doForcePull = function(enemies){
+    var pullRange = 10;
+    var pullPower = 5;
+    for(var i=0; i<enemies.length; i++){
+      var enemy = enemies[i];
+      var toPlayer = new THREE.Vector3().subVectors(this.group.position,enemy.group.position);
+      var dist = toPlayer.length();
+      if(dist < pullRange){
+        var dir = toPlayer.normalize();
+        enemy.velocity.add(dir.multiplyScalar(pullPower));
+      }
+    }
+  };
+
+  // Enemy constructor
+  function Enemy(pos){
+    this.group = new THREE.Group();
+    var geo = new THREE.BoxGeometry(1,1,1);
+    var mat = new THREE.MeshStandardMaterial({color:0xaa2222});
+    this.body = new THREE.Mesh(geo,mat);
+    this.body.castShadow = true;
+    this.group.add(this.body);
+    this.group.position.copy(pos);
+    scene.add(this.group);
+    this.health = 100;
+    this.velocity = new THREE.Vector3();
+    this.speed = 2.5;
+    this.isDead = false;
+  }
+  Enemy.prototype.takeDamage = function(amount){
+    if(this.isDead) return;
+    this.health -= amount;
+    if(this.health <= 0){
+      this.die();
+    }
+  };
+  Enemy.prototype.die = function(){
+    this.isDead = true;
+    this.group.visible = false;
+  };
+  Enemy.prototype.update = function(delta, player){
+    if(this.isDead) return;var toPlayer = new THREE.Vector3().subVectors(player.group.position, this.group.position);
+    toPlayer.y = 0;
+    var dist = toPlayer.length();
+    if(dist > 0.5){
+      var dir = toPlayer.normalize();
+      this.velocity.x += dir.x * this.speed * delta;
+      this.velocity.z += dir.z * this.speed * delta;
+    }
+    this.velocity.multiplyScalar(0.85);
+    this.group.position.add(this.velocity.clone().multiplyScalar(delta));
+    if(dist < 1.2 && !player.swinging){
+      player.health -= 10 * delta;
+      if(player.health < 0) player.health = 0;
+    }
+  };
+
+  // Save/load game state
+  function saveGame(){
+    if(!currentPlayerName) return;
+    var saveData = {
+      position: player.group.position.toArray(),
+      health: player.health,
+      forceEnergy: player.forceEnergy
+    };
+    localStorage.setItem('jediSave_' + currentPlayerName, JSON.stringify(saveData));
+  }
+  function loadGame(name){
+    var dataStr = localStorage.getItem('jediSave_' + name);
+    if(!dataStr) return null;
+    try {
+      return JSON.parse(dataStr);
+    } catch(e) { return null; }
+  }
+  function clearSave(name){
+    localStorage.removeItem('jediSave_' + name);
+  }
+
+  // Init Three.js scene
+  function initScene(){
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a1a);
+
+    camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+    camera.position.set(0,1.8,5);
+
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    var hemiLight = new THREE.HemisphereLight(0xffffff,0x222244,0.7);
+    hemiLight.position.set(0,20,0);
+    scene.add(hemiLight);
+
+    var dirLight = new THREE.DirectionalLight(0xffffff,1);
+    dirLight.position.set(5,10,7);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    // Floor
+    var floorGeo = new THREE.PlaneGeometry(200,200);
+    var floorMat = new THREE.MeshStandardMaterial({color:0x223322});
+    var floor = new THREE.Mesh(floorGeo,floorMat);
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Player
+    player = new Player();
+
+    // Enemies at fixed positions
+    enemies = [];
+    enemies.push(new Enemy(new THREE.Vector3(5,0,0)));
+    enemies.push(new Enemy(new THREE.Vector3(-5,0,-5)));
+    enemies.push(new Enemy(new THREE.Vector3(0,0,-10)));
+
+    // Controls
+    controls = new THREE.PointerLockControls(camera, document.body);
+    scene.add(controls.getObject());
+
+    // Link camera to player
+    controls.getObject().position.copy(player.group.position).add(new THREE.Vector3(0,1.5,0));
+
+    // Play button event: go to next page (activity)
+    playButton.addEventListener('click', function(){
+      window.location.href = 'activity.html';
+    }, false);
+
+    // Input events
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('mousemove', onMouseMove);
+
+    // Window resize
+    window.addEventListener('resize', onWindowResize);
+
+    // New Game Button
+    newGameBtn.addEventListener('click', function(){
+      if(!currentPlayerName) return;
+      if(confirm('Start a new game for "' + currentPlayerName + '"? This will erase saved progress.')){
+        clearSave(currentPlayerName);
+        startGameFor(currentPlayerName, true);
+      }
+    });
+
+    startGameForPrompt();
+  }
+
+  function startGameForPrompt(){
+    var name = prompt('Enter your Jedi name:');
+    if(!name) {
+      alert('Name is required.');return startGameForPrompt();
+    }
+    startGameFor(name.trim());
+  }
+
+  function startGameFor(name, fresh){
+    currentPlayerName = name;
+    playerNameDisplay.textContent = currentPlayerName;
+    var saved = loadGame(currentPlayerName);
+    if(!saved || fresh){
+      // New game
+      player.group.position.set(0,0,0);
+      player.health = 100;
+      player.forceEnergy = 100;
+    } else {
+      var p = saved.position || [0,0,0];
+      player.group.position.set(p[0], p[1], p[2]);
+      player.health = saved.health || 100;
+      player.forceEnergy = saved.forceEnergy || 100;
+    }
+    // Reset enemies
+    enemies.forEach(function(e){
+      e.isDead = false;
+      e.group.visible = true;
+      // Respawn near initial pos
+      e.group.position.y = 0;
+      // (You can randomize or reset enemies better here)
+    });
+  }
+
+  // Input handlers
+  function onKeyDown(e){
+    switch(e.code){
+      case 'KeyW': input.forward=true; break;
+      case 'KeyS': input.backward=true; break;
+      case 'KeyA': input.left=true; break;
+      case 'KeyD': input.right=true; break;
+      case 'Space': input.jump=true; break;
+      case 'KeyF': input.forcePush=true; break;
+      case 'KeyG': input.forcePull=true; break;
+    }
+  }
+  function onKeyUp(e){
+    switch(e.code){
+      case 'KeyW': input.forward=false; break;
+      case 'KeyS': input.backward=false; break;
+      case 'KeyA': input.left=false; break;
+      case 'KeyD': input.right=false; break;
+      case 'Space': input.jump=false; break;
+      case 'KeyF': input.forcePush=false; break;
+      case 'KeyG': input.forcePull=false; break;
+    }
+  }
+  function onMouseDown(e){
+    if(e.button===0) input.swing=true;
+  }
+  function onMouseUp(e){
+    if(e.button===0) input.swing=false;
+  }
+  function onMouseMove(e){
+    if(!controls.isLocked) return;
+    input.cameraYaw -= e.movementX * 0.002;
+  }
+  function onWindowResize(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  }
+
+  // Main loop
+  function animate(){
+    requestAnimationFrame(animate);
+    var delta = clock.getDelta();
+
+    if(controls.isLocked){
+      player.update(delta,input,enemies);
+      enemies.forEach(function(e){ e.update(delta, player); });
+
+      // Update camera position to player + offset
+      controls.getObject().position.copy(player.group.position).add(new THREE.Vector3(0,1.5,0));
+
+      // Save game periodically (every 2 seconds)
+      if(Date.now() - (animate.lastSave||0) > 2000){
+        saveGame();
+        animate.lastSave = Date.now();
+      }
+    }
+
+    renderer.render(scene,camera);
+  }
+
+  initScene();
+  animate();
+})();
+</script>
+</body>
+</html>
+((
+
+))
