@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html><head><title>Publisher</title><style>
+body{font-family:sans-serif;padding:20px}
+textarea{width:100%;height:200px;font-family:monospace;margin:10px 0}
+#gitbot-area {
+  display:none;
+  background:#111;
+  color:#fff;
+  padding:18px 12px 16px 12px;
+  border-radius:0 0 8px 8px;
+  margin-top:0;
+  position:relative;
+}
+#gitbot-line {
+  border:0;
+  border-top:2px solid #222;
+  margin:0 0 0 0;
+  width:100%;
+}
+#gitbot-input {
+  width:calc(100% - 44px);
+  padding:8px 10px;
+  border:none;
+  border-radius:4px;
+  font-size:1em;
+  background:#222;
+  color:#fff;
+  outline:none;
+  margin-right:6px;
+}
+#gitbot-send {
+  display:none;
+  background:#333;
+  border:none;
+  color:#fff;
+  font-size:1.3em;
+  border-radius:50%;
+  width:36px;
+  height:36px;
+  cursor:pointer;
+  vertical-align:middle;
+  transition:background 0.2s;
+}
+#gitbot-send:hover { background:#444; }
+</style>
+<style>
+#chat-area {
+  display:none;
+  background:#111;
+  color:#fff;
+  border-radius:0 0 8px 8px;
+  margin-top:0;
+  position:relative;
+  min-height:180px;
+  padding-bottom:70px;
+}
+#chat-transparent-line {
+  border:0;
+  border-top:2px solid rgba(255,255,255,0.25);
+  background:transparent;
+  margin:0;
+  width:100%;
+}
+#chat-messages {
+  padding:16px 12px 0 12px;
+  min-height:120px;
+  max-height:260px;
+  overflow-y:auto;
+}
+.chat-msg {
+  margin:8px 0;
+  display:flex;
+  align-items:flex-end;
+}
+.chat-user {
+  background:#2196f3;
+  color:#fff;
+  border-radius:16px 16px 4px 16px;
+  padding:8px 14px;
+  margin-left:auto;
+  max-width:70%;
+  animation: sendmsg 0.3s;
+}
+.chat-bot {
+  background:#333;
+  color:#eee;
+  border-radius:16px 16px 16px 4px;
+  padding:8px 14px;
+  margin-right:auto;
+  max-width:70%;
+  animation: receivemsg 0.3s;
+}
+@keyframes sendmsg { from {transform:translateY(30px);opacity:0} to {transform:translateY(0);opacity:1} }
+@keyframes receivemsg { from {transform:translateY(30px);opacity:0} to {transform:translateY(0);opacity:1} }
+#chat-input-bar {
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  width:420px;
+  max-width:90vw;
+  background:#fff;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  box-shadow:0 2px 12px #0004;
+  padding:8px 12px;
+  z-index:1000;
+}
+#chat-input {
+  flex:1;
+  background:transparent;
+  border:none;
+  color:#222;
+  font-size:1.1em;
+  padding:8px 0;
+  outline:none;
+}
+#chat-send {
+  background:none;
+  border:none;
+  color:#2196f3;
+  font-size:1.7em;
+  margin-left:8px;
+  cursor:pointer;
+  border-radius:50%;
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background 0.2s;
+}
+#chat-send:active { background:#1a5fb4; }
+</style>
+</style></head><body>
+<h3>� Code Publisher</h3>
+<input id="file" placeholder="Filename (e.g. index.js)">
+<select id="type">
+  <option value="web">🔵 Web</option>
+  <option value="app">🟣 App</option>
+  <option value="server">🟣 Server</option>
+</select>
+<textarea id="code" placeholder="Write your code..."></textarea>
+<button id="gitBotBtn" onclick="showGitBot()">🤖 Git Bot</button>
+<button onclick="publish()">Publish</button>
+<div id="out"></div>
+<div id="gitbot-area">
+  <hr id="gitbot-line">
+  <input id="gitbot-input" type="text" placeholder="type what you want to do" autocomplete="off">
+  <button id="gitbot-send" title="Send"><span style="font-size:1.2em">&#128255;</span></button>
+</div>
+<div id="chat-area">
+  <hr id="chat-transparent-line">
+  <div id="chat-messages"></div>
+</div>
+<form id="chat-input-bar" style="display:none" autocomplete="off" onsubmit="return false;">
+  <input id="chat-input" type="text" placeholder="ask anything" autocomplete="off">
+  <button id="chat-send" title="Send" type="submit" disabled><span style="font-size:1.2em">&#128255;</span></button>
+</form>
+<script>
+// --- Chat UI logic ---
+const chatArea = document.getElementById('chat-area');
+const chatMessages = document.getElementById('chat-messages');
+const chatInputBar = document.getElementById('chat-input-bar');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+
+function showChat() {
+  chatArea.style.display = '';
+  chatInputBar.style.display = 'flex';
+  chatInput.value = '';
+  chatInput.placeholder = 'ask anything';
+  chatSend.disabled = true;
+  chatInput.focus();
+}
+
+document.getElementById('gitBotBtn').addEventListener('click', showChat);
+
+chatInput.addEventListener('input', function() {
+  chatSend.disabled = this.value.trim().length === 0;
+  this.placeholder = this.value.length === 0 ? 'ask anything' : '';
+});
+
+chatInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !chatSend.disabled) {
+    chatSend.click();
+  }
+});
+
+chatSend.addEventListener('click', function() {
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  addChatMessage(msg, 'user');
+  chatInput.value = '';
+  chatSend.disabled = true;
+  // Simulate sending animation
+  setTimeout(() => getBotReply(msg), 500);
+});
+
+function addChatMessage(text, who) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  const bubble = document.createElement('div');
+  bubble.className = who === 'user' ? 'chat-user' : 'chat-bot';
+  bubble.innerText = text;
+  div.appendChild(bubble);
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function getBotReply(msg) {
+  // Placeholder for ChatGPT API call
+  addChatMessage('Thinking...', 'bot');
+  setTimeout(() => {
+    // Simulate ChatGPT answer with explanation and code
+    const explanation = 'Here is how to make a hello world sign:';
+    const code = 'console.log("Hello from Git Bot!");';
+    // Replace last bot message with explanation
+    chatMessages.lastChild.querySelector('.chat-bot').innerText = explanation;
+    // Add code as a separate code bubble
+    const codeDiv = document.createElement('div');
+    codeDiv.className = 'chat-msg';
+    const codeBubble = document.createElement('div');
+    codeBubble.className = 'chat-bot';
+    codeBubble.style.background = '#222';
+    codeBubble.style.fontFamily = 'monospace';
+    codeBubble.style.whiteSpace = 'pre';
+    codeBubble.style.marginTop = '4px';
+    codeBubble.innerText = code;
+    codeDiv.appendChild(codeBubble);
+    chatMessages.appendChild(codeDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Paste code in textarea
+    document.getElementById('code').value = code;
+  }, 1200);
+}
+function publish(){
+  const name=document.getElementById('file').value.trim(),
+        code=document.getElementById('code').value,
+        type=document.getElementById('type').value;
+  if(!name||!code)return alert("Enter filename and code.");
+  fetch('/publish',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,code,type})
+  })
+  .then(r=>r.text())
+  .then(msg=>document.getElementById('out').innerText=msg)
+  .catch(e=>alert("Error: "+e));
+}
+
+function showGitBot() {
+  document.getElementById('gitbot-area').style.display = '';
+  document.getElementById('gitbot-input').value = '';
+  document.getElementById('gitbot-input').placeholder = 'type what you want to do';
+  document.getElementById('gitbot-send').style.display = 'none';
+  document.getElementById('gitbot-input').focus();
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  const gitbotInput = document.getElementById('gitbot-input');
+  const gitbotSend = document.getElementById('gitbot-send');
+  let gitbotPlaceholder = 'type what you want to do';
+
+  gitbotInput.addEventListener('input', function() {
+    if (this.value.length > 0) {
+      gitbotSend.style.display = '';
+      this.placeholder = '';
+    } else {
+      gitbotSend.style.display = 'none';
+      this.placeholder = gitbotPlaceholder;
+    }
+  });
+
+  gitbotInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.value.length > 0) {
+      gitbotSend.click();
+    }
+  });
+
+  gitbotSend.addEventListener('click', function() {
+    // You can add logic here to handle the send action
+    alert('Git Bot received: ' + gitbotInput.value);
+    gitbotInput.value = '';
+    gitbotSend.style.display = 'none';
+    gitbotInput.placeholder = gitbotPlaceholder;
+    gitbotInput.focus();
+  });
+});
+</script></body></html>

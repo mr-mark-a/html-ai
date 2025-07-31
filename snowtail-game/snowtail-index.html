@@ -913,9 +913,10 @@
                 s: 0.3 + Math.random() * 0.7
             });
         }
-        // Levitate balls
-        const levitateBalls = [];
-        const levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
+
+        // Only 5 levitate balls, no more (define only once, outside any duplicate blocks)
+        var levitateBalls = [];
+        var levitateBallMaterial = new THREE.MeshBasicMaterial({ color: 0xFF6B35, emissive: 0xFFB84D, transparent: true, opacity: 0.85 });
         for (let i = 0; i < 5; i++) {
             const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), levitateBallMaterial.clone());
             ball.position.set(
@@ -927,10 +928,35 @@
             s.add(ball);
             levitateBalls.push(ball);
         }
-        // Levitate state
-        let isLevitating = false;
-        let levitateHeight = 0;
-        let levitateBarDiv = null;
+
+        // Double jump logic
+        var jumpCount = 0;
+        var isJumping = false;
+        var jumpVelocity = 0;
+        const maxJumps = 2;
+        const jumpStrength = 1.2; // Adjust as needed
+
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                if (jumpCount < maxJumps) {
+                    jumpVelocity = jumpStrength;
+                    isJumping = true;
+                    jumpCount++;
+                }
+            }
+        });
+
+        // Add this to your main animation loop:
+        // if (isJumping) {
+        //     w.position.y += jumpVelocity;
+        //     jumpVelocity -= 0.08; // gravity
+        //     if (w.position.y <= 0.2) {
+        //         w.position.y = 0.2;
+        //         isJumping = false;
+        //         jumpCount = 0;
+        //         jumpVelocity = 0;
+        //     }
+        // }
         
         function updateLoadingProgress(step, percentage) {
             const progressBar = document.getElementById('progressBar');
