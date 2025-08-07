@@ -417,10 +417,11 @@
             border-radius: 0 15px 15px 15px;
             padding: 15px;
             min-width: 200px;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: all 0.3s ease;
+            max-height: none !important;
+            opacity: 1 !important;
+            display: block !important;
+            overflow: visible !important;
+            transition: none !important;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
@@ -533,13 +534,9 @@
     </style>
 </head>
 <body style="position:relative;">
-<!-- Language Selector -->
+<!-- Language Selector (always open) -->
 <div class="language-selector">
-    <button class="lang-btn" id="langBtn">
-        <span id="currentLang">🇺🇸 EN</span>
-        <span class="lang-arrow">▼</span>
-    </button>
-    <div class="lang-dropdown" id="langDropdown">
+    <div class="lang-dropdown show" id="langDropdown" style="margin-top:0;">
         <div class="lang-option active" data-lang="en">🇺🇸 English</div>
         <div class="lang-option" data-lang="es">🇪🇸 Español</div>
         <div class="lang-option" data-lang="fr">🇫🇷 Français</div>
@@ -574,13 +571,9 @@
     🧹 Clean Up
 </button>
 
-<!-- Mode Panel -->
+<!-- Mode Panel (always open) -->
 <div class="mode-panel">
-    <button class="mode-toggle" id="modeToggle">
-        <span>🎯 Modes</span>
-        <span class="mode-arrow">▼</span>
-    </button>
-    <div class="mode-content" id="modeContent">
+    <div class="mode-content expanded" id="modeContent">
         <button class="mode-button ideal-fines" id="modeBtnIdealFines">
             💳 Ideal Fines
         </button>
@@ -593,6 +586,9 @@
         <button class="mode-button my-ios" id="modeBtnMyIOS">
             🍎 MY IOS
         </button>
+        <button class="mode-button grok" id="modeBtnGrok">
+            🧠 Grok
+        </button>
         <button class="mode-button accounts" id="modeBtnAccounts">
             👤 Accounts
         </button>
@@ -600,8 +596,8 @@
 </div>
 
 <div id="loginContainer">
-    <input id="passwordInput" type="password" placeholder="Password" style="font-size:1em; padding:0.4em 1em; border-radius:6px; border:1px solid #b8860b; outline:none;" />
-    <button id="loginBtn" style="background:#43a047; color:#fff; border:none; border-radius:6px; padding:0.4em 1.2em; font-size:1em; cursor:pointer;">Login</button>
+    <div style="font-size:1.1em; color:#b8860b; padding:0.5em 0; text-align:center; width:100%;">We are updated!<br/>Please create an account.</div>
+    <button id="accountsBtn" style="background:#43a047; color:#fff; border:none; border-radius:6px; padding:0.4em 1.2em; font-size:1em; cursor:pointer; width:100%;">Accounts</button>
 </div>
 
 <div id="gameArea" style="margin-top: 100px;">
@@ -617,18 +613,12 @@
 <script>
 // Account 10x10 button navigation
 document.getElementById('account10x10Btn').onclick = function() {
-    // Clear any active search inputs on the page
-    try {
-        const searchInputs = document.querySelectorAll('input[type="search"], input[name*="search"], input[placeholder*="search"], input[placeholder*="Search"]');
-        searchInputs.forEach(input => {
-            input.value = '';
-        });
-        if (window.find) {
-            window.find(''); // Attempt to clear browser's find-in-page
-        }
-    } catch (error) {
-        console.log('Could not clear search inputs:', error);
-    }
+    // ...existing code...
+    window.location.href = 'select.html';
+};
+
+// Accounts button in loginContainer
+document.getElementById('accountsBtn').onclick = function() {
     window.location.href = 'select.html';
 };
 // Add random cats and mice emojis to the background
@@ -719,7 +709,42 @@ document.getElementById('cleanUpBtn').onclick = function() {
     window.location.href = 'clean-up.html';
 };
 
-// Mode Panel functionality
+// --- Make all mode and language panel buttons work (always open) ---
+// Mode panel navigation
+['modeBtnIdealFines','modeBtnGitBot','modeBtnCleanUp','modeBtnMyIOS','modeBtnGrok','modeBtnAccounts'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.onclick = function() {
+        switch(id) {
+            case 'modeBtnIdealFines': window.location.href = 'ideal/payment.html'; break;
+            case 'modeBtnGitBot': window.location.href = 'git-bot.html'; break;
+            case 'modeBtnCleanUp': window.location.href = 'clean-up.html'; break;
+            case 'modeBtnMyIOS': window.location.href = 'simulateors/ios/main.html'; break;
+            case 'modeBtnGrok': window.location.href = 'GROK.html'; break;
+            case 'modeBtnAccounts': window.location.href = 'select.html'; break;
+        }
+    };
+});
+// Language panel selection
+(function() {
+    var langOptions = document.querySelectorAll('.lang-option');
+    langOptions.forEach(function(option) {
+        option.onclick = function() {
+            langOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            // Optionally update language here
+        };
+    });
+    // See more button
+    var seeMoreBtn = document.getElementById('seeMoreBtn');
+    if (seeMoreBtn) {
+        seeMoreBtn.onclick = function() {
+            window.location.href = 'file:///D:/marks%20shortcuts/SOFT/massege-caller/translate/all.html';
+        };
+    }
+})();
+// --- end always open panel button logic ---
+
 (function() {
     const modeToggle = document.getElementById('modeToggle');
     const modeContent = document.getElementById('modeContent');
@@ -758,6 +783,14 @@ document.getElementById('cleanUpBtn').onclick = function() {
     modeBtnMyIOS.addEventListener('click', function() {
         window.location.href = 'simulateors/ios/main.html';
     });
+    
+    // Grok button
+    var modeBtnGrok = document.getElementById('modeBtnGrok');
+    if (modeBtnGrok) {
+        modeBtnGrok.addEventListener('click', function() {
+            window.location.href = 'GROK.html';
+        });
+    }
     
     // Accounts button click handler
     modeBtnAccounts.addEventListener('click', function() {
@@ -1171,6 +1204,37 @@ document.getElementById('cleanUpBtn').onclick = function() {
         console.log('Language saved to storage:', langCode);
     }
 })();
+
+// --- Simple Q&A for Grok and git-bot.html ---
+const qaPairs = [
+  {q: 'hi', a: 'hi, how can I help'},
+  {q: 'what is the capital of japan?', a: 'Tokyo'},
+  {q: 'what language is spoken in brazil?', a: 'Portuguese'},
+  {q: 'which country has the great pyramid of giza?', a: 'Egypt'},
+  {q: 'what is the longest river in the world?', a: 'Nile'},
+  {q: 'where is the eiffel tower located?', a: 'Paris'},
+  {q: 'what is the official currency of the united kingdom?', a: 'Pound sterling'},
+  {q: 'what continent is nigeria in?', a: 'Africa'},
+  {q: 'what is the tallest mountain in the world?', a: 'Mount Everest'},
+  {q: 'which ocean is the largest?', a: 'Pacific Ocean'},
+  {q: 'what is the capital of canada?', a: 'Ottawa'},
+  {q: 'what country is famous for sushi?', a: 'Japan'},
+  {q: 'what desert covers much of northern africa?', a: 'Sahara Desert'},
+  {q: 'what is the national animal of australia?', a: 'Kangaroo'},
+  {q: 'which country is known as the land of the rising sun?', a: 'Japan'},
+  {q: 'what is the capital of italy?', a: 'Rome'},
+  {q: 'what country has the most population?', a: 'China'},
+  {q: 'what is the currency of india?', a: 'Indian Rupee'},
+  {q: 'what city is known as the big apple?', a: 'New York City'},
+  {q: 'where is the taj mahal located?', a: 'Agra, India'},
+  {q: 'which country has the maple leaf on its flag?', a: 'Canada'}
+];
+function getSimpleAnswer(userInput) {
+  const q = userInput.trim().toLowerCase();
+  const found = qaPairs.find(pair => q === pair.q);
+  return found ? found.a : null;
+}
+// --- end Q&A ---
 </script>
 </body>
 </html>

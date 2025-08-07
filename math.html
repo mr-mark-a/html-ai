@@ -1,0 +1,162 @@
+<div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
+  <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
+</div>
+<div style="width:100%;text-align:center;margin-bottom:18px;">
+  <button onclick="window.location.href='index.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Home</button>
+  <button onclick="window.location.href='marks-games.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Games Menu</button>
+  <button onclick="window.location.href='browser.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Mini Browser</button>
+  <button onclick="window.location.href='select.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Account Select</button>
+</div>
+<script>
+  // === WebRTC Variables ===
+  let peerConnection;
+  let dataChannel;
+  let isTeacher = false;
+  let peerConnectionOther;
+  const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  function setupConnection() {
+    peerConnection = new RTCPeerConnection(config);
+    dataChannel = peerConnection.createDataChannel("homeworkChannel");
+
+    dataChannel.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "score") {
+        alert("🎓 Student completed homework!\nScore: " + msg.score);
+      }
+    };
+
+    peerConnection.onicecandidate = (e) => {
+      if (e.candidate) {
+        document.getElementById("localOffer").value = JSON.stringify(peerConnection.localDescription);
+      }
+    };
+
+    peerConnection.createOffer().then(offer => {
+      peerConnection.setLocalDescription(offer);
+    });
+  }
+
+  function connectToTeacher() {
+    peerConnection = new RTCPeerConnection(config);
+    peerConnection.ondatachannel = (event) => {
+      dataChannel = event.channel;
+      dataChannel.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "homework") {
+          homework[currentUser.username] = msg.payload;
+          localStorage.setItem('homework', JSON.stringify(homework));
+          alert("📥 Homework received from teacher!");
+        }
+      };
+    };
+
+    peerConnection.onicecandidate = (e) => {
+      if (e.candidate) {
+        document.getElementById("studentAnswer").value = JSON.stringify(peerConnection.localDescription);
+      }
+    };
+  }
+
+  function sendOfferToStudent() {
+    const remoteSDP = JSON.parse(document.getElementById("studentAnswer").value);
+    peerConnection.setRemoteDescription(remoteSDP);
+  }
+
+  function receiveOfferFromTeacher() {
+    const offer = JSON.parse(document.getElementById("teacherOffer").value);
+    peerConnection.setRemoteDescription(offer).then(() => {
+      peerConnection.createAnswer().then(answer => {
+        peerConnection.setLocalDescription(answer);
+      });
+    });
+  }
+
+  // === Homework Logic Extension ===
+
+  function assignHomework() {
+    const count = parseInt(document.getElementById("hwCount").value);
+    const time = parseInt(document.getElementById("hwTime").value);
+    const payload = { count, time };
+
+    if (dataChannel && dataChannel.readyState === "open") {
+      dataChannel.send(JSON.stringify({ type: "homework", payload }));
+      alert("✅ Homework sent via WebRTC!");
+    } else {
+      alert("⚠️ WebRTC not connected.");
+    }
+  }
+
+  function endQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById("quizArea").innerHTML = `<h3>🏁 Homework Complete!</h3><p>Score: ${score}/${currentHomework.count}</p>`;
+    delete homework[currentUser.username];
+    localStorage.setItem('homework', JSON.stringify(homework));
+
+    if (dataChannel && dataChannel.readyState === "open") {
+      dataChannel.send(JSON.stringify({ type: "score", score }));
+    }
+  }
+
+  // === UI Logic ===
+
+  function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+    const error = document.getElementById("loginError");
+
+    if (!username || !password) {
+      error.textContent = "Fill in all fields.";
+      return;
+    }
+
+    if (!users[username]) {
+      users[username] = { password, role };
+      localStorage.setItem('users', JSON.stringify(users));
+    } else if (users[username].password !== password) {
+      error.textContent = "Incorrect password.";
+      return;
+    }
+
+    currentUser = { username, role };
+    document.getElementById("loginBox").classList.add("hidden");
+
+    if (role === 'teacher') {
+      document.getElementById("teacherBox").classList.remove("hidden");
+      isTeacher = true;
+      setupConnection();
+      showTeacherWebRTCControls();
+    } else {
+      document.getElementById("studentBox").classList.remove("hidden");
+      connectToTeacher();
+      showStudentWebRTCControls();
+    }
+  }
+
+  function showTeacherWebRTCControls() {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <h3>Teacher WebRTC Connection</h3>
+      <textarea id="localOffer" rows="5" cols="60" readonly></textarea>
+      <br>
+      <textarea id="studentAnswer" rows="5" cols="60" placeholder="Paste student's answer SDP here..."></textarea>
+      <br>
+      <button onclick="sendOfferToStudent()">🔗 Connect to Student</button>
+    `;
+    document.getElementById("teacherBox").appendChild(div);
+  }
+
+  function showStudentWebRTCControls() {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <h3>Student WebRTC Connection</h3>
+      <textarea id="teacherOffer" rows="5" cols="60" placeholder="Paste teacher's offer SDP here..."></textarea>
+      <br>
+      <button onclick="receiveOfferFromTeacher()">✅ Accept Offer</button>
+      <br>
+      <textarea id="studentAnswer" rows="5" cols="60" readonly></textarea>
+    `;
+    document.getElementById("studentBox").appendChild(div);
+  }
+</script>

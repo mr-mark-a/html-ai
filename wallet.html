@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet with Real Face-ID</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <style>
+    body,html{margin:0;padding:0;height:100%;background:#000;color:#fff;font-family:sans-serif}
+    #video, canvas { position:fixed; top:0; left:0; display:none; }
+    #loginUI, #walletUI { padding:20px; }
+    .btn { margin:10px; padding:10px; background:#007bff; border:none; color:#fff; cursor:pointer; }
+    #welcome{margin-bottom:10px;}
+    #searchBar{width:100%;padding:10px;margin-bottom:10px;background:#111;border:none;color:#fff}
+    #addForm input, #addForm textarea { display:block;width:100%;margin:5px 0;padding:5px }
+    #cards{overflow-y:auto;max-height:calc(100vh - 200px)}
+    .card {
+      height:80px;
+      margin:12px 0;
+      background: linear-gradient(135deg, #2d2d2d 60%, #007bff 100%);
+      border-radius:16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      padding:18px 24px;
+      cursor:pointer;
+      transition:height .3s, box-shadow .3s;
+      overflow:hidden;
+      color:#fff;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .card h3 {
+      font-size:1.3em;
+      font-weight:600;
+      margin:0 0 4px 0;
+      letter-spacing:1px;
+      text-shadow:0 1px 2px #0006;
+    }
+    .card .card-chip {
+      width:38px;
+      height:28px;
+      background:#e0e0e0;
+      border-radius:6px;
+      position:absolute;
+      top:18px;
+      right:24px;
+      box-shadow:0 2px 6px #0002;
+    }
+    .card.expanded {
+      height:220px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.28);
+    }
+    .details{display:none;margin-top:18px}
+    .card.expanded .details{display:block}
+    .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;color:#fff;z-index:1000;flex-direction:column;display:none}
+    .loader{border:4px solid #fff;border-top:4px solid #888;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-top:20px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<video id="video" width="320" height="240" autoplay muted></video>
+<canvas id="overlayCanvas" width="320" height="240"></canvas>
+
+<div id="loginUI">
+  <h2>Register or Login</h2>
+  <button id="registerBtn" class="btn">Register Face</button>
+  <button id="loginBtn" class="btn">Login (Scan Face)</button>
+  <button id="scanBtn" class="btn">Scan & Login</button>
+  <button id="pwdLoginBtn" class="btn">Type Password & Login</button>
+</div>
+
+<div id="walletUI" style="display:none">
+  <div id="welcome"></div>
+  <input type="text" id="searchBar" placeholder="Search cards…">
+  <button id="addCardBtn" class="btn">Add Card</button>
+  <div id="cards"></div>
+</div>
+
+<div id="overlay" class="overlay"><div id="overlayText"></div><div class="loader"></div></div>
+
+<script>
+const VIDEO = document.getElementById('video');
+const OVERLAY = document.getElementById('overlay');
+const OVERLAY_TEXT = document.getElementById('overlayText');
+const loginUI = document.getElementById('loginUI');
+const walletUI = document.getElementById('walletUI');
+const registerBtn = document.getElementById('registerBtn');
+const loginBtn = document.getElementById('loginBtn');
+const scanBtn = document.getElementById('scanBtn');
+const welcome = document.getElementById('welcome');
+const searchBar = document.getElementById('searchBar');
+const addCardBtn = document.getElementById('addCardBtn');
+const cardsEl = document.getElementById('cards');
+const pwdLoginBtn = document.getElementById('pwdLoginBtn');
+
+let labeledDescriptors = [];
+let faceMatcher;
+let userName = '';
+let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+let expandedId = null;
+
+async function loadModels() {
+  const MODEL_URL = './models';
+  await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+}
+
+async function startVideo() {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+  VIDEO.srcObject = stream;
+  return new Promise(res => VIDEO.onloadedmetadata = res);
+}
+
+async function captureDescriptor(label) {
+  await startVideo();
+  const detection = await faceapi.detectSingleFace(VIDEO).withFaceLandmarks().withFaceDescriptor();
+  VIDEO.srcObject.getTracks().forEach(t => t.stop());
+  if (!detection) { alert('No face detected.'); return null; }
+  return new faceapi.LabeledFaceDescriptors(label, [detection.descriptor]);
+}
+
+async function registerFace() {
+  let name = '';
+  let password = '';
+  // Custom modal for name and password
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.8)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '9999';
+  modal.innerHTML = `<div style="background:#222;padding:30px;border-radius:10px;min-width:300px;text-align:center;">
+    <h3>Register Face or Password</h3>
+    <input id="regName" type="text" placeholder="Enter your name" style="width:90%;margin:10px 0;padding:8px"><br>
+    <button id="regFaceBtn" class="btn">Register Face</button>
+    <button id="regPwdBtn" class="btn">Use Password Instead</button>
+    <div id="pwdDiv" style="display:none;margin-top:10px">
+      <input id="regPwd" type="password" placeholder="Set a password" style="width:90%;margin:10px 0;padding:8px"><br>
+      <button id="savePwdBtn" class="btn">Save Password</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('regFaceBtn').onclick = async function() {
+    name = document.getElementById('regName').value.trim();
+    if (!name) { alert('Enter your name.'); return; }
+    const ld = await captureDescriptor(name);
+    if (!ld) return;
+    labeledDescriptors.push(ld);
+    localStorage.setItem('faces', JSON.stringify(labeledDescriptors.map(ld => ({label: ld.label, descriptor: Array.from(ld.descriptors[0])}))));
+    alert('Face registered!');
+    document.body.removeChild(modal);
+  };
+  document.getElementById('regPwdBtn').onclick = function() {
+    document.getElementById('pwdDiv').style.display = 'block';
+  };
+  document.getElementById('savePwdBtn').onclick = function() {
+    name = document.getElementById('regName').value.trim();
+    password = document.getElementById('regPwd').value;
+    if (!name || !password) { alert('Enter name and password.'); return; }
+    let pwds = JSON.parse(localStorage.getItem('walletPwds') || '{}');
+    pwds[name] = password;
+    localStorage.setItem('walletPwds', JSON.stringify(pwds));
+    alert('Password saved!');
+    document.body.removeChild(modal);
+  };
+}
+
+function loadFaces() {
+  const data = JSON.parse(localStorage.getItem('faces') || '[]');
+  labeledDescriptors = data.map(d => new faceapi.LabeledFaceDescriptors(d.label, [new Float32Array(d.descriptor)]));
+  if (labeledDescriptors.length) faceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+}
+
+async function loginFace() {
+  await loadFaces();
+  if (!faceMatcher) { alert('No faces registered.'); return; }
+  await startVideo();
+  const detection = await faceapi.detectSingleFace(VIDEO).withFaceLandmarks().withFaceDescriptor();
+  VIDEO.srcObject.getTracks().forEach(t => t.stop());
+  if (!detection) { alert('No face detected.'); return; }
+  const match = faceMatcher.findBestMatch(detection.descriptor);
+  if (match.label === 'unknown') {
+    // Ask for password
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.8)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.innerHTML = `<div style="background:#222;padding:30px;border-radius:10px;min-width:300px;text-align:center;">
+      <h3>Face not recognized. Use password?</h3>
+      <input id="loginName" type="text" placeholder="Enter your name" style="width:90%;margin:10px 0;padding:8px"><br>
+      <input id="loginPwd" type="password" placeholder="Enter password" style="width:90%;margin:10px 0;padding:8px"><br>
+      <button id="loginPwdBtn" class="btn">Login</button>
+    </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('loginPwdBtn').onclick = function() {
+      const name = document.getElementById('loginName').value.trim();
+      const pwd = document.getElementById('loginPwd').value;
+      let pwds = JSON.parse(localStorage.getItem('walletPwds') || '{}');
+      if (pwds[name] && pwds[name] === pwd) {
+        userName = name;
+        loginUI.style.display = 'none';
+        walletUI.style.display = 'block';
+        renderUI();
+        document.body.removeChild(modal);
+      } else {
+        alert('Wrong password or name.');
+      }
+    };
+    return;
+  }
+  userName = match.label;
+  loginUI.style.display = 'none';
+  walletUI.style.display = 'block';
+  renderUI();
+}
+
+function saveCards(){ localStorage.setItem('cards', JSON.stringify(cards)); }
+
+function renderUI(){
+  welcome.textContent = `Welcome ${userName}! It’s nice to meet you.`;
+  cardsEl.innerHTML = '';
+  const q = searchBar.value.toLowerCase();
+  cards.forEach(c => {
+    const match = c.name && c.name.toLowerCase().includes(q);
+    const d = document.createElement('div');
+    d.className = 'card' + (expandedId === c.id ? ' expanded' : '');
+    if (!match) d.style.display = 'none';
+    d.innerHTML = `
+      <div class="card-chip"></div>
+      <h3>${c.name || 'Unnamed Card'}</h3>
+      <div class="details">
+        ${c.info ? `<p>${c.info}</p>` : ''}
+        ${c.code ? `<p>Code: ${c.code}</p>` : ''}
+        ${c.cvs ? `<p>CVV: ${c.cvs}</p>` : ''}
+        ${c.exp ? `<p>Expiry: ${c.exp}</p>` : ''}
+        <button class="btn payBtn">Pay</button>
+        <button class="btn deleteBtn">Delete Card</button>
+      </div>
+    `;
+    d.addEventListener('click', e => {
+      if (e.target.classList.contains('payBtn') || e.target.classList.contains('deleteBtn')) return;
+      expandedId = expandedId === c.id ? null : c.id;
+      renderUI();
+    });
+    if (expandedId === c.id) {
+      const payBtn = d.querySelector('.payBtn');
+      if (payBtn) payBtn.addEventListener('click', e => { e.stopPropagation(); paymentFlow(); });
+      const delBtn = d.querySelector('.deleteBtn');
+      if (delBtn) delBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this card?')) return;
+        cards = cards.filter(x => x.id !== c.id); saveCards(); renderUI();
+      });
+    }
+    cardsEl.appendChild(d);
+  });
+}
+
+function paymentFlow(){
+  OVERLAY.style.display = 'flex';
+  let currentCard = cards.find(c => c.id === expandedId);
+  OVERLAY_TEXT.innerHTML = `Hold to reader…<br><br>
+    <b>Card Number:</b> ${currentCard?.code || ''}<br>
+    <b>Expiry:</b> ${currentCard?.exp || ''}<br>
+    <b>CVV:</b> ${currentCard?.cvs || ''}<br>
+    <b>Name:</b> ${currentCard?.info || ''}<br><br>
+    <button id="cancelPayBtn" class="btn" style="margin-top:10px;">Cancel Payment</button>
+    <div style="margin-top:10px;font-size:1.1em;">Tap your reader to pay</div>
+  `;
+  let paymentActive = true;
+  document.getElementById('cancelPayBtn').onclick = function(e) {
+    paymentActive = false;
+    OVERLAY.style.display = 'none';
+    e.stopPropagation();
+  };
+  OVERLAY.onclick = function(e) {
+    // Only trigger if payment is active and not clicking cancel
+    if (!paymentActive) return;
+    if (e.target.id === 'cancelPayBtn') return;
+    OVERLAY_TEXT.innerHTML = 'Processing…';
+    paymentActive = false;
+    setTimeout(() => {
+      if (Math.random() < 0.2) {
+        OVERLAY_TEXT.innerHTML = "Opps, something went wrong. Payment not processed, try again.";
+        setTimeout(() => { OVERLAY.style.display = 'none'; }, 2000);
+      } else {
+        OVERLAY_TEXT.innerHTML = 'Payment processed successfully!';
+        setTimeout(() => { OVERLAY.style.display = 'none'; }, 1500);
+      }
+    }, 2000);
+  };
+}
+
+
+addCardBtn.onclick = function() {
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.8)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '9999';
+  modal.innerHTML = `<div style="background:#222;padding:30px;border-radius:10px;min-width:320px;text-align:center;">
+    <h3>Add Card</h3>
+    <input id="modalNameInput" type="text" placeholder="Card name" style="width:90%;margin:8px 0;padding:8px" required><br>
+    <input id="modalNumberInput" type="text" placeholder="Card number" style="width:90%;margin:8px 0;padding:8px" maxlength="19"><br>
+    <input id="modalExpInput" type="text" placeholder="Expiry date (MM/YY)" style="width:90%;margin:8px 0;padding:8px" maxlength="5"><br>
+    <input id="modalCvsInput" type="text" placeholder="CVV" style="width:90%;margin:8px 0;padding:8px" maxlength="4"><br>
+    <input id="modalHolderInput" type="text" placeholder="Name on card" style="width:90%;margin:8px 0;padding:8px"><br>
+    <button id="modalAddBtn" class="btn">Add Card</button>
+    <button id="modalCancelBtn" class="btn">Cancel</button>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('modalAddBtn').onclick = function() {
+    const name = document.getElementById('modalNameInput').value.trim();
+    const code = document.getElementById('modalNumberInput').value.trim();
+    const exp = document.getElementById('modalExpInput').value.trim();
+    const cvs = document.getElementById('modalCvsInput').value.trim();
+    const holder = document.getElementById('modalHolderInput').value.trim();
+    if (!name || !code || !exp || !cvs || !holder) {
+      alert('Please fill in all fields.'); return;
+    }
+    const c = { id: Date.now(), name, code, exp, cvs, info: holder };
+    cards.unshift(c); saveCards();
+    renderUI();
+    document.body.removeChild(modal);
+  };
+  document.getElementById('modalCancelBtn').onclick = function() {
+    document.body.removeChild(modal);
+  };
+};
+
+searchBar.addEventListener('input', renderUI);
+
+(async () => { await loadModels(); loadFaces(); })();
+
+
+registerBtn.onclick = registerFace;
+loginBtn.onclick = loginFace;
+scanBtn.onclick = async function() {
+  await loadModels();
+  await loadFaces();
+  if (!faceMatcher) { alert('No faces registered.'); return; }
+  await startVideo();
+  const detection = await faceapi.detectSingleFace(VIDEO).withFaceLandmarks().withFaceDescriptor();
+  VIDEO.srcObject.getTracks().forEach(t => t.stop());
+  if (!detection) { alert('No face detected.'); return; }
+  const match = faceMatcher.findBestMatch(detection.descriptor);
+  if (match.label === 'unknown') { alert('Face not recognized.'); return; }
+  userName = match.label;
+  loginUI.style.display = 'none';
+  walletUI.style.display = 'block';
+  renderUI();
+};
+
+pwdLoginBtn.onclick = function() {
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.8)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '9999';
+  modal.innerHTML = `<div style="background:#222;padding:30px;border-radius:10px;min-width:300px;text-align:center;">
+    <h3>Password Login</h3>
+    <input id="loginName" type="text" placeholder="Enter your name" style="width:90%;margin:10px 0;padding:8px"><br>
+    <input id="loginPwd" type="password" placeholder="Enter password" style="width:90%;margin:10px 0;padding:8px"><br>
+    <button id="loginPwdBtn" class="btn">Login</button>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('loginPwdBtn').onclick = function() {
+    const name = document.getElementById('loginName').value.trim();
+    const pwd = document.getElementById('loginPwd').value;
+    let pwds = JSON.parse(localStorage.getItem('walletPwds') || '{}');
+    if (pwds[name] && pwds[name] === pwd) {
+      userName = name;
+      loginUI.style.display = 'none';
+      walletUI.style.display = 'block';
+      renderUI();
+      document.body.removeChild(modal);
+    } else {
+      alert('Wrong password or name.');
+    }
+  };
+};
+</script>
+</body>
+</html>
