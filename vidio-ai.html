@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vidio AI Chat</title>
+<style>
+		body {
+			background: #000;
+			color: #fff;
+			font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+			margin: 0;
+			min-height: 100vh;
+			width: 100vw;
+			height: 100vh;
+			overflow: hidden;
+		}
+			.chat-container {
+				background: transparent;
+				border-radius: 0;
+				box-shadow: none;
+				width: 100vw;
+				height: 100vh;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 0;
+				position: fixed;
+				top: 0; left: 0;
+				min-width: 0;
+				min-height: 0;
+				box-sizing: border-box;
+			}
+		}
+	}
+		.message {
+			background: #222;
+			color: #fff;
+			border-radius: 16px 16px 16px 6px;
+			padding: 14px 16px;
+			margin-bottom: 8px;
+			align-self: flex-end;
+			max-width: 60vw;
+			word-break: break-word;
+			font-size: 15px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+		}
+		.ai-message {
+			background: transparent;
+			color: #fff;
+			border-radius: 16px 16px 6px 16px;
+			padding: 14px 16px;
+			margin-bottom: 18px;
+			align-self: flex-start;
+			max-width: 60vw;
+			word-break: break-word;
+			font-size: 15px;
+			box-shadow: none;
+	}
+			.input-bar {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				margin: 0;
+				padding: 18px 24px 12px 24px;
+				background: #181818;
+				border-top: 1px solid #222;
+				position: fixed;
+				left: 0;
+				bottom: 0;
+				width: 100vw;
+				box-sizing: border-box;
+				z-index: 10;
+			}
+			#actionButtons {
+				position: fixed;
+				left: 0;
+				bottom: 0;
+				width: 100vw;
+				display: flex;
+				gap: 12px;
+				justify-content: flex-end;
+				padding: 0 24px 70px 24px;
+				background: transparent;
+				z-index: 11;
+			}
+			#actionButtons button {
+				background: #4fc3f7;
+				color: #111;
+				border: none;
+				border-radius: 8px;
+				padding: 10px 22px;
+				font-size: 16px;
+				font-weight: 600;
+				cursor: pointer;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+				transition: background 0.2s;
+			}
+			#actionButtons button:hover {
+				background: #6a7cff;
+				color: #fff;
+			}
+	}
+		<div id="actionButtons" style="display:flex; gap:24px; justify-content:flex-end; align-items:center; padding:8px 24px 0 24px;">
+			<button id="startAnimBtn" style="background:#333; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:15px; cursor:pointer;">Start Animation</button>
+			<img id="deepLogo" src="logos/snowtail-logo.jpg" alt="Deep Research" title="Deep Research" style="width:48px; height:48px; border-radius:12px; box-shadow:0 2px 8px #4fc3f7; cursor:pointer; border:2px solid #4fc3f7; background:#222; object-fit:cover;" />
+			<img id="superLogo" src="logos/snowtail-logo.jpg" alt="Super AI" title="Super AI" style="width:48px; height:48px; border-radius:12px; box-shadow:0 2px 8px #6a7cff; cursor:pointer; border:2px solid #6a7cff; background:#222; object-fit:cover;" />
+		</div>
+<script>
+// ...existing chat and animation code...
+
+// Logo button actions
+const deepLogo = document.getElementById('deepLogo');
+const superLogo = document.getElementById('superLogo');
+const progressDiv = document.getElementById('animArea');
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function deepResearchLogo() {
+	progressDiv.innerHTML = '';
+	// Create animation canvas
+	const animCanvas = document.createElement('canvas');
+	animCanvas.width = 320;
+	animCanvas.height = 180;
+	animCanvas.style.background = '#000';
+	animCanvas.style.borderRadius = '12px';
+	animCanvas.style.display = 'block';
+	progressDiv.appendChild(animCanvas);
+	const actx = animCanvas.getContext('2d');
+	// Animate purple line
+	let steps = 80;
+	for (let i = 0; i <= steps; i++) {
+		actx.clearRect(0,0,animCanvas.width,animCanvas.height);
+		actx.strokeStyle = 'purple';
+		actx.lineWidth = 6;
+		actx.beginPath();
+		actx.moveTo(0,0);
+		actx.lineTo((animCanvas.width/steps)*i, (animCanvas.height/steps)*i);
+		actx.stroke();
+		await sleep(30);
+	}
+	// Show high-quality photo (placeholder)
+	actx.clearRect(0,0,animCanvas.width,animCanvas.height);
+	actx.fillStyle = '#000';
+	actx.fillRect(0,0,animCanvas.width,animCanvas.height);
+	actx.save();
+	actx.beginPath();
+	actx.arc(160,90,60,0,2*Math.PI);
+	let grad = actx.createRadialGradient(160,90,20,160,90,60);
+	grad.addColorStop(0,'#fff');
+	grad.addColorStop(0.5,'#4fc3f7');
+	grad.addColorStop(1,'#222');
+	actx.fillStyle = grad;
+	actx.fill();
+	actx.restore();
+	actx.font = 'bold 18px sans-serif';
+	actx.fillStyle = '#fff';
+	actx.textAlign = 'center';
+	actx.fillText('High Quality Photo',160,170);
+}
+
+async function superAILogo() {
+	progressDiv.innerHTML = '';
+	const superCanvas = document.createElement('canvas');
+	superCanvas.width = 400;
+	superCanvas.height = 200;
+	superCanvas.style.background = '#000';
+	superCanvas.style.borderRadius = '12px';
+	superCanvas.style.display = 'block';
+	progressDiv.appendChild(superCanvas);
+	const sctx = superCanvas.getContext('2d');
+	// Simulate slow progress
+	sctx.fillStyle = '#000';
+	sctx.fillRect(0,0,superCanvas.width,superCanvas.height);
+	sctx.font = 'bold 20px sans-serif';
+	sctx.fillStyle = '#fff';
+	sctx.textAlign = 'center';
+	sctx.fillText('Super AI is working...',200,100);
+	for (let i = 0; i < 60; i++) {
+		sctx.strokeStyle = `hsl(${i*6},80%,60%)`;
+		sctx.lineWidth = 4;
+		sctx.beginPath();
+		sctx.moveTo(0,0);
+		sctx.lineTo(400*(i/60),200*(i/60));
+		sctx.stroke();
+		await sleep(20);
+	}
+	// Show final collage (placeholder)
+	sctx.clearRect(0,0,superCanvas.width,superCanvas.height);
+	sctx.fillStyle = '#000';
+	sctx.fillRect(0,0,superCanvas.width,superCanvas.height);
+	// Draw many tiny colored dots to simulate billions of images
+	for (let i = 0; i < 999; i++) {
+		let x = Math.random()*superCanvas.width;
+		let y = Math.random()*superCanvas.height;
+		sctx.beginPath();
+		sctx.arc(x,y,1.5,0,2*Math.PI);
+		sctx.fillStyle = `hsl(${(i*13)%360},80%,60%)`;
+		sctx.globalAlpha = 0.7;
+		sctx.fill();
+	}
+	sctx.globalAlpha = 1;
+	sctx.font = 'bold 16px sans-serif';
+	sctx.fillStyle = '#fff';
+	sctx.textAlign = 'center';
+	sctx.fillText('99,999,999,999 images in 1 photo',200,190);
+}
+
+deepLogo.onclick = deepResearchLogo;
+superLogo.onclick = superAILogo;
+</script>
+	<div id="animArea" style="padding:24px; display:flex; flex-direction:column; align-items:center;"></div>
+	<script>
+	// ...existing chat code...
+
+	// Object animation logic
+	const startAnimBtn = document.getElementById('startAnimBtn');
+	const animArea = document.getElementById('animArea');
+
+	function drawObject(ctx, x, y) {
+	  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	  ctx.save();
+	  ctx.beginPath();
+	  ctx.arc(x, y, 28, 0, 2 * Math.PI);
+	  ctx.fillStyle = '#4fc3f7';
+	  ctx.shadowColor = '#fff8';
+	  ctx.shadowBlur = 8;
+	  ctx.fill();
+	  ctx.restore();
+	}
+
+	function animateAndCombine() {
+	  animArea.innerHTML = '';
+	  const canvas = document.createElement('canvas');
+	  canvas.width = 80;
+	  canvas.height = 80;
+	  animArea.appendChild(canvas);
+	  const ctx = canvas.getContext('2d');
+	  const framesDiv = document.createElement('div');
+	  framesDiv.style.display = 'flex';
+	  framesDiv.style.flexWrap = 'wrap';
+	  framesDiv.style.gap = '8px';
+	  framesDiv.style.margin = '12px 0';
+	  animArea.appendChild(framesDiv);
+	  const combined = document.createElement('canvas');
+	  combined.width = 400;
+	  combined.height = 80;
+	  combined.style.display = 'none';
+	  animArea.appendChild(combined);
+	  const resultDiv = document.createElement('div');
+	  animArea.appendChild(resultDiv);
+	  const frames = [];
+	  let x = 40, y = 40;
+	  const steps = 5, dx = 40;
+	  // Animate: move right by dx each step, save frame
+	  for (let i = 0; i < steps; i++) {
+	    drawObject(ctx, x + i * dx, y);
+	    const imgData = canvas.toDataURL('image/png');
+	    frames.push(imgData);
+	    // Show each frame
+	    const img = document.createElement('img');
+	    img.src = imgData;
+	    img.width = 80;
+	    img.height = 80;
+	    img.style.borderRadius = '8px';
+	    img.style.border = '1px solid #333';
+	    img.style.background = '#222';
+	    framesDiv.appendChild(img);
+	  }
+	  // Combine frames into one image
+	  combined.width = steps * 80;
+	  combined.height = 80;
+	  const cctx = combined.getContext('2d');
+	  cctx.clearRect(0, 0, combined.width, combined.height);
+	  let loaded = 0;
+	  frames.forEach((src, i) => {
+	    const img = new window.Image();
+	    img.src = src;
+	    img.onload = () => {
+	      cctx.drawImage(img, i * 80, 0, 80, 80);
+	      loaded++;
+	      if (loaded === frames.length) {
+	        combined.style.display = 'block';
+	        // Show combined image
+	        const finalImg = document.createElement('img');
+	        finalImg.src = combined.toDataURL('image/png');
+	        finalImg.width = combined.width;
+	        finalImg.height = combined.height;
+	        finalImg.style.borderRadius = '8px';
+	        finalImg.style.border = '1px solid #333';
+	        finalImg.style.background = '#222';
+	        resultDiv.innerHTML = '<b>Combined Image:</b><br>';
+	        resultDiv.appendChild(finalImg);
+	      }
+	    };
+	  });
+	}
+
+	startAnimBtn.onclick = animateAndCombine;
+	</script>
+		.input-bar input[type="text"] {
+			flex: 1 1 0;
+			min-width: 0;
+			background: #333;
+			color: #fff;
+			border: none;
+			border-radius: 16px;
+			padding: 10px 14px;
+			font-size: 15px;
+			outline: none;
+			box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+	}
+		.input-bar .divider {
+			width: 1px;
+			height: 36px;
+			background: #888;
+			margin: 0 12px;
+			border-radius: 1px;
+			flex-shrink: 0;
+		}
+		.input-bar button {
+			background: #444;
+			color: #fff;
+			border: none;
+			border-radius: 50%;
+			width: 44px;
+			height: 44px;
+			min-width: 44px;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0;
+			cursor: pointer;
+			transition: background 0.2s;
+			position: relative;
+			flex-shrink: 0;
+		}
+		.input-bar button:hover {
+			background: #666;
+	}
+		.label {
+			color: #bbb;
+			font-size: 13px;
+			margin-bottom: 6px;
+			padding: 18px 24px 0 24px;
+	}
+</style>
+</head>
+<body>
+<div class="chat-container">
+		<div id="messages" style="flex:1; overflow-y:auto; padding:4vw 2vw 120px 2vw; display:flex; flex-direction:column; min-width:0; min-height:0; box-sizing:border-box;">
+			<!-- Messages will appear here -->
+		</div>
+	<form class="input-bar" id="chatForm" autocomplete="off">
+		<input type="text" id="chatInput" placeholder="message to Mark 'I like vidio'" />
+		<button type="submit">Send</button>
+	</form>
+</div>
+<script>
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const messages = document.getElementById('messages');
+
+function addUserMessage(text) {
+	const msg = document.createElement('div');
+	msg.className = 'message';
+	msg.textContent = text;
+	messages.appendChild(msg);
+}
+
+function addAIMessage(text) {
+	const aiMsg = document.createElement('div');
+	aiMsg.className = 'ai-message';
+	if (/make vidio/i.test(text)) {
+		// Display 1999 real images from Lorem Picsum in a grid
+		const cols = 50, rows = 40, thumbSize = 24;
+		const container = document.createElement('div');
+		container.style.display = 'grid';
+		container.style.gridTemplateColumns = `repeat(${cols}, ${thumbSize}px)`;
+		container.style.gridGap = '2px';
+		container.style.background = 'transparent';
+		container.style.marginTop = '12px';
+		container.style.borderRadius = '12px';
+		container.style.overflow = 'auto';
+		container.style.maxHeight = '400px';
+		container.style.maxWidth = '100%';
+		for (let i = 0; i < 1999; i++) {
+			const img = document.createElement('img');
+			img.src = `https://picsum.photos/seed/${i}/24/24`;
+			img.alt = `Photo ${i+1}`;
+			img.style.width = `${thumbSize}px`;
+			img.style.height = `${thumbSize}px`;
+			img.style.borderRadius = '4px';
+			img.style.background = 'transparent';
+			img.style.display = 'block';
+			img.style.cursor = 'pointer';
+			img.addEventListener('click', function(e) {
+				window.open(img.src, '_blank');
+			});
+			container.appendChild(img);
+		}
+		aiMsg.innerHTML = `<div style='font-weight:700; margin-bottom:6px;'>AI Generated Video Collage</div>
+			<div style='margin-bottom:10px;'>This collage contains 1999 real images arranged on a transparent background, simulating video frames as requested.</div>`;
+		aiMsg.appendChild(container);
+	} else {
+		// Default single image
+		const svg = `<svg width='400' height='200' xmlns='http://www.w3.org/2000/svg'><rect width='400' height='200' fill='transparent'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='22' fill='#222'>${text.replace(/"/g,'')}</text></svg>`;
+		const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+		aiMsg.innerHTML = `<div style='font-weight:700; margin-bottom:6px;'>AI Image Description</div>
+			<div style='margin-bottom:10px;'>This image visually represents your prompt: <b>"${text}"</b>. It features your text centered on a transparent background.</div>
+			<div style='margin-top:12px;'><img src='${imgUrl}' alt='AI generated image' style='width:220px; border-radius:12px; border:1px solid #333; background:transparent; cursor:pointer;'/></div>`;
+		aiMsg.querySelector('img').addEventListener('click', function(e) {
+			window.open(imgUrl, '_blank');
+		});
+	}
+	messages.appendChild(aiMsg);
+}
+
+chatForm.addEventListener('submit', function(e) {
+	e.preventDefault();
+	const text = chatInput.value.trim();
+	if (text) {
+		addUserMessage(text);
+		addAIMessage(text);
+		chatInput.value = '';
+		messages.scrollTop = messages.scrollHeight;
+	}
+});
+</script>
+</body>
+</html>

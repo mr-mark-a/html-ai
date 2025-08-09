@@ -1,4 +1,202 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Object Animation and Combine</title>
+  <style>
+    body { background: #111; color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+    #canvas, #combined { background: #222; border-radius: 12px; margin: 12px 0; }
+    #frames { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .frame-img { border-radius: 8px; border: 1px solid #333; background: #222; }
+  </style>
+</head>
+<body>
+  <h2>Animated Object Frames & Combined Image</h2>
+  <canvas id="canvas" width="80" height="80"></canvas>
+  <div id="frames"></div>
+  <canvas id="combined" width="400" height="80" style="display:none"></canvas>
+  <div id="result"></div>
+  <div style="margin-top:18px; display:flex; gap:12px; justify-content:center;">
+    <button id="startBtn">Animate & Combine</button>
+    <button id="deepBtn">Deep Research</button>
+    <button id="superBtn">Super AI</button>
+  </div>
+  <div id="progress" style="margin-top:18px; min-height:40px;"></div>
+// Deep Research: purple line animation, then show photo
+const progressDiv = document.getElementById('progress');
+const deepBtn = document.getElementById('deepBtn');
+const superBtn = document.getElementById('superBtn');
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function deepResearch() {
+  progressDiv.innerHTML = '';
+  // Create animation canvas
+  const animCanvas = document.createElement('canvas');
+  animCanvas.width = 320;
+  animCanvas.height = 180;
+  animCanvas.style.background = '#000';
+  animCanvas.style.borderRadius = '12px';
+  animCanvas.style.display = 'block';
+  progressDiv.appendChild(animCanvas);
+  const actx = animCanvas.getContext('2d');
+  // Animate purple line
+  let steps = 80;
+  for (let i = 0; i <= steps; i++) {
+    actx.clearRect(0,0,animCanvas.width,animCanvas.height);
+    actx.strokeStyle = 'purple';
+    actx.lineWidth = 6;
+    actx.beginPath();
+    actx.moveTo(0,0);
+    actx.lineTo((animCanvas.width/steps)*i, (animCanvas.height/steps)*i);
+    actx.stroke();
+    await sleep(30);
+  }
+  // Show high-quality photo (placeholder)
+  actx.clearRect(0,0,animCanvas.width,animCanvas.height);
+  actx.fillStyle = '#000';
+  actx.fillRect(0,0,animCanvas.width,animCanvas.height);
+  actx.save();
+  actx.beginPath();
+  actx.arc(160,90,60,0,2*Math.PI);
+  actx.fillStyle = 'url(#gradient)';
+  // Simulate a photo with a gradient
+  let grad = actx.createRadialGradient(160,90,20,160,90,60);
+  grad.addColorStop(0,'#fff');
+  grad.addColorStop(0.5,'#4fc3f7');
+  grad.addColorStop(1,'#222');
+  actx.fillStyle = grad;
+  actx.fill();
+  actx.restore();
+  actx.font = 'bold 18px sans-serif';
+  actx.fillStyle = '#fff';
+  actx.textAlign = 'center';
+  actx.fillText('High Quality Photo',160,170);
+}
+
+deepBtn.onclick = deepResearch;
+
+// Super AI: simulate 99,999,999,999 images in one photo
+async function superAI() {
+  progressDiv.innerHTML = '';
+  const superCanvas = document.createElement('canvas');
+  superCanvas.width = 400;
+  superCanvas.height = 200;
+  superCanvas.style.background = '#000';
+  superCanvas.style.borderRadius = '12px';
+  superCanvas.style.display = 'block';
+  progressDiv.appendChild(superCanvas);
+  const sctx = superCanvas.getContext('2d');
+  // Simulate slow progress
+  sctx.fillStyle = '#000';
+  sctx.fillRect(0,0,superCanvas.width,superCanvas.height);
+  sctx.font = 'bold 20px sans-serif';
+  sctx.fillStyle = '#fff';
+  sctx.textAlign = 'center';
+  sctx.fillText('Super AI is working...',200,100);
+  for (let i = 0; i < 60; i++) {
+    sctx.strokeStyle = `hsl(${i*6},80%,60%)`;
+    sctx.lineWidth = 4;
+    sctx.beginPath();
+    sctx.moveTo(0,0);
+    sctx.lineTo(400*(i/60),200*(i/60));
+    sctx.stroke();
+    await sleep(20);
+  }
+  // Show final collage (placeholder)
+  sctx.clearRect(0,0,superCanvas.width,superCanvas.height);
+  sctx.fillStyle = '#000';
+  sctx.fillRect(0,0,superCanvas.width,superCanvas.height);
+  // Draw many tiny colored dots to simulate billions of images
+  for (let i = 0; i < 999; i++) {
+    let x = Math.random()*superCanvas.width;
+    let y = Math.random()*superCanvas.height;
+    sctx.beginPath();
+    sctx.arc(x,y,1.5,0,2*Math.PI);
+    sctx.fillStyle = `hsl(${(i*13)%360},80%,60%)`;
+    sctx.globalAlpha = 0.7;
+    sctx.fill();
+  }
+  sctx.globalAlpha = 1;
+  sctx.font = 'bold 16px sans-serif';
+  sctx.fillStyle = '#fff';
+  sctx.textAlign = 'center';
+  sctx.fillText('99,999,999,999 images in 1 photo',200,190);
+}
+
+superBtn.onclick = superAI;
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const framesDiv = document.getElementById('frames');
+const combined = document.getElementById('combined');
+const resultDiv = document.getElementById('result');
+const startBtn = document.getElementById('startBtn');
+
+function drawObject(x, y) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, 28, 0, 2 * Math.PI);
+  ctx.fillStyle = '#4fc3f7';
+  ctx.shadowColor = '#fff8';
+  ctx.shadowBlur = 8;
+  ctx.fill();
+  ctx.restore();
+}
+
+function animateAndCombine() {
+  framesDiv.innerHTML = '';
+  resultDiv.innerHTML = '';
+  combined.style.display = 'none';
+  const frames = [];
+  let x = 40, y = 40;
+  const steps = 5, dx = 40;
+  // Animate: move right by dx each step, save frame
+  for (let i = 0; i < steps; i++) {
+    drawObject(x + i * dx, y);
+    const imgData = canvas.toDataURL('image/png');
+    frames.push(imgData);
+    // Show each frame
+    const img = document.createElement('img');
+    img.src = imgData;
+    img.width = 80;
+    img.height = 80;
+    img.className = 'frame-img';
+    framesDiv.appendChild(img);
+  }
+  // Combine frames into one image
+  combined.width = steps * 80;
+  combined.height = 80;
+  const cctx = combined.getContext('2d');
+  cctx.clearRect(0, 0, combined.width, combined.height);
+  frames.forEach((src, i) => {
+    const img = new window.Image();
+    img.src = src;
+    img.onload = () => {
+      cctx.drawImage(img, i * 80, 0, 80, 80);
+      if (i === frames.length - 1) {
+        combined.style.display = 'block';
+        // Show combined image
+        const finalImg = document.createElement('img');
+        finalImg.src = combined.toDataURL('image/png');
+        finalImg.width = combined.width;
+        finalImg.height = combined.height;
+        finalImg.className = 'frame-img';
+        resultDiv.innerHTML = '<b>Combined Image:</b><br>';
+        resultDiv.appendChild(finalImg);
+      }
+    };
+  });
+}
+
+startBtn.onclick = animateAndCombine;
+drawObject(40, 40);
+</script>
+</body>
+</html>
+<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Mini Data Holder</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
