@@ -1,6 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <title>Web Wallet Payment Flow</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background-color: #f2f2f7;
+      color: #1c1c1e;
+    }
+    #message {
+      font-size: 1.8em;
+      margin: 30px;
+    }
+    button {
+      padding: 14px 30px;
+      font-size: 1em;
+      border: none;
+      border-radius: 16px;
+      background-color: #007aff;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+    button:active {
+      background-color: #005ecb;
+    }
+  </style>
+</head>
+<body>
+  <div id="message">💳 Enter your card details below</div>
+  <div id="cardDisplay" style="display:none;margin:30px auto;max-width:340px;text-align:left;background:#f2f2f7;padding:24px 18px;border-radius:18px;box-shadow:0 2px 12px #0001;">
+    <h3 style="margin-top:0;">Your Card</h3>
+    <div><strong>Name:</strong> <span id="dispName"></span></div>
+    <div><strong>Number:</strong> <span id="dispNumber"></span></div>
+    <div><strong>Expiry:</strong> <span id="dispExpiry"></span></div>
+    <div><strong>CVV:</strong> <span id="dispCVV"></span></div>
+  </div>
+
+  <script>
+    // Card form logic
+    const cardForm = document.getElementById('cardForm');
+    const cardDisplay = document.getElementById('cardDisplay');
+    const dispName = document.getElementById('dispName');
+    const dispNumber = document.getElementById('dispNumber');
+    const dispExpiry = document.getElementById('dispExpiry');
+    const dispCVV = document.getElementById('dispCVV');
+
+    cardForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Get values
+      const name = document.getElementById('cardName').value;
+      const number = document.getElementById('cardNumber').value.replace(/[^0-9]/g, '').replace(/(.{4})/g, '$1 ').trim();
+      const expiry = document.getElementById('cardExpiry').value;
+      const cvv = document.getElementById('cardCVV').value;
+      // Display
+      dispName.textContent = name;
+      dispNumber.textContent = number;
+      dispExpiry.textContent = expiry;
+      dispCVV.textContent = cvv;
+      cardDisplay.style.display = 'block';
+      cardForm.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <title>Wallet with Real Face-ID</title>
   <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
