@@ -596,7 +596,8 @@
 </div>
 
 <div id="loginContainer">
-    <button id="enterWebBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.7em 2.2em; font-size:1.2em; font-weight:bold; width:100%; cursor:pointer; margin:0.5em 0;">Enter Web</button>
+    <div style="font-size:1.1em; color:#b8860b; padding:0.5em 0; text-align:center; width:100%;">We are updated!<br/>Please create an account.</div>
+    <button id="accountsBtn" style="background:#43a047; color:#fff; border:none; border-radius:6px; padding:0.4em 1.2em; font-size:1em; cursor:pointer; width:100%;">Accounts</button>
 </div>
 
 <div id="gameArea" style="margin-top: 100px;">
@@ -616,13 +617,10 @@ document.getElementById('account10x10Btn').onclick = function() {
     window.location.href = 'select.html';
 };
 
-// Enter Web button in loginContainer
-var enterWebBtn = document.getElementById('enterWebBtn');
-if (enterWebBtn) {
-    enterWebBtn.onclick = function() {
-        window.location.href = 'marks-games.html';
-    };
-}
+// Accounts button in loginContainer
+document.getElementById('accountsBtn').onclick = function() {
+    window.location.href = 'select.html';
+};
 // Add random cats and mice emojis to the background
 (function() {
     const EMOJIS = ['🐱','🐭','🐱','🐭','🐱','🐭'];

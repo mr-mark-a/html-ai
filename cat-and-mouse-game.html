@@ -221,7 +221,6 @@
         <label for="pipeCountInput" style="color:#333; font-size:1em;">Number of Pipes: </label>
         <input id="pipeCountInput" type="number" min="4" max="10" step="2" value="4" style="vertical-align:middle; width:60px;">
     </div>
-    <button id="gamesMenuBtn" style="background:#1976d2; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Games Menu</button>
     <button id="signOutBtn" style="background:#e53935; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; width:100%; margin-top:10px;">Sign Out</button>
 </div>
 <!-- Expandable button and panel (Bottom Right) -->
@@ -1242,13 +1241,6 @@ window.addEventListener('mousedown', function(e) {
         expandPanel.classList.remove('open');
     }
 });
-// Games Menu button logic
-const gamesMenuBtn = document.getElementById('gamesMenuBtn');
-if (gamesMenuBtn) {
-    gamesMenuBtn.addEventListener('click', function() {
-        window.location.href = 'marks-games.html';
-    });
-}
 // Expandable button logic (Bottom Right)
 const expandBtnBR = document.getElementById('expandBtnBR');
 const expandPanelBR = document.getElementById('expandPanelBR');
