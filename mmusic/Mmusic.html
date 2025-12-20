@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Audio Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .player-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        #youtube-player {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1>YouTube Audio Player</h1>
+        <input type="text" id="video-url" placeholder="Enter YouTube URL or Video ID">
+        <br>
+        <button id="load-btn">Load Video</button>
+        <br>
+        <button id="play-btn">Play</button>
+        <button id="pause-btn">Pause</button>
+        <button id="stop-btn">Stop</button>
+        <br>
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="100" value="50">
+        <br>
+        <div id="current-song">No song loaded</div>
+    </div>
+
+    <!-- YouTube Player (hidden) -->
+    <div id="youtube-player"></div>
+
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <script>
+        let player;
+        let videoId = '';
+
+        // YouTube API ready
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player', {
+                height: '0',
+                width: '0',
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            // Player is ready
+        }
+
+        function onPlayerStateChange(event) {
+            // Handle state changes if needed
+        }
+
+        // Extract video ID from URL
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length == 11) ? match[2] : null;
+        }
+
+        // Load video
+        document.getElementById('load-btn').addEventListener('click', function() {
+            const url = document.getElementById('video-url').value.trim();
+            videoId = extractVideoId(url) || url; // If not URL, assume it's ID
+            if (videoId) {
+                player.loadVideoById(videoId);
+                document.getElementById('current-song').textContent = `Loaded: ${videoId}`;
+            } else {
+                alert('Invalid YouTube URL or Video ID');
+            }
+        });
+
+        // Play
+        document.getElementById('play-btn').addEventListener('click', function() {
+            if (player && videoId) {
+                player.playVideo();
+            }
+        });
+
+        // Pause
+        document.getElementById('pause-btn').addEventListener('click', function() {
+            if (player) {
+                player.pauseVideo();
+            }
+        });
+
+        // Stop
+        document.getElementById('stop-btn').addEventListener('click', function() {
+            if (player) {
+                player.stopVideo();
+            }
+        });
+
+        // Volume
+        document.getElementById('volume').addEventListener('input', function() {
+            if (player) {
+                player.setVolume(this.value);
+            }
+        });
+    </script>
+</body>
+</html>
