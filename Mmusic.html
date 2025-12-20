@@ -34,6 +34,120 @@
             padding: 20px;
             overflow-y: auto;
         }
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                max-height: 150px;
+                padding: 10px;
+            }
+            .album-art {
+                width: 200px;
+                height: 200px;
+            }
+            .song-title {
+                font-size: 20px;
+            }
+            .controls button {
+                font-size: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            .play-btn {
+                font-size: 30px;
+                width: 50px;
+                height: 50px;
+            }
+            .progress-container {
+                max-width: 300px;
+            }
+            .volume-bar {
+                width: 80px;
+            }
+            .inputs {
+                position: static;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin: 10px 0;
+                gap: 20px;
+            }
+            .inputs input {
+                width: 150px;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 10px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .sidebar {
+                max-height: 120px;
+                padding: 5px;
+            }
+            .sidebar h2 {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            .song-item {
+                padding: 8px;
+                font-size: 14px;
+            }
+            .album-art {
+                width: 150px;
+                height: 150px;
+            }
+            .song-info {
+                margin-bottom: 20px;
+            }
+            .song-title {
+                font-size: 18px;
+            }
+            .controls {
+                margin-bottom: 15px;
+            }
+            button {
+                font-size: 18px;
+                padding: 8px;
+            }
+            .play-btn {
+                font-size: 24px;
+                width: 40px;
+                height: 40px;
+            }
+            .progress-container {
+                max-width: 250px;
+                margin-bottom: 15px;
+            }
+            .progress-bar {
+                height: 5px;
+            }
+            .time-display {
+                font-size: 10px;
+            }
+            .volume-container {
+                font-size: 14px;
+            }
+            .volume-bar {
+                width: 60px;
+                height: 3px;
+            }
+            .inputs {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            .inputs input {
+                width: 200px;
+            }
+        }
         .sidebar h2 {
             margin-bottom: 10px;
         }
@@ -70,9 +184,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 48px;
-            margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        #visualizer {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
         }
         .song-info {
             text-align: center;
@@ -82,6 +200,7 @@
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
+            margin-top: 20px;
         }
         .controls {
             display: flex;
@@ -164,7 +283,7 @@
             right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 20px;
         }
         input[type="text"] {
             padding: 8px;
@@ -192,7 +311,9 @@
             <div class="playlist" id="playlist"></div>
         </div>
         <div class="player-area">
-            <div class="album-art" id="album-art">🎶</div>
+            <div class="album-art" id="album-art">
+                <canvas id="visualizer" width="300" height="300"></canvas>
+            </div>
             <div class="song-info">
                 <div class="song-title" id="current-song">No song selected</div>
             </div>
@@ -247,10 +368,48 @@
         const currentTimeEl = document.getElementById('current-time');
         const durationEl = document.getElementById('duration');
 
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let animationId;
+
         let playlist = [];
         let currentIndex = -1;
         let player;
         let currentType = null;
+
+        function drawVisualizer() {
+            if (!analyser) return;
+            analyser.getByteFrequencyData(dataArray);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const barWidth = canvas.width / dataArray.length * 2.5;
+            let barHeight;
+            let x = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                barHeight = dataArray[i] / 2;
+                ctx.fillStyle = `hsl(${i * 360 / dataArray.length}, 100%, 50%)`;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+            animationId = requestAnimationFrame(drawVisualizer);
+        }
+
+        function stopVisualizer() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎶', canvas.width / 2, canvas.height / 2 + 15);
+        }
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtube-player', {
@@ -267,7 +426,7 @@
 
         function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.ENDED) {
-                nextSong();
+                setTimeout(nextSong, 1000);
             }
         }
 
@@ -290,9 +449,13 @@
         });
 
         folderInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files).filter(file => file.name.endsWith('.mp3'));
-            files.forEach(file => {
-                playlist.push({ type: 'local', file: file, name: file.name });
+            const files = Array.from(e.target.files);
+            const mp3Files = files.filter(file => file.name.endsWith('.mp3'));
+            const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file.name));
+            mp3Files.forEach(file => {
+                const baseName = file.name.replace(/\.mp3$/i, '');
+                const imageFile = imageFiles.find(img => img.name.replace(/\.(jpg|jpeg|png|gif)$/i, '') === baseName);
+                playlist.push({ type: 'local', file: file, name: baseName, image: imageFile || null });
             });
             renderPlaylist();
         });
@@ -315,16 +478,32 @@
             const song = playlist[index];
             currentType = song.type;
             currentSongDisplay.textContent = song.name;
-            albumArt.textContent = song.type === 'youtube' ? '📺' : '🎵';
             updateActiveSong();
 
             if (song.type === 'local') {
                 const url = URL.createObjectURL(song.file);
                 audio.src = url;
                 audio.load();
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    const source = audioContext.createMediaElementSource(audio);
+                    source.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                }
+                stopVisualizer();
+                audio.addEventListener('loadedmetadata', () => {
+                    audio.play();
+                    playPauseBtn.textContent = '⏸️';
+                    drawVisualizer();
+                }, { once: true });
             } else if (song.type === 'youtube') {
                 if (player) {
                     player.loadVideoById(song.id);
+                    stopVisualizer();
+                    playPauseBtn.textContent = '⏸️';
                 }
             }
         }
@@ -341,9 +520,11 @@
                 if (audio.paused) {
                     audio.play();
                     playPauseBtn.textContent = '⏸️';
+                    drawVisualizer();
                 } else {
                     audio.pause();
                     playPauseBtn.textContent = '▶️';
+                    stopVisualizer();
                 }
             } else if (currentType === 'youtube') {
                 if (player) {
@@ -363,15 +544,11 @@
         function nextSong() {
             const nextIndex = (currentIndex + 1) % playlist.length;
             loadSong(nextIndex);
-            if (currentType === 'local' && !audio.paused) audio.play();
-            else if (currentType === 'youtube' && player) player.playVideo();
         }
 
         prevBtn.addEventListener('click', function() {
             const prevIndex = currentIndex > 0 ? currentIndex - 1 : playlist.length - 1;
             loadSong(prevIndex);
-            if (currentType === 'local' && !audio.paused) audio.play();
-            else if (currentType === 'youtube' && player) player.playVideo();
         });
 
         audio.addEventListener('timeupdate', function() {
@@ -402,7 +579,7 @@
             volumeEl.style.width = (percent * 100) + '%';
         });
 
-        audio.addEventListener('ended', nextSong);
+        audio.addEventListener('ended', () => setTimeout(nextSong, 1000));
 
         function updateButtons() {
             const disabled = playlist.length === 0;
@@ -416,6 +593,8 @@
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+
+        stopVisualizer();
     </script>
 </body>
 </html>
