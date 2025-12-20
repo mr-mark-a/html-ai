@@ -314,6 +314,7 @@
             <div class="album-art" id="album-art">
                 <canvas id="visualizer" width="300" height="300"></canvas>
             </div>
+            <div id="effect-name" style="text-align: center; margin-top: 10px; color: white; font-size: 14px;"></div>
             <div class="song-info">
                 <div class="song-title" id="current-song">No song selected</div>
             </div>
@@ -370,10 +371,17 @@
 
         const canvas = document.getElementById('visualizer');
         const ctx = canvas.getContext('2d');
+        const effectNameEl = document.getElementById('effect-name');
+
+        canvas.addEventListener('click', () => {
+            currentEffect = (currentEffect + 1) % effects.length;
+            effectNameEl.textContent = effects[currentEffect].name;
+        });
 
         let audioContext;
         let analyser;
         let dataArray;
+        let dataArrayTime;
         let animationId;
 
         let playlist = [];
@@ -381,19 +389,422 @@
         let player;
         let currentType = null;
 
+        document.addEventListener('visibilitychange', () => {
+            if (audioContext && audioContext.state === 'suspended' && !document.hidden) {
+                audioContext.resume();
+            }
+        });
+
+        let currentEffect = 0;
+        const effects = [
+            {
+                name: 'Bars',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / (dataArray.length / 4);
+                    let barHeight;
+                    let x = 0;
+                    for (let i = 0; i < dataArray.length / 4; i++) {
+                        barHeight = dataArray[i] / 1.5;
+                        ctx.fillStyle = `rgb(0, ${Math.floor(255 * (dataArray[i] / 255))}, 0)`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth + 1;
+                    }
+                }
+            },
+            {
+                name: 'Waveform',
+                draw: function() {
+                    analyser.getByteTimeDomainData(dataArrayTime);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    const sliceWidth = canvas.width / dataArrayTime.length;
+                    let x = 0;
+                    for (let i = 0; i < dataArrayTime.length; i++) {
+                        const v = dataArrayTime[i] / 128.0;
+                        const y = v * canvas.height / 2;
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                        x += sliceWidth;
+                    }
+                    ctx.stroke();
+                }
+            },
+            {
+                name: 'Circular',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const radius = Math.min(centerX, centerY) - 20;
+                    const barCount = dataArray.length / 8;
+                    const angleStep = (Math.PI * 2) / barCount;
+                    for (let i = 0; i < barCount; i++) {
+                        const barHeight = dataArray[i] / 255 * radius;
+                        const angle = i * angleStep;
+                        const x1 = centerX + Math.cos(angle) * radius;
+                        const y1 = centerY + Math.sin(angle) * radius;
+                        const x2 = centerX + Math.cos(angle) * (radius - barHeight);
+                        const y2 = centerY + Math.sin(angle) * (radius - barHeight);
+                        ctx.strokeStyle = `hsl(${i * 360 / barCount}, 100%, 50%)`;
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                }
+            },
+            {
+                name: 'Particles',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const particleCount = dataArray.length / 4;
+                    for (let i = 0; i < particleCount; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = Math.random() * canvas.height;
+                        const size = dataArray[i] / 255 * 10;
+                        ctx.fillStyle = `rgba(0, 255, 0, ${dataArray[i] / 255})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            },
+            {
+                name: 'Spectrum',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / dataArray.length * 2;
+                    let x = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        const barHeight = dataArray[i] / 255 * canvas.height;
+                        const hue = (i / dataArray.length) * 360;
+                        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth;
+                    }
+                }
+            },
+            {
+                name: 'VU Meter',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                    const level = avg / 255;
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = level > 0.5 ? '#ff0000' : '#00ff00';
+                    ctx.fillRect(50, canvas.height / 2 - 10, (canvas.width - 100) * level, 20);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(50, canvas.height / 2 - 10, canvas.width - 100, 20);
+                }
+            },
+            {
+                name: 'Mirror Bars',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / (dataArray.length / 2);
+                    let x = canvas.width / 2;
+                    for (let i = 0; i < dataArray.length / 4; i++) {
+                        const barHeight = dataArray[i] / 1.5;
+                        ctx.fillStyle = `rgb(0, ${Math.floor(255 * (dataArray[i] / 255))}, 0)`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        ctx.fillRect(canvas.width - x - barWidth, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth;
+                    }
+                }
+            },
+            {
+                name: 'Starfield',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    for (let i = 0; i < dataArray.length / 4; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = Math.random() * canvas.height;
+                        const size = dataArray[i] / 255 * 3;
+                        ctx.fillStyle = `rgba(255, 255, 255, ${dataArray[i] / 255})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            },
+            {
+                name: 'Kaleidoscope',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    for (let i = 0; i < 8; i++) {
+                        ctx.save();
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate((Math.PI / 4) * i);
+                        for (let j = 0; j < dataArray.length / 16; j++) {
+                            const barHeight = dataArray[j] / 255 * 50;
+                            ctx.fillStyle = `hsl(${j * 20}, 100%, 50%)`;
+                            ctx.fillRect(0, 0, 10, barHeight);
+                            ctx.translate(10, 0);
+                        }
+                        ctx.restore();
+                    }
+                }
+            },
+            {
+                name: 'Fireworks',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    for (let i = 0; i < 10; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = Math.random() * canvas.height;
+                        const radius = dataArray[i] / 255 * 20;
+                        ctx.strokeStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        for (let j = 0; j < 12; j++) {
+                            const angle = (Math.PI * 2 / 12) * j;
+                            const endX = x + Math.cos(angle) * radius;
+                            const endY = y + Math.sin(angle) * radius;
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(endX, endY);
+                        }
+                        ctx.stroke();
+                    }
+                }
+            },
+            {
+                name: 'Liquid',
+                draw: function() {
+                    analyser.getByteTimeDomainData(dataArrayTime);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'rgba(0, 150, 255, 0.5)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height / 2);
+                    for (let i = 0; i < dataArrayTime.length; i++) {
+                        const x = (i / dataArrayTime.length) * canvas.width;
+                        const y = (dataArrayTime[i] / 128 - 1) * canvas.height / 4 + canvas.height / 2;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(canvas.width, canvas.height / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            },
+            {
+                name: 'Matrix',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = '14px monospace';
+                    for (let i = 0; i < dataArray.length / 4; i++) {
+                        const char = String.fromCharCode(33 + Math.floor(Math.random() * 94));
+                        const x = (i % 20) * 15;
+                        const y = Math.floor(i / 20) * 15 + (dataArray[i] / 255 * 10);
+                        ctx.fillText(char, x, y);
+                    }
+                }
+            },
+            {
+                name: 'Pulse',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                    const radius = avg / 255 * 100;
+                    ctx.strokeStyle = '#ff00ff';
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            },
+            {
+                name: 'Equalizer',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / 32;
+                    let x = 0;
+                    for (let i = 0; i < 32; i++) {
+                        const barHeight = dataArray[i * 2] / 255 * canvas.height;
+                        ctx.fillStyle = `hsl(${i * 11}, 100%, 50%)`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth;
+                    }
+                }
+            },
+            {
+                name: 'Tunnel',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    for (let i = 0; i < 20; i++) {
+                        const radius = (i / 20) * 150 + dataArray[i] / 255 * 50;
+                        ctx.strokeStyle = `hsl(${i * 18}, 100%, 50%)`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+            },
+            {
+                name: 'Fractal',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    function drawFractal(x, y, size, depth) {
+                        if (depth === 0 || size < 2) return;
+                        ctx.strokeStyle = `hsl(${dataArray[depth] / 255 * 360}, 100%, 50%)`;
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+                        drawFractal(x - size / 2, y - size / 2, size / 2, depth - 1);
+                        drawFractal(x + size / 2, y - size / 2, size / 2, depth - 1);
+                        drawFractal(x - size / 2, y + size / 2, size / 2, depth - 1);
+                        drawFractal(x + size / 2, y + size / 2, size / 2, depth - 1);
+                    }
+                    drawFractal(canvas.width / 2, canvas.height / 2, 100, 5);
+                }
+            },
+            {
+                name: 'Nebula',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    for (let i = 0; i < 50; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = Math.random() * canvas.height;
+                        const radius = dataArray[i % dataArray.length] / 255 * 30;
+                        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                        gradient.addColorStop(0, `rgba(255, 0, 255, ${dataArray[i % dataArray.length] / 255})`);
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            },
+            {
+                name: 'Lightning',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height / 2);
+                    for (let i = 0; i < 10; i++) {
+                        const x = (i / 10) * canvas.width;
+                        const y = canvas.height / 2 + (Math.random() - 0.5) * dataArray[i] / 255 * 100;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            },
+            {
+                name: 'Rain',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = '#00ffff';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 50; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = (i / 50) * canvas.height + dataArray[i % dataArray.length] / 255 * 10;
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x + 5, y + 20);
+                        ctx.stroke();
+                    }
+                }
+            },
+            {
+                name: 'Snow',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ffffff';
+                    for (let i = 0; i < 100; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = Math.random() * canvas.height;
+                        const size = dataArray[i % dataArray.length] / 255 * 5;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            },
+            {
+                name: 'Heartbeat',
+                draw: function() {
+                    analyser.getByteTimeDomainData(dataArrayTime);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height / 2);
+                    for (let i = 0; i < dataArrayTime.length; i++) {
+                        const x = (i / dataArrayTime.length) * canvas.width;
+                        const y = canvas.height / 2 - (dataArrayTime[i] - 128) / 128 * 50;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            },
+            {
+                name: 'Spiral',
+                draw: function() {
+                    analyser.getByteFrequencyData(dataArray);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let i = 0; i < dataArray.length; i++) {
+                        const angle = (i / dataArray.length) * Math.PI * 4;
+                        const radius = (i / dataArray.length) * 150 + dataArray[i] / 255 * 50;
+                        const x = centerX + Math.cos(angle) * radius;
+                        const y = centerY + Math.sin(angle) * radius;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            }
+        ];
+
         function drawVisualizer() {
             if (!analyser) return;
-            analyser.getByteFrequencyData(dataArray);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = canvas.width / dataArray.length * 2.5;
-            let barHeight;
-            let x = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                barHeight = dataArray[i] / 2;
-                ctx.fillStyle = `hsl(${i * 360 / dataArray.length}, 100%, 50%)`;
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 1;
-            }
+            effects[currentEffect].draw();
             animationId = requestAnimationFrame(drawVisualizer);
         }
 
@@ -409,6 +820,7 @@
             ctx.font = '48px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('🎶', canvas.width / 2, canvas.height / 2 + 15);
+            effectNameEl.textContent = 'Click to change effect';
         }
 
         function onYouTubeIframeAPIReady() {
@@ -489,6 +901,7 @@
                     analyser = audioContext.createAnalyser();
                     analyser.fftSize = 256;
                     dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    dataArrayTime = new Uint8Array(analyser.fftSize);
                     const source = audioContext.createMediaElementSource(audio);
                     source.connect(analyser);
                     analyser.connect(audioContext.destination);
@@ -498,6 +911,7 @@
                     audio.play();
                     playPauseBtn.textContent = '⏸️';
                     drawVisualizer();
+                    effectNameEl.textContent = effects[currentEffect].name;
                 }, { once: true });
             } else if (song.type === 'youtube') {
                 if (player) {
