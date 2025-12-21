@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cam Place</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .cam-container {
+            position: relative;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #camera {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .placed-item {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            font-size: 24px;
+        }
+        .placed-item:hover {
+            opacity: 0.8;
+        }
+        .item-emoji {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .placed-item:hover .item-emoji {
+            transform: scale(1.1);
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cam Place</h1>
+        
+        <div class="controls">
+            <div>
+                <label for="camSelect">Camera Switch:</label>
+                <select id="camSelect">
+                    <option value="">Select Camera</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="itemSelect">Items:</label>
+                <select id="itemSelect">
+                    <option value="">Select Item</option>
+                    <!-- Live Items -->
+                    <optgroup label="Live Items">
+                        <option value="🐱">Cat</option>
+                        <option value="🐶">Dog</option>
+                        <option value="🐰">Bunny</option>
+                        <option value="🐦">Bird</option>
+                        <option value="🐠">Fish</option>
+                        <option value="🦋">Butterfly</option>
+                        <option value="🐝">Bee</option>
+                        <option value="🐞">Ladybug</option>
+                    </optgroup>
+                    <!-- Unliving Items -->
+                    <optgroup label="Decorations">
+                        <option value="🦌">Reindeer</option>
+                        <option value="🎄">Christmas Tree</option>
+                        <option value="🎁">Gift</option>
+                        <option value="❄️">Snowflake</option>
+                        <option value="🌟">Star</option>
+                        <option value="🎈">Balloon</option>
+                        <option value="🏠">House</option>
+                        <option value="🌸">Flower</option>
+                        <option value="🍎">Apple</option>
+                        <option value="📚">Books</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <button id="clearBtn">Clear All Items</button>
+        </div>
+        
+        <div class="cam-container">
+            <video id="camera" autoplay playsinline></video>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ul>
+                <li>Select a camera from the first dropdown</li>
+                <li>Choose an item from the second dropdown</li>
+                <li>Click on the camera view to place the item</li>
+                <li>Drag items to reposition them</li>
+                <li>Items are automatically saved and will persist until you close the page</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const camera = document.getElementById('camera');
+        const camSelect = document.getElementById('camSelect');
+        const itemSelect = document.getElementById('itemSelect');
+        const camContainer = document.querySelector('.cam-container');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        let currentStream = null;
+        let selectedItem = null;
+        let placedItems = [];
+        let dragItem = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        // Load saved items from localStorage
+        function loadSavedItems() {
+            const saved = localStorage.getItem('camplace-items');
+            if (saved) {
+                placedItems = JSON.parse(saved);
+                placedItems.forEach(item => {
+                    createPlacedItem(item.emoji, item.x, item.y, item.id);
+                });
+            }
+        }
+
+        // Save items to localStorage
+        function saveItems() {
+            localStorage.setItem('camplace-items', JSON.stringify(placedItems));
+        }
+
+        // Get available cameras
+        async function getCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                camSelect.innerHTML = '<option value="">Select Camera</option>';
+                cameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.deviceId;
+                    option.textContent = camera.label || `Camera ${index + 1}`;
+                    camSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error getting cameras:', error);
+            }
+        }
+
+        // Start camera stream
+        async function startCamera(deviceId) {
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+                
+                const constraints = {
+                    video: { deviceId: deviceId ? { exact: deviceId } : undefined }
+                };
+                
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                camera.srcObject = currentStream;
+            } catch (error) {
+                console.error('Error starting camera:', error);
+                alert('Could not access camera. Please check permissions.');
+            }
+        }
+
+        // Create a placed item element
+        function createPlacedItem(emoji, x, y, id) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'placed-item';
+            itemDiv.style.left = x + 'px';
+            itemDiv.style.top = y + 'px';
+            itemDiv.dataset.id = id;
+            
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'item-emoji';
+            emojiSpan.textContent = emoji;
+            itemDiv.appendChild(emojiSpan);
+            
+            // Add remove button
+            const removeBtn = document.createElement('span');
+            removeBtn.textContent = '×';
+            removeBtn.style.cssText = `
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: red;
+                color: white;
+                border-radius: 50%;
+                width: 16px;
+                height: 16px;
+                font-size: 12px;
+                text-align: center;
+                line-height: 16px;
+                cursor: pointer;
+                display: none;
+            `;
+            itemDiv.appendChild(removeBtn);
+            
+            // Show remove button on hover
+            itemDiv.addEventListener('mouseenter', () => {
+                removeBtn.style.display = 'block';
+            });
+            itemDiv.addEventListener('mouseleave', () => {
+                removeBtn.style.display = 'none';
+            });
+            
+            // Remove item
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = placedItems.findIndex(item => item.id === id);
+                if (index > -1) {
+                    placedItems.splice(index, 1);
+                    saveItems();
+                }
+                itemDiv.remove();
+            });
+            
+            camContainer.appendChild(itemDiv);
+            return itemDiv;
+        }
+
+        // Handle camera selection
+        camSelect.addEventListener('change', (e) => {
+            startCamera(e.target.value);
+        });
+
+        // Handle item selection
+        itemSelect.addEventListener('change', (e) => {
+            selectedItem = e.target.value;
+        });
+
+        // Handle placing items
+        camContainer.addEventListener('click', (e) => {
+            if (!selectedItem) return;
+            
+            const rect = camContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const id = Date.now().toString();
+            const item = { id, emoji: selectedItem, x, y };
+            placedItems.push(item);
+            saveItems();
+            
+            createPlacedItem(selectedItem, x, y, id);
+        });
+
+        // Handle dragging
+        camContainer.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.placed-item')) {
+                dragItem = e.target.closest('.placed-item');
+                const rect = dragItem.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                dragItem.style.zIndex = '1000';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (dragItem) {
+                const rect = camContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left - dragOffset.x;
+                const y = e.clientY - rect.top - dragOffset.y;
+                
+                dragItem.style.left = x + 'px';
+                dragItem.style.top = y + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (dragItem) {
+                // Update position in placedItems array
+                const id = dragItem.dataset.id;
+                const item = placedItems.find(item => item.id === id);
+                if (item) {
+                    item.x = parseFloat(dragItem.style.left);
+                    item.y = parseFloat(dragItem.style.top);
+                    saveItems();
+                }
+                
+                dragItem.style.zIndex = '';
+                dragItem = null;
+            }
+        });
+
+        // Clear all items
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all items?')) {
+                placedItems = [];
+                saveItems();
+                document.querySelectorAll('.placed-item').forEach(item => item.remove());
+            }
+        });
+
+        // Initialize
+        getCameras();
+        loadSavedItems();
+        
+        // Start with default camera if available
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                currentStream = stream;
+                camera.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing camera:', error);
+            });
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <title>Gitbot</title>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Chat-Only with Image Replies</title>
@@ -43,6 +44,51 @@
       cursor: pointer;
       background: #2979ff;
       color: white;
+      margin-right: 8px;
+    }
+    .input-container .voice-btn {
+      background: #4caf50;
+    }
+    .settings-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .settings-content {
+      background: #2e2e2e;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      color: #e0e0e0;
+    }
+    .settings-content h3 {
+      margin-top: 0;
+    }
+    .settings-content select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      background: #1f1f1f;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+    .settings-content button {
+      padding: 8px 16px;
+      margin-right: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #2979ff;
+      color: white;
     }
     .message {
       margin-bottom: 16px;
@@ -76,93 +122,51 @@
 <body>
 
 
-  <!-- Exit Button (hidden initially) -->
-  <button id="exitBtn" onclick="exitChat()" style="position: fixed; top: 20px; right: 20px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; display: none;">❌ Exit</button>
+  <!-- Exit Button -->
+  <button id="exitBtn" onclick="exitChat()" style="position: fixed; top: 20px; right: 20px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px;">❌ Exit</button>
 
-  <div id="payment" style="text-align: center; padding: 40px; border: 1px solid #444; border-radius: 8px; background: #222; max-width: 400px; margin: 40px auto 0 auto;">
-    <h3>🚀 Unlock GPT Chat</h3>
-    <p>Pay $2 to unlock the GPT chatbot with unlimited messages.</p>
-    <p><small>💡 Enter your payment details below</small></p>
-    <div style="max-width: 300px; margin: 0 auto; text-align: left;">
-      <div style="margin-bottom: 10px;">
-        <label for="cardNumber" style="display: block; margin-bottom: 5px; font-size: 14px;">Card Number:</label>
-        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" style="width: 100%; box-sizing: border-box;" />
-      </div>
-      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <div style="flex: 1;">
-          <label for="expiryDate" style="display: block; margin-bottom: 5px; font-size: 14px;">Expiry:</label>
-          <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5" style="width: 100%; box-sizing: border-box;" />
-        </div>
-        <div style="flex: 1;">
-          <label for="cvv" style="display: block; margin-bottom: 5px; font-size: 14px;">CVV:</label>
-          <input type="text" id="cvv" placeholder="123" maxlength="4" style="width: 100%; box-sizing: border-box;" />
-        </div>
-      </div>
-      <div style="margin-bottom: 15px;">
-        <label for="cardName" style="display: block; margin-bottom: 5px; font-size: 14px;">Name on Card:</label>
-        <input type="text" id="cardName" placeholder="John Doe" style="width: 100%; box-sizing: border-box;" />
-      </div>
-    </div>
-    <button onclick="processPayment()">💳 Pay $2 Now</button>
-  </div>
+  <!-- Settings Button -->
+  <button id="settingsBtn" onclick="openSettings()" style="position: fixed; top: 20px; right: 80px; background: #666; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px;">⚙️ Settings</button>
 
-  <div id="chat" style="display:none; flex:1; flex-direction:column; height:100vh;">
+  <div id="chat" style="display:flex; flex:1; flex-direction:column; height:100vh;">
     <div class="chat-container" id="chatContainer"></div>
     <div class="input-container">
       <input type="text" id="prompt" placeholder="Ask me something…"/>
+      <button id="micBtn" class="voice-btn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+      <button id="speakBtn" class="voice-btn" onclick="toggleVoiceOutput()" title="Voice Output">🔊</button>
       <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="settings-modal">
+    <div class="settings-content">
+      <h3>Voice Settings</h3>
+      <label for="voiceSelect">Select Voice:</label>
+      <select id="voiceSelect"></select>
+      <label for="langSelect">Select Language:</label>
+      <select id="langSelect">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <option value="de-DE">German</option>
+        <option value="it-IT">Italian</option>
+        <option value="pt-BR">Portuguese (Brazil)</option>
+        <option value="ja-JP">Japanese</option>
+        <option value="ko-KR">Korean</option>
+        <option value="zh-CN">Chinese (Mandarin)</option>
+        <option value="ru-RU">Russian</option>
+        <option value="ar-SA">Arabic</option>
+        <option value="hi-IN">Hindi</option>
+      </select>
+      <button onclick="saveSettings()">Save</button>
+      <button onclick="closeSettings()">Cancel</button>
     </div>
   </div>
 
 
   <script>
-    // Payment logic
-    function processPayment() {
-      const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-      const expiryDate = document.getElementById('expiryDate').value;
-      const cvv = document.getElementById('cvv').value;
-      const cardName = document.getElementById('cardName').value.trim();
-      if (!cardNumber || !expiryDate || !cvv || !cardName) {
-        alert("❌ Please fill in all payment details!");
-        return;
-      }
-      if (cardNumber.length < 13 || cardNumber.length > 19) {
-        alert("❌ Please enter a valid card number!");
-        return;
-      }
-      if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-        alert("❌ Please enter expiry date in MM/YY format!");
-        return;
-      }
-      if (cvv.length < 3 || cvv.length > 4) {
-        alert("❌ Please enter a valid CVV!");
-        return;
-      }
-      const merchantCard = "1234567789901234";
-      const merchantCVV = "854";
-      alert("🔄 Processing payment to merchant account...");
-      setTimeout(() => {
-        const paymentData = {
-          amount: 2.00,
-          currency: "USD",
-          customerCard: cardNumber,
-          merchantCard: merchantCard,
-          merchantCVV: merchantCVV,
-          timestamp: new Date().toISOString(),
-          transactionId: 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-        };
-        console.log('Payment processed:', paymentData);
-        alert(`✅ Payment successful! Transaction ID: ${paymentData.transactionId}\n$2.00 transferred to card ending in ${merchantCard.slice(-4)}`);
-        unlockChat();
-      }, 2000);
-    }
-
-    function unlockChat() {
-      document.getElementById('payment').style.display = 'none';
-      document.getElementById('chat').style.display = 'flex';
-      document.getElementById('exitBtn').style.display = 'block';
-    }
-
     function exitChat() {
       const confirmed = confirm("⚠️ Your progress will be lost if you exit!\n\nAre you sure you want to leave?");
       if (confirmed) {
@@ -170,32 +174,130 @@
       }
     }
 
-    // Card formatting
-    document.addEventListener('DOMContentLoaded', function() {
-      const cardNumber = document.getElementById('cardNumber');
-      const expiryDate = document.getElementById('expiryDate');
-      const cvv = document.getElementById('cvv');
-      if (cardNumber) cardNumber.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
-        let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-        if (formattedValue.length > 19) formattedValue = formattedValue.substr(0, 19);
-        e.target.value = formattedValue;
-      });
-      if (expiryDate) expiryDate.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length >= 2) {
-          value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        }
-        e.target.value = value;
-      });
-      if (cvv) cvv.addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/[^0-9]/g, '');
-      });
-    });
-
     // Chat logic
     const chatEl = document.getElementById('chatContainer');
     const inputEl = document.getElementById('prompt');
+    const micBtn = document.getElementById('micBtn');
+    const speakBtn = document.getElementById('speakBtn');
+
+    // Voice functionality
+    let recognition;
+    let isListening = false;
+    let voiceOutputEnabled = false;
+    const synth = window.speechSynthesis;
+    let selectedVoice = null;
+    let selectedLang = 'en-US';
+
+    // Load saved settings
+    selectedVoice = localStorage.getItem('selectedVoice');
+    selectedLang = localStorage.getItem('selectedLang') || 'en-US';
+
+    function populateVoices() {
+      const voices = synth.getVoices();
+      const voiceSelect = document.getElementById('voiceSelect');
+      voiceSelect.innerHTML = '';
+      voices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (selectedVoice && index == selectedVoice) {
+          option.selected = true;
+        }
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    if (synth) {
+      populateVoices();
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = populateVoices;
+      }
+    }
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = selectedLang;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputEl.value = transcript;
+        send();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('active');
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        isListening = false;
+        micBtn.classList.remove('active');
+      };
+    } else {
+      micBtn.style.display = 'none';
+    }
+
+    function toggleVoiceInput() {
+      if (!recognition) return;
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+        isListening = true;
+        micBtn.classList.add('active');
+      }
+    }
+
+    function toggleVoiceOutput() {
+      voiceOutputEnabled = !voiceOutputEnabled;
+      speakBtn.classList.toggle('active');
+    }
+
+    function speakText(text) {
+      if (!voiceOutputEnabled || !synth) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (selectedVoice) {
+        const voices = synth.getVoices();
+        const voiceIndex = parseInt(selectedVoice);
+        if (voices[voiceIndex]) {
+          utterance.voice = voices[voiceIndex];
+        }
+      }
+      synth.speak(utterance);
+    }
+
+    function openSettings() {
+      document.getElementById('settingsModal').style.display = 'flex';
+      const langSelect = document.getElementById('langSelect');
+      langSelect.value = selectedLang;
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function saveSettings() {
+      const voiceSelect = document.getElementById('voiceSelect');
+      const langSelect = document.getElementById('langSelect');
+      selectedVoice = voiceSelect.value;
+      selectedLang = langSelect.value;
+      localStorage.setItem('selectedVoice', selectedVoice);
+      localStorage.setItem('selectedLang', selectedLang);
+      if (recognition) {
+        recognition.lang = selectedLang;
+      }
+      closeSettings();
+      // Speak greeting in the new voice
+      setTimeout(() => speakText("Hello, I am GitBot, Mark's AI"), 500);
+    }
+
+    // Google Custom Search API credentials (replace with your own)
+    const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Get from Google Cloud Console
+    const SEARCH_ENGINE_ID = 'YOUR_SEARCH_ENGINE_ID'; // Create a Custom Search Engine
 
     function appendMessage(role, text, imgUrl = null) {
       const msg = document.createElement('div');
@@ -216,6 +318,15 @@
       }
       chatEl.appendChild(msg);
       chatEl.scrollTop = chatEl.scrollHeight;
+
+      // Speak the message if voice output is enabled and it's a bot message
+      if (role === 'bot') {
+        if (imgUrl) {
+          speakText(`Here's an image: ${text}`);
+        } else {
+          speakText(text);
+        }
+      }
     }
 
     function shouldGenerateImage(prompt) {
@@ -223,8 +334,27 @@
       return triggers.some(kw => prompt.toLowerCase().includes(kw));
     }
 
-    function simulateChatGPT(prompt) {
-      return `Here’s a text reply to "${prompt}".`;
+    async function searchGoogle(prompt) {
+      try {
+        const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(prompt)}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          let formattedResults = `Search results for "${prompt}":\n\n`;
+          data.items.slice(0, 5).forEach((item, index) => {
+            formattedResults += `${index + 1}. **${item.title}**\n   ${item.snippet}\n   [Link](${item.link})\n\n`;
+          });
+          return formattedResults;
+        } else {
+          return `Sorry, I did not quite catch that`;
+        }
+      } catch (error) {
+        console.error('Error searching Google:', error);
+        return `Sorry, I did not quite catch that`;
+      }
     }
 
     function simulateDallE(prompt) {
@@ -232,17 +362,17 @@
       return `https://placekitten.com/${size}/${size}`;
     }
 
-    function send() {
+    async function send() {
       const prompt = inputEl.value.trim();
       if (!prompt) return;
       appendMessage('user', prompt);
       inputEl.value = '';
-      setTimeout(() => {
+      setTimeout(async () => {
         if (shouldGenerateImage(prompt)) {
           const imgUrl = simulateDallE(prompt);
           appendMessage('bot', prompt, imgUrl);
         } else {
-          const reply = simulateChatGPT(prompt);
+          const reply = await searchGoogle(prompt);
           appendMessage('bot', reply);
         }
       }, 600);
