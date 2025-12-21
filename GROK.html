@@ -102,17 +102,6 @@
   }
 
   /* Controls and output */
-  #output {
-    margin-bottom: 25px;
-    background: rgba(255,255,255,0.9);
-    padding: 20px 30px;
-    border-radius: 20px;
-    max-width: 700px;
-    font-size: 24px;
-    color: #222;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  }
   #micBtn {
     font-size: 26px;
     padding: 12px 40px;
@@ -143,14 +132,12 @@
   <div id="panda-mouth"></div>
 </div>
 
-<div id="output">Press 🎤 and talk to the Red Panda!</div>
 <button id="micBtn">🎤 Start Listening</button>
 
 <script>
   const pandaContainer = document.getElementById('panda-container');
   const mouth = document.getElementById('panda-mouth');
   const micBtn = document.getElementById('micBtn');
-  const output = document.getElementById('output');
 
   // Walking animation: panda moves left-right and flips horizontally
   let direction = 1; // 1 = right, -1 = left
@@ -175,7 +162,6 @@
   const synth = window.speechSynthesis;
 
   if (!SpeechRecognition || !synth) {
-    output.textContent = "Sorry, your browser doesn't support speech recognition or synthesis.";
     micBtn.disabled = true;
   } else {
     const recognition = new SpeechRecognition();
@@ -188,7 +174,6 @@
       if (!isListening) {
         recognition.start();
         micBtn.textContent = '🎙 Listening...';
-        output.textContent = 'Speak now!';
         isListening = true;
       } else {
         recognition.stop();
@@ -199,12 +184,10 @@
 
     recognition.onresult = e => {
       const text = e.results[0][0].transcript;
-      output.textContent = 'You said: "' + text + '"';
       speak(text);
     };
 
     recognition.onerror = e => {
-      output.textContent = 'Error: ' + e.error;
       micBtn.textContent = '🎤 Start Listening';
       isListening = false;
     };
