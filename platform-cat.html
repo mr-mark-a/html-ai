@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Winter Cat Platformer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #1a2332 0%, #2d4056 50%, #4a5f7f 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #1a2332 0%, #2d4056 70%, #3a4a5f 100%);
+            cursor: default;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+        
+        #actionButtons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        #actionButtons button {
+            padding: 20px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            min-width: 200px;
+        }
+        
+        #collectBtn {
+            background: linear-gradient(145deg, #00ff88, #00cc6a);
+            color: #1a1a1a;
+        }
+        
+        #collectBtn:hover {
+            background: linear-gradient(145deg, #00cc6a, #00ff88);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        #collectBtn:active {
+            transform: translateY(0);
+        }
+        
+        #insertBtn {
+            background: linear-gradient(145deg, #ffd700, #ffaa00);
+            color: #1a1a1a;
+        }
+        
+        #insertBtn:hover {
+            background: linear-gradient(145deg, #ffaa00, #ffd700);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        #insertBtn:active {
+            transform: translateY(0);
+        }
+        
+        #message {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        #gameOver button {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 18px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        #gameOver button:hover {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1200" height="700" tabindex="0"></canvas>
+        <div id="ui">
+            <div>Batteries: <span id="score">0</span></div>
+            <div>Distance: <span id="distance">0</span>m</div>
+        </div>
+        <div id="actionButtons">
+            <button id="collectBtn" onclick="collectNearbyDrive()">GRAB</button>
+            <button id="insertBtn" onclick="insertDriveIntoGate()">💾 INSERT</button>
+        </div>
+        <div id="message"></div>
+        <div id="controls">
+            ← → Arrow Keys to Move | SPACE to Jump | LOWER path = Batteries (risky!) | UPPER path = Gates
+        </div>
+        <div id="gameOver">
+            <h1>Game Over!</h1>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameRunning = true;
+        let score = 0;
+        let keys = {};
+        let cameraX = 0;
+        let batteries = 0;
+        let gatesOpened = 0;
+        let lastCheckpoint = { x: 100, y: 500 }; // Checkpoint system
+        
+        // Cat player
+        const cat = {
+            x: 100,
+            y: 500,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            velocityX: 0,
+            speed: 7,
+            jumpPower: 22,
+            gravity: 0.4,
+            isJumping: false,
+            facingRight: true
+        };
+        
+        // Platforms - Procedurally generated with UPPER and LOWER paths!
+        const platforms = [];
+        const pressurePlates = []; // Transparent plates that vanish platforms
+        
+        // Starting platform
+        platforms.push({ x: 0, y: 650, width: 500, height: 50 });
+        
+        // Generate platforms up to 1,000,000px with branching paths
+        let currentX = 500;
+        const targetDistance = 1000000;
+        
+        while (currentX < targetDistance) {
+            const pathLength = 2000 + Math.floor(Math.random() * 1000); // Length of this path section
+            
+            // Create UPPER path (leads to gate, has batteries)
+            let upperY = 300;
+            let upperX = currentX;
+            while (upperX < currentX + pathLength) {
+                const width = 120 + Math.floor(Math.random() * 80);
+                platforms.push({ x: upperX, y: upperY, width: width, height: 20, isUpper: true });
+                upperX += width + (100 + Math.floor(Math.random() * 80));
+                upperY += Math.floor(Math.random() * 60) - 30;
+                if (upperY < 200) upperY = 200;
+                if (upperY > 400) upperY = 400;
+            }
+            
+            // Create LOWER path (has pressure plates that vanish platforms)
+            let lowerY = 550;
+            let lowerX = currentX;
+            while (lowerX < currentX + pathLength) {
+                const width = 120 + Math.floor(Math.random() * 80);
+                const platform = { x: lowerX, y: lowerY, width: width, height: 20, isLower: true, vanished: false };
+                platforms.push(platform);
+                
+                // 30% chance to add a pressure plate
+                if (Math.random() < 0.3) {
+                    pressurePlates.push({
+                        x: platform.x + width / 2 - 25,
+                        y: platform.y - 5,
+                        width: 50,
+                        height: 5,
+                        triggered: false,
+                        linkedPlatform: platform
+                    });
+                }
+                
+                lowerX += width + (100 + Math.floor(Math.random() * 80));
+                lowerY += Math.floor(Math.random() * 60) - 30;
+                if (lowerY < 500) lowerY = 500;
+                if (lowerY > 620) lowerY = 620;
+            }
+            
+            // Connect paths with transition platforms
+            platforms.push({ x: currentX - 100, y: 480, width: 150, height: 20, isTransition: true });
+            
+            currentX += pathLength;
+            
+            // Every 50,000px add a long rest platform
+            if (currentX % 50000 < 500 && currentX > 10000) {
+                platforms.push({ x: currentX, y: 550, width: 500, height: 20 });
+                currentX += 520;
+            }
+        }
+        
+        // Victory platform at the end
+        platforms.push({ x: targetDistance - 300, y: 400, width: 500, height: 50 });
+        
+        // NYC Buildings (background) - extended
+        const buildings = [];
+        for (let i = 0; i < 60; i++) {
+            buildings.push({
+                x: i * 120,
+                y: 250 + Math.random() * 150,
+                width: 90 + Math.random() * 40,
+                height: 200 + Math.random() * 250,
+                windows: Math.floor(Math.random() * 15) + 10
+            });
+        }
+        
+        // Snowflakes
+        const snowflakes = [];
+        for (let i = 0; i < 150; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speed: Math.random() * 1 + 0.5,
+                drift: Math.random() * 0.5 - 0.25
+            });
+        }
+        
+        // Generate gates every 10,000px - ON UPPER PATHS ONLY
+        const gates = [];
+        for (let i = 10000; i < 1000000; i += 10000) {
+            // Find a platform on the upper path near this position
+            const nearPlatform = platforms.find(p => p.x > i - 200 && p.x < i + 500 && p.isUpper);
+            if (nearPlatform) {
+                gates.push({
+                    x: nearPlatform.x + 100,
+                    y: nearPlatform.y - 100,
+                    width: 50,
+                    height: 100,
+                    open: false,
+                    required: 4,
+                    checkpointX: nearPlatform.x + 200,
+                    checkpointY: nearPlatform.y - 50
+                });
+            }
+        }
+        
+        // Generate batteries - 4+ per gate section, ON LOWER PATHS ONLY (risky!)
+        const collectibles = [];
+        for (let i = 0; i < gates.length; i++) {
+            const gateX = gates[i].x;
+            const startX = i === 0 ? 500 : gates[i - 1].x + 300;
+            
+            // Find all LOWER platforms in this section (risky path with batteries)
+            const sectionPlatforms = platforms.filter(p => p.x >= startX && p.x < gateX - 300 && p.isLower);
+            
+            // Place at least 4 batteries on lower path, spread evenly
+            if (sectionPlatforms.length >= 4) {
+                const step = Math.floor(sectionPlatforms.length / 4);
+                for (let j = 0; j < 4; j++) {
+                    const platform = sectionPlatforms[j * step];
+                    collectibles.push({
+                        x: platform.x + platform.width / 2 - 10,
+                        y: platform.y - 30,
+                        width: 20,
+                        height: 25,
+                        collected: false,
+                        isBattery: true
+                    });
+                }
+            } else {
+                // If not enough platforms, place on whatever we have
+                sectionPlatforms.forEach((platform, idx) => {
+                    if (idx < 4) {
+                        collectibles.push({
+                            x: platform.x + platform.width / 2 - 10,
+                            y: platform.y - 30,
+                            width: 20,
+                            height: 25,
+                            collected: false,
+                            isBattery: true
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ' && !cat.isJumping) {
+                cat.velocityY = -cat.jumpPower;
+                cat.isJumping = true;
+            }
+            // Ctrl+G to collect flash drive
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault();
+                collectNearbyDrive();
+            }
+            // Ctrl+I to insert flash drive into gate
+            if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                insertDriveIntoGate();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Draw functions
+        function drawBuildings() {
+            buildings.forEach(building => {
+                const screenX = building.x - cameraX * 0.5; // Parallax effect
+                if (screenX + building.width > -50 && screenX < canvas.width + 50) {
+                    // Building body
+                    ctx.fillStyle = '#2a3a4a';
+                    ctx.fillRect(screenX, building.y, building.width, building.height);
+                
+                    // Building outline
+                    ctx.strokeStyle = '#1a2a3a';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(screenX, building.y, building.width, building.height);
+                    
+                    // Windows
+                    ctx.fillStyle = '#ffd966';
+                    const windowsPerRow = 3;
+                    const windowsPerCol = Math.floor(building.windows / windowsPerRow);
+                    const windowWidth = 12;
+                    const windowHeight = 15;
+                    const padding = (building.width - (windowsPerRow * windowWidth + (windowsPerRow - 1) * 8)) / 2;
+                    
+                    for (let row = 0; row < windowsPerCol; row++) {
+                        for (let col = 0; col < windowsPerRow; col++) {
+                            const wx = screenX + padding + col * (windowWidth + 8);
+                            const wy = building.y + 20 + row * (windowHeight + 10);
+                            if (Math.random() > 0.3) { // Some windows are lit
+                                ctx.fillRect(wx, wy, windowWidth, windowHeight);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function drawSnow() {
+            ctx.fillStyle = 'white';
+            snowflakes.forEach(flake => {
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Update position
+                flake.y += flake.speed;
+                flake.x += flake.drift;
+                
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+                if (flake.x > canvas.width) flake.x = 0;
+                if (flake.x < 0) flake.x = canvas.width;
+            });
+        }
+        
+        function drawPlatforms() {
+            platforms.forEach(platform => {
+                if (platform.vanished) return; // Don't draw vanished platforms
+                
+                const screenX = platform.x - cameraX;
+                if (screenX + platform.width > -50 && screenX < canvas.width + 50) {
+                    // Snow on platform
+                    ctx.fillStyle = '#e8f4f8';
+                    ctx.fillRect(screenX, platform.y, platform.width, 10);
+                    
+                    // Platform body - color based on type
+                    if (platform.isUpper) {
+                        ctx.fillStyle = '#4a7a8a'; // Blue tint for upper paths
+                    } else if (platform.isLower) {
+                        ctx.fillStyle = '#7a5a4a'; // Brown tint for lower paths
+                    } else {
+                        ctx.fillStyle = '#5a6a7a';
+                    }
+                    ctx.fillRect(screenX, platform.y + 10, platform.width, platform.height - 10);
+                    
+                    // Platform edge
+                    ctx.strokeStyle = '#4a5a6a';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(screenX, platform.y, platform.width, platform.height);
+                }
+            });
+            
+            // Draw pressure plates
+            pressurePlates.forEach(plate => {
+                if (plate.triggered) return;
+                const screenX = plate.x - cameraX;
+                if (screenX > -100 && screenX < canvas.width + 100) {
+                    // Transparent pressure plate
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.fillRect(screenX, plate.y, plate.width, plate.height);
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(screenX, plate.y, plate.width, plate.height);
+                }
+            });
+        }
+        
+        function drawCat() {
+            ctx.save();
+            
+            const screenX = cat.x - cameraX;
+            
+            if (!cat.facingRight) {
+                ctx.translate(screenX + cat.width, cat.y);
+                ctx.scale(-1, 1);
+                ctx.translate(-screenX, -cat.y);
+            }
+            
+            // Cat body
+            ctx.fillStyle = '#ff8c42';
+            ctx.fillRect(screenX, cat.y + 15, cat.width - 5, cat.height - 20);
+            
+            // Cat head
+            ctx.fillStyle = '#ff8c42';
+            ctx.beginPath();
+            ctx.arc(screenX + cat.width / 2, cat.y + 10, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Ears
+            ctx.fillStyle = '#ff8c42';
+            ctx.beginPath();
+            ctx.moveTo(screenX + 10, cat.y + 5);
+            ctx.lineTo(screenX + 5, cat.y - 5);
+            ctx.lineTo(screenX + 15, cat.y + 5);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(screenX + 25, cat.y + 5);
+            ctx.lineTo(screenX + 20, cat.y - 5);
+            ctx.lineTo(screenX + 30, cat.y + 5);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = '#2d2d2d';
+            ctx.beginPath();
+            ctx.arc(screenX + 15, cat.y + 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(screenX + 23, cat.y + 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Tail
+            ctx.strokeStyle = '#ff8c42';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(screenX + cat.width - 5, cat.y + 25);
+            ctx.quadraticCurveTo(screenX + cat.width + 5, cat.y + 20, screenX + cat.width + 10, cat.y + 15);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        function drawCollectibles() {
+            collectibles.forEach(battery => {
+                if (!battery.collected) {
+                    const screenX = battery.x - cameraX;
+                    if (screenX > -50 && screenX < canvas.width + 50) {
+                        // Check if cat is nearby
+                        const distance = Math.abs((cat.x + cat.width/2) - (battery.x + battery.width/2));
+                        const verticalDistance = Math.abs((cat.y + cat.height/2) - (battery.y + battery.height/2));
+                        const isNearby = distance < 60 && verticalDistance < 60;
+                        
+                        // Glow effect if nearby
+                        if (isNearby) {
+                            ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                            ctx.beginPath();
+                            ctx.arc(screenX + battery.width/2, battery.y + battery.height/2, 20, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        
+                        // Battery body
+                        ctx.fillStyle = '#2ecc71';
+                        ctx.fillRect(screenX, battery.y, battery.width, battery.height);
+                        
+                        // Battery top terminal
+                        ctx.fillStyle = '#27ae60';
+                        ctx.fillRect(screenX + 6, battery.y - 3, 8, 3);
+                        
+                        // Positive symbol
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 14px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('+', screenX + battery.width/2, battery.y + battery.height - 5);
+                    }
+                }
+            });
+        }
+        
+        function drawGates() {
+            gates.forEach((gate, index) => {
+                const screenX = gate.x - cameraX;
+                if (screenX > -100 && screenX < canvas.width + 100) {
+                    if (!gate.open) {
+                        // Check if cat is nearby
+                        const distance = Math.abs((cat.x + cat.width/2) - (gate.x + gate.width/2));
+                        const verticalDistance = Math.abs((cat.y + cat.height/2) - (gate.y + gate.height/2));
+                        const isNearby = distance < 80 && verticalDistance < 100;
+                        
+                        // Glow effect if nearby
+                        if (isNearby) {
+                            ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                            ctx.fillRect(screenX - 10, gate.y - 10, gate.width + 20, gate.height + 20);
+                            
+                            // Show Ctrl+I hint
+                            ctx.fillStyle = '#ffd700';
+                            ctx.font = '12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('Press Ctrl+I', screenX + gate.width / 2, gate.y - 40);
+                        }
+                        
+                        // Closed gate
+                        ctx.fillStyle = '#c0392b';
+                        ctx.fillRect(screenX, gate.y, gate.width, gate.height);
+                        
+                        // Gate bars
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.lineWidth = 3;
+                        for (let i = 0; i < 5; i++) {
+                            ctx.beginPath();
+                            ctx.moveTo(screenX + 10, gate.y + i * 20 + 10);
+                            ctx.lineTo(screenX + gate.width - 10, gate.y + i * 20 + 10);
+                            ctx.stroke();
+                        }
+                        
+                        // Lock indicator
+                        ctx.fillStyle = '#ffd700';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${gate.required}`, screenX + gate.width / 2, gate.y - 10);
+                        ctx.fillText('🔒', screenX + gate.width / 2, gate.y - 25);
+                    } else {
+                        // Open gate (just posts)
+                        ctx.fillStyle = '#27ae60';
+                        ctx.fillRect(screenX, gate.y, 10, gate.height);
+                        ctx.fillRect(screenX + gate.width - 10, gate.y, 10, gate.height);
+                        
+                        ctx.fillStyle = '#2ecc71';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('✓ OPEN', screenX + gate.width / 2, gate.y + gate.height / 2);
+                    }
+                }
+            });
+        }
+        
+        // Physics and collision
+        function updateCat() {
+            // Horizontal movement
+            if (keys['ArrowLeft']) {
+                cat.velocityX = -cat.speed;
+                cat.facingRight = false;
+            } else if (keys['ArrowRight']) {
+                cat.velocityX = cat.speed;
+                cat.facingRight = true;
+            } else {
+                cat.velocityX = 0;
+            }
+            
+            cat.x += cat.velocityX;
+            cat.velocityY += cat.gravity;
+            cat.y += cat.velocityY;
+            
+            // Screen boundaries - only prevent going left past start
+            if (cat.x < 0) cat.x = 0;
+            // No right boundary - level extends far beyond screen
+            
+            // Platform collision (skip vanished platforms)
+            cat.isJumping = true;
+            platforms.forEach(platform => {
+                if (platform.vanished) return; // Skip vanished platforms
+                
+                if (cat.x < platform.x + platform.width &&
+                    cat.x + cat.width > platform.x &&
+                    cat.y + cat.height > platform.y &&
+                    cat.y + cat.height < platform.y + platform.height &&
+                    cat.velocityY > 0) {
+                    cat.y = platform.y - cat.height;
+                    cat.velocityY = 0;
+                    cat.isJumping = false;
+                }
+            });
+            
+            // Pressure plate collision
+            pressurePlates.forEach(plate => {
+                if (!plate.triggered &&
+                    cat.x < plate.x + plate.width &&
+                    cat.x + cat.width > plate.x &&
+                    cat.y + cat.height > plate.y &&
+                    cat.y + cat.height < plate.y + plate.height + 20) {
+                    // Trigger plate - vanish the linked platform
+                    plate.triggered = true;
+                    plate.linkedPlatform.vanished = true;
+                    showMessage('⚠️ Platform vanished!', 1500);
+                }
+            });
+            
+            // Fall off screen - infinite respawns!
+            if (cat.y > canvas.height) {
+                resetCatPosition();
+                showMessage('Respawned at checkpoint!', 1500);
+            }
+        }
+        
+        function checkCollectibles() {
+            // Auto-collect batteries on touch
+            collectibles.forEach(battery => {
+                if (!battery.collected) {
+                    const distance = Math.abs((cat.x + cat.width/2) - (battery.x + battery.width/2));
+                    const verticalDistance = Math.abs((cat.y + cat.height/2) - (battery.y + battery.height/2));
+                    
+                    // Auto-collect if close enough (within 60 pixels)
+                    if (distance < 60 && verticalDistance < 60) {
+                        battery.collected = true;
+                        batteries++;
+                        score += 100;
+                        updateUI();
+                        showMessage('🔋 Battery collected!', 1000);
+                    }
+                }
+            });
+        }
+        
+        function collectNearbyDrive() {
+            let collected = false;
+            collectibles.forEach(drive => {
+                if (!drive.collected) {
+                    const distance = Math.abs((cat.x + cat.width/2) - (drive.x + drive.width/2));
+                    const verticalDistance = Math.abs((cat.y + cat.height/2) - (drive.y + drive.height/2));
+                    
+                    // Check if cat is close enough to collect (within 60 pixels)
+                    if (distance < 60 && verticalDistance < 60) {
+                        drive.collected = true;
+                        flashDrives++;
+                        score += 100;
+                        updateUI();
+                        showMessage('Flash drive collected! Press Ctrl+I at gate to insert', 2000);
+                        collected = true;
+                    }
+                }
+            });
+            if (!collected) {
+                showMessage('No flash drive nearby!', 1000);
+            }
+        }
+        
+        function checkGates() {
+            // Auto-open gates when cat touches them with enough batteries
+            gates.forEach((gate, index) => {
+                if (!gate.open) {
+                    const distance = Math.abs((cat.x + cat.width/2) - (gate.x + gate.width/2));
+                    const verticalDistance = Math.abs((cat.y + cat.height/2) - (gate.y + gate.height/2));
+                    
+                    // Check if cat is touching gate
+                    if (distance < 60 && verticalDistance < 80) {
+                        if (batteries >= gate.required) {
+                            // Auto-open gate and set checkpoint
+                            gate.open = true;
+                            batteries -= gate.required;
+                            gatesOpened++;
+                            lastCheckpoint = { x: gate.checkpointX, y: gate.checkpointY };
+                            showMessage(`Gate ${index + 1} opened! Checkpoint saved! ✓`, 2500);
+                            updateUI();
+                        } else {
+                            // Block cat if not enough batteries
+                            if (cat.velocityX > 0) {
+                                cat.x = gate.x - cat.width - 5;
+                            } else {
+                                cat.x = gate.x + gate.width + 5;
+                            }
+                            cat.velocityX = 0;
+                            showMessage(`Need ${gate.required} batteries! You have ${batteries}`, 1500);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function insertDriveIntoGate() {
+            let inserted = false;
+            gates.forEach((gate, index) => {
+                if (!gate.open) {
+                    const distance = Math.abs((cat.x + cat.width/2) - (gate.x + gate.width/2));
+                    const verticalDistance = Math.abs((cat.y + cat.height/2) - (gate.y + gate.height/2));
+                    
+                    // Check if cat is near gate (within 80 pixels)
+                    if (distance < 80 && verticalDistance < 100) {
+                        if (flashDrives >= gate.required) {
+                            // Open gate and set checkpoint
+                            gate.open = true;
+                            flashDrives -= gate.required;
+                            gatesOpened++;
+                            lastCheckpoint = { x: gate.checkpointX, y: gate.checkpointY };
+                            showMessage(`Gate ${index + 1} opened! Checkpoint saved! ✓`, 2000);
+                            updateUI();
+                            inserted = true;
+                        } else {
+                            showMessage(`Need ${gate.required} flash drives! You have ${flashDrives}`, 1500);
+                            inserted = true;
+                        }
+                    }
+                }
+            });
+            if (!inserted) {
+                showMessage('No gate nearby!', 1000);
+            }
+        }
+        
+        function showMessage(text, duration) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.style.display = 'block';
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, duration);
+        }
+        
+        function resetCatPosition() {
+            cat.x = lastCheckpoint.x;
+            cat.y = lastCheckpoint.y;
+            cat.velocityY = 0;
+            cat.velocityX = 0;
+        }
+        
+        function updateUI() {
+            document.getElementById('score').textContent = batteries;
+            document.getElementById('distance').textContent = Math.floor(cat.x / 10);
+        }
+        
+        function updateCamera() {
+            // Camera follows cat, keeping it centered
+            const targetCameraX = cat.x - canvas.width / 3;
+            cameraX = Math.max(0, targetCameraX);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        function restartGame() {
+            gameRunning = true;
+            score = 0;
+            batteries = 0;
+            gatesOpened = 0;
+            cameraX = 0;
+            lastCheckpoint = { x: 100, y: 500 };
+            resetCatPosition();
+            collectibles.forEach(item => item.collected = false);
+            gates.forEach(gate => gate.open = false);
+            platforms.forEach(platform => platform.vanished = false);
+            pressurePlates.forEach(plate => plate.triggered = false);
+            document.getElementById('gameOver').style.display = 'none';
+            updateUI();
+            gameLoop();
+        }
+        
+        // Main game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update camera
+            updateCamera();
+            
+            // Draw background elements
+            drawBuildings();
+            drawPlatforms();
+            drawGates();
+            drawCollectibles();
+            
+            // Update and draw cat
+            updateCat();
+            drawCat();
+            
+            // Check collisions
+            checkCollectibles();
+            checkGates();
+            
+            // Check victory condition - reach 1 million!
+            if (cat.x > 999500) {
+                showMessage('🎉 YOU WIN! Reached 1,000,000 pixels! 🎉', 5000);
+                endGame();
+            }
+            
+            // Draw snow on top
+            drawSnow();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start game
+        updateUI();
+        gameLoop();
+        
+        // Auto-focus canvas for keyboard input
+        canvas.focus();
+        canvas.addEventListener('click', () => {
+            canvas.focus();
+        });
+    </script>
+</body>
+</html>
