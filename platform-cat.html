@@ -165,7 +165,7 @@
         </div>
         <div id="message"></div>
         <div id="controls">
-            ← → Arrow Keys to Move | SPACE to Jump | LOWER path = Batteries (risky!) | UPPER path = Gates
+            ← → Arrow Keys to Move | SPACE to Jump | Collect batteries to open gates
         </div>
         <div id="gameOver">
             <h1>Game Over!</h1>
@@ -202,66 +202,36 @@
             facingRight: true
         };
         
-        // Platforms - Procedurally generated with UPPER and LOWER paths!
+        // Platforms - Procedurally generated with single upper path!
         const platforms = [];
-        const pressurePlates = []; // Transparent plates that vanish platforms
         
         // Starting platform
-        platforms.push({ x: 0, y: 650, width: 500, height: 50 });
+        platforms.push({ x: 0, y: 500, width: 500, height: 50 });
         
-        // Generate platforms up to 1,000,000px with branching paths
+        // Generate platforms up to 1,000,000px
         let currentX = 500;
         const targetDistance = 1000000;
         
         while (currentX < targetDistance) {
-            const pathLength = 2000 + Math.floor(Math.random() * 1000); // Length of this path section
+            const pathLength = 2000 + Math.floor(Math.random() * 1000);
             
-            // Create UPPER path (leads to gate, has batteries)
-            let upperY = 300;
-            let upperX = currentX;
-            while (upperX < currentX + pathLength) {
+            // Create single path
+            let pathY = 400;
+            let pathX = currentX;
+            while (pathX < currentX + pathLength) {
                 const width = 120 + Math.floor(Math.random() * 80);
-                platforms.push({ x: upperX, y: upperY, width: width, height: 20, isUpper: true });
-                upperX += width + (100 + Math.floor(Math.random() * 80));
-                upperY += Math.floor(Math.random() * 60) - 30;
-                if (upperY < 200) upperY = 200;
-                if (upperY > 400) upperY = 400;
+                platforms.push({ x: pathX, y: pathY, width: width, height: 20, isUpper: true });
+                pathX += width + (100 + Math.floor(Math.random() * 80));
+                pathY += Math.floor(Math.random() * 60) - 30;
+                if (pathY < 300) pathY = 300;
+                if (pathY > 500) pathY = 500;
             }
-            
-            // Create LOWER path (has pressure plates that vanish platforms)
-            let lowerY = 550;
-            let lowerX = currentX;
-            while (lowerX < currentX + pathLength) {
-                const width = 120 + Math.floor(Math.random() * 80);
-                const platform = { x: lowerX, y: lowerY, width: width, height: 20, isLower: true, vanished: false };
-                platforms.push(platform);
-                
-                // 30% chance to add a pressure plate
-                if (Math.random() < 0.3) {
-                    pressurePlates.push({
-                        x: platform.x + width / 2 - 25,
-                        y: platform.y - 5,
-                        width: 50,
-                        height: 5,
-                        triggered: false,
-                        linkedPlatform: platform
-                    });
-                }
-                
-                lowerX += width + (100 + Math.floor(Math.random() * 80));
-                lowerY += Math.floor(Math.random() * 60) - 30;
-                if (lowerY < 500) lowerY = 500;
-                if (lowerY > 620) lowerY = 620;
-            }
-            
-            // Connect paths with transition platforms
-            platforms.push({ x: currentX - 100, y: 480, width: 150, height: 20, isTransition: true });
             
             currentX += pathLength;
             
             // Every 50,000px add a long rest platform
             if (currentX % 50000 < 500 && currentX > 10000) {
-                platforms.push({ x: currentX, y: 550, width: 500, height: 20 });
+                platforms.push({ x: currentX, y: 450, width: 500, height: 20 });
                 currentX += 520;
             }
         }
@@ -272,14 +242,29 @@
         // NYC Buildings (background) - extended
         const buildings = [];
         for (let i = 0; i < 60; i++) {
+            const numWindows = Math.floor(Math.random() * 15) + 10;
+            const windowStates = [];
+            // Initialize random window states (true = on, false = off)
+            for (let j = 0; j < numWindows; j++) {
+                windowStates.push(Math.random() > 0.3);
+            }
             buildings.push({
                 x: i * 120,
                 y: 250 + Math.random() * 150,
                 width: 90 + Math.random() * 40,
                 height: 200 + Math.random() * 250,
-                windows: Math.floor(Math.random() * 15) + 10
+                windows: numWindows,
+                windowStates: windowStates
             });
         }
+        
+        // Timer to randomly toggle windows every 1 minute (60000ms)
+        setInterval(() => {
+            buildings.forEach(building => {
+                // Randomly toggle each window
+                building.windowStates = building.windowStates.map(() => Math.random() > 0.3);
+            });
+        }, 60000);
         
         // Snowflakes
         const snowflakes = [];
@@ -312,16 +297,16 @@
             }
         }
         
-        // Generate batteries - 4+ per gate section, ON LOWER PATHS ONLY (risky!)
+        // Generate batteries - 4+ per gate section, ON UPPER PATH
         const collectibles = [];
         for (let i = 0; i < gates.length; i++) {
             const gateX = gates[i].x;
             const startX = i === 0 ? 500 : gates[i - 1].x + 300;
             
-            // Find all LOWER platforms in this section (risky path with batteries)
-            const sectionPlatforms = platforms.filter(p => p.x >= startX && p.x < gateX - 300 && p.isLower);
+            // Find all platforms in this section
+            const sectionPlatforms = platforms.filter(p => p.x >= startX && p.x < gateX - 300 && p.isUpper);
             
-            // Place at least 4 batteries on lower path, spread evenly
+            // Place at least 4 batteries on the path, spread evenly
             if (sectionPlatforms.length >= 4) {
                 const step = Math.floor(sectionPlatforms.length / 4);
                 for (let j = 0; j < 4; j++) {
@@ -397,13 +382,16 @@
                     const windowHeight = 15;
                     const padding = (building.width - (windowsPerRow * windowWidth + (windowsPerRow - 1) * 8)) / 2;
                     
+                    let windowIndex = 0;
                     for (let row = 0; row < windowsPerCol; row++) {
                         for (let col = 0; col < windowsPerRow; col++) {
                             const wx = screenX + padding + col * (windowWidth + 8);
                             const wy = building.y + 20 + row * (windowHeight + 10);
-                            if (Math.random() > 0.3) { // Some windows are lit
+                            // Check window state from array
+                            if (building.windowStates[windowIndex]) {
                                 ctx.fillRect(wx, wy, windowWidth, windowHeight);
                             }
+                            windowIndex++;
                         }
                     }
                 }
@@ -432,42 +420,20 @@
         
         function drawPlatforms() {
             platforms.forEach(platform => {
-                if (platform.vanished) return; // Don't draw vanished platforms
-                
                 const screenX = platform.x - cameraX;
                 if (screenX + platform.width > -50 && screenX < canvas.width + 50) {
                     // Snow on platform
                     ctx.fillStyle = '#e8f4f8';
                     ctx.fillRect(screenX, platform.y, platform.width, 10);
                     
-                    // Platform body - color based on type
-                    if (platform.isUpper) {
-                        ctx.fillStyle = '#4a7a8a'; // Blue tint for upper paths
-                    } else if (platform.isLower) {
-                        ctx.fillStyle = '#7a5a4a'; // Brown tint for lower paths
-                    } else {
-                        ctx.fillStyle = '#5a6a7a';
-                    }
+                    // Platform body
+                    ctx.fillStyle = '#4a7a8a';
                     ctx.fillRect(screenX, platform.y + 10, platform.width, platform.height - 10);
                     
                     // Platform edge
                     ctx.strokeStyle = '#4a5a6a';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(screenX, platform.y, platform.width, platform.height);
-                }
-            });
-            
-            // Draw pressure plates
-            pressurePlates.forEach(plate => {
-                if (plate.triggered) return;
-                const screenX = plate.x - cameraX;
-                if (screenX > -100 && screenX < canvas.width + 100) {
-                    // Transparent pressure plate
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-                    ctx.fillRect(screenX, plate.y, plate.width, plate.height);
-                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(screenX, plate.y, plate.width, plate.height);
                 }
             });
         }
@@ -641,11 +607,9 @@
             if (cat.x < 0) cat.x = 0;
             // No right boundary - level extends far beyond screen
             
-            // Platform collision (skip vanished platforms)
+            // Platform collision
             cat.isJumping = true;
             platforms.forEach(platform => {
-                if (platform.vanished) return; // Skip vanished platforms
-                
                 if (cat.x < platform.x + platform.width &&
                     cat.x + cat.width > platform.x &&
                     cat.y + cat.height > platform.y &&
@@ -654,20 +618,6 @@
                     cat.y = platform.y - cat.height;
                     cat.velocityY = 0;
                     cat.isJumping = false;
-                }
-            });
-            
-            // Pressure plate collision
-            pressurePlates.forEach(plate => {
-                if (!plate.triggered &&
-                    cat.x < plate.x + plate.width &&
-                    cat.x + cat.width > plate.x &&
-                    cat.y + cat.height > plate.y &&
-                    cat.y + cat.height < plate.y + plate.height + 20) {
-                    // Trigger plate - vanish the linked platform
-                    plate.triggered = true;
-                    plate.linkedPlatform.vanished = true;
-                    showMessage('⚠️ Platform vanished!', 1500);
                 }
             });
             
@@ -825,8 +775,6 @@
             resetCatPosition();
             collectibles.forEach(item => item.collected = false);
             gates.forEach(gate => gate.open = false);
-            platforms.forEach(platform => platform.vanished = false);
-            pressurePlates.forEach(plate => plate.triggered = false);
             document.getElementById('gameOver').style.display = 'none';
             updateUI();
             gameLoop();

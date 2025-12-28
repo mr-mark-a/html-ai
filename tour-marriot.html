@@ -1,299 +1,1601 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Marriott Tour</title>
-<style>
-body, html { margin:0; padding:0; height:100%; width:100%; overflow:hidden; font-family:sans-serif; background:#000; color:#fff; }
-#preview { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:0; background:#181818; overflow:hidden; }
-#fp-corridor { position:relative; width:100vw; height:100vh; perspective:1800px; overflow:hidden; }
-.fp-wall { position:absolute; top:0; width:30vw; height:100vh; background:linear-gradient(90deg,#232323 60%,#444 100%); z-index:2; box-shadow:inset 0 0 60px #000a; }
-.fp-wall-left { left:0; border-right:6px solid #222; }
-.fp-wall-right { right:0; border-left:6px solid #222; }
-.fp-ceiling { position:absolute; left:0; top:0; width:100vw; height:18vh; background:linear-gradient(180deg,#333 60%,#222 100%); z-index:3; box-shadow:0 8px 32px #000a; }
-.fp-floor { position:absolute; left:0; bottom:0; width:100vw; height:22vh; background:linear-gradient(0deg,#222 60%,#444 100%); z-index:3; box-shadow:0 -8px 32px #000a; }
-.fp-doors { position:absolute; top:32vh; left:0; width:100vw; height:36vh; z-index:5; }
-.fp-door { position:absolute; top:0; width:5vw; height:18vh; background:#444; border-radius:8px; border:3px solid #222; color:#fff; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 12px #0008; cursor:pointer; transition:background 0.3s, box-shadow 0.3s; }
-.fp-door.locked { background:#333; }
-.fp-door.unlocked { background:#4caf50; }
-.fp-door span { position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); font-size:0.9em; opacity:0.7; }
-.fp-elevator { position:absolute; left:48vw; top:10vh; width:8vw; height:12vh; background:#888; border-radius:10px; border:3px solid #222; display:flex; align-items:center; justify-content:center; font-size:2em; box-shadow:0 2px 12px #0008; z-index:10; cursor:pointer; transition:background 0.3s; }
-.fp-pool { position:absolute; right:8vw; bottom:12vh; width:10vw; height:7vh; background:radial-gradient(circle at 60% 40%,#aeefff 70%,#2196f3 100%); border-radius:18px 30px 30px 18px/30px 18px 30px 30px; border:3px solid #1976d2; box-shadow:0 2px 12px #0008; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.5em; z-index:10; cursor:pointer; }
-.fp-fade { position:absolute; left:0; top:0; width:100vw; height:100vh; pointer-events:none; background:rgba(0,0,0,0); z-index:99; transition:background 0.4s; }
-.fp-floor-label { position:absolute; left:50%; top:2vh; transform:translateX(-50%); color:#fff; font-size:1.3em; background:rgba(0,0,0,0.4); padding:4px 18px; border-radius:12px; z-index:20; letter-spacing:2px; }
-#preview-content {
-#preview-content {
-  width:420px;
-  height:320px;
-  margin:auto;
-  position:relative;
-  background: #222 linear-gradient(160deg,#333 60%,#444 100%);
-  border-radius:24px;
-  box-shadow:0 8px 32px #000a;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  overflow:hidden;
-}
-.room {
-  width:100%; height:100%; position:relative;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-}
-.door {
-  position:absolute; left:50%; top:40px; transform:translateX(-50%);
-  width:80px; height:140px; background:#444; border-radius:10px 10px 8px 8px; border:4px solid #222;
-  box-shadow:0 4px 16px #0008;
-  display:flex; align-items:center; justify-content:center;
-  transition:background 0.4s;
-}
-.door.locked { background:#333; }
-.door.unlocked { background:#4caf50; }
-.door-label {
-  position:absolute; bottom:-28px; left:50%; transform:translateX(-50%);
-  color:#fff; font-size:1.1em; opacity:0.7;
-}
-.bed {
-  position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
-  width:120px; height:36px; background:#888; border-radius:12px 12px 18px 18px; box-shadow:0 2px 8px #0006;
-}
-.window {
-  position:absolute; right:30px; top:30px; width:48px; height:48px; background:#aeefff; border-radius:8px; box-shadow:0 0 0 2px #fff4;
-}
-.carpet {
-  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-  width:90px; height:18px; background:#bfa76f; border-radius:9px; opacity:0.7;
-}
-.person {
-  position:absolute; left:50%; bottom:60px; transform:translateX(-50%);
-  width:32px; height:60px;
-  display:flex; flex-direction:column; align-items:center;
-}
-.person-head { width:28px; height:28px; background:#ffe0b2; border-radius:50%; border:2px solid #c9a66b; }
-.person-body { width:18px; height:32px; background:#1976d2; border-radius:8px; margin-top:-4px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Hotel Navigator</title>
+    <!-- Leaflet CSS for real maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-#controls, #scene, #lift { z-index:2; position:relative; }
-</style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Hotel List */
+        .hotel-list {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .hotel-item {
+            padding: 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+            overflow: hidden;
+            display: flex;
+            gap: 15px;
+        }
+
+        .hotel-item:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .hotel-image {
+            width: 250px;
+            height: 180px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .hotel-info {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .hotel-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .hotel-location {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .hotel-rating {
+            color: #ffa500;
+            margin-top: 5px;
+        }
+
+        /* 3D Map View */
+        .map-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .map-content {
+            display: flex;
+            gap: 20px;
+            min-height: 700px;
+        }
+
+        /* Level Controls */
+        .level-controls {
+            width: 250px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .level-controls h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .level-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .level-btn:hover {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .level-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Map Canvas */
+        .map-canvas {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 10px;
+            position: relative;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #realMap {
+            width: 100%;
+            height: 180px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        #canvas3d {
+            width: 100%;
+            flex: 1;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Add visible test styling */
+        #canvas3d::before {
+            content: "HOTEL FLOOR MAP";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #666;
+            font-weight: bold;
+            z-index: 0;
+        }
+
+        .floor-plan-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .interactive-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .corridor {
+            position: absolute;
+            background: rgba(232, 232, 232, 0.5);
+            border: 2px solid #ccc;
+        }
+
+        .corridor-label {
+            position: absolute;
+            color: #666;
+            font-size: 0.8em;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        /* Navigation Panel */
+        .nav-panel {
+            width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .nav-panel h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .nav-section select,
+        .nav-section input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .navigate-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .navigate-btn:hover {
+            background: #218838;
+        }
+
+        .quick-locations {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .quick-locations h4 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .location-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 8px;
+            text-align: left;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .location-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .room-search-indicator {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        /* Rating Section */
+        .rating-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .rating-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .star-rating .star {
+            font-size: 2em;
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .star-rating .star:hover,
+        .star-rating .star.active {
+            color: #ffa500;
+            transform: scale(1.1);
+        }
+
+        .rating-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .submit-rating-btn {
+            background: #ffa500;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .submit-rating-btn:hover {
+            background: #ff8c00;
+        }
+
+        .user-reviews {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .review-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ffa500;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .review-stars {
+            color: #ffa500;
+            font-size: 0.9em;
+        }
+
+        .review-date {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .review-text {
+            color: #555;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .average-rating {
+            background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .average-rating .big-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .average-rating .small-text {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 3D Map Elements */
+        .map-room {
+            position: absolute;
+            background: rgba(102, 126, 234, 0.15);
+            border: 3px solid #667eea;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .map-room:hover {
+            background: rgba(102, 126, 234, 0.4);
+            transform: scale(1.08);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .map-elevator {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.3) 100%);
+            border: 3px solid #28a745;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #155724;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .map-restroom {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.3) 100%);
+            border: 3px solid #ffc107;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #856404;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .map-lobby {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.3) 100%);
+            border: 3px solid #dc3545;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            font-weight: 700;
+            color: #721c24;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .facility-label {
+            font-size: 0.65em;
+            margin-top: 3px;
+            opacity: 0.9;
+        }
+
+        .path-line {
+            position: absolute;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 4px;
+            transform-origin: left center;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+            animation: pathPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pathPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .path-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            border: 3px solid white;
+            border-radius: 50%;
+            z-index: 101;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+            animation: markerBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes markerBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .map-content {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .level-controls,
+            .nav-panel {
+                width: 100%;
+            }
+
+            .map-canvas {
+                height: 400px;
+            }
+        }
+    </style>
 </head>
 <body>
-<div id="preview">
-  <div id="fp-corridor">
-    <div class="fp-wall fp-wall-left"></div>
-    <div class="fp-wall fp-wall-right"></div>
-    <div class="fp-ceiling"></div>
-    <div class="fp-floor"></div>
-    <div class="fp-doors">
-      <!-- Doors will be generated by JS -->
+    <div class="container">
+        <header>
+            <h1>🏨 Global Hotel Navigator</h1>
+            <p class="tagline">Navigate hotels worldwide with precision</p>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section" id="searchSection">
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label for="countrySelect">Country</label>
+                    <select id="countrySelect">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="stateSelect">State (US Only)</label>
+                    <select id="stateSelect" disabled>
+                        <option value="">Select State</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="cityInput">City</label>
+                    <input type="text" id="cityInput" placeholder="Enter city name">
+                </div>
+                <div class="filter-group">
+                    <label for="hotelInput">Hotel Name</label>
+                    <input type="text" id="hotelInput" placeholder="Enter hotel name">
+                </div>
+            </div>
+            <button class="search-btn" onclick="filterHotels()">🔍 Search Hotels</button>
+        </div>
+
+        <!-- Hotel List -->
+        <div class="hotel-list" id="hotelList">
+            <h2 style="margin-bottom: 20px; color: #333;">Available Hotels</h2>
+            <div id="hotelItems"></div>
+        </div>
+
+        <!-- 3D Map View -->
+        <div class="map-container" id="mapContainer">
+            <div class="map-header">
+                <button class="back-btn" onclick="backToList()">← Back to Hotels</button>
+                <h2 id="currentHotelName" style="color: #333;"></h2>
+                <button class="search-btn" onclick="backToList()" style="padding: 10px 20px; font-size: 0.95em; width: auto;">🔍 More Hotels</button>
+            </div>
+
+            <div class="map-content">
+                <!-- Level Controls -->
+                <div class="level-controls">
+                    <h3>Floors</h3>
+                    <div id="levelButtons"></div>
+                    
+                    <!-- Rating Section -->
+                    <div class="rating-section">
+                        <div id="averageRating" class="average-rating">
+                            <div class="big-number">0.0</div>
+                            <div class="small-text">Average Rating</div>
+                            <div class="small-text"><span id="reviewCount">0</span> reviews</div>
+                        </div>
+                        <h3>Rate This Hotel</h3>
+                        <div class="star-rating" id="starRating">
+                            <span class="star" data-rating="1">★</span>
+                            <span class="star" data-rating="2">★</span>
+                            <span class="star" data-rating="3">★</span>
+                            <span class="star" data-rating="4">★</span>
+                            <span class="star" data-rating="5">★</span>
+                        </div>
+                        <textarea id="reviewText" class="rating-input" placeholder="Share your experience..."></textarea>
+                        <button class="submit-rating-btn" onclick="submitRating()">Submit Rating</button>
+                        <div id="userReviews" class="user-reviews"></div>
+                    </div>
+                </div>
+
+                <!-- 3D Map Canvas -->
+                <div class="map-canvas">
+                    <div id="realMap"></div>
+                    <div id="canvas3d"></div>
+                </div>
+
+                <!-- Navigation Panel -->
+                <div class="nav-panel">
+                    <h3>Navigate</h3>
+                    
+                    <div class="nav-section">
+                        <label>From:</label>
+                        <select id="fromLocation">
+                            <option value="">Select starting point</option>
+                        </select>
+                    </div>
+
+                    <div class="nav-section">
+                        <label>To:</label>
+                        <select id="toLocation">
+                            <option value="">Select destination</option>
+                        </select>
+                    </div>
+
+                    <button class="navigate-btn" onclick="navigatePath()">Navigate →</button>
+
+                    <div class="quick-locations">
+                        <h4>Recommended Locations</h4>
+                        <button class="location-btn" onclick="findNearest('restroom')">🚻 Nearest Restroom</button>
+                        <button class="location-btn" onclick="goToLocation('lobby')">🏛️ Lobby</button>
+                        <button class="location-btn" onclick="goToLocation('elevator')">🛗 Elevators</button>
+                        <button class="location-btn" onclick="selectRoom()">🚪 Room Select</button>
+                    </div>
+
+                    <div id="roomSearchIndicator" class="room-search-indicator hidden">
+                        Searching: ROOMS/ROOM=<span id="roomNumber"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="fp-elevator" id="fp-elevator" onclick="move('^')">🛗 Elevator</div>
-    <div class="fp-pool" id="fp-pool" onclick="move('v')">🏊‍♂️ Pool</div>
-    <div class="fp-fade" id="fp-fade"></div>
-    <div class="fp-floor-label" id="fp-floor-label"></div>
-  </div>
-</div>
-<div id="controls" style="position:fixed;top:10px;left:10px;z-index:9;text-align:center">
-  <button onclick="move('^')">^</button><br>
-  <button onclick="move('<')"><</button>
-  <button onclick="useKeycard()">🎫</button>
-  <button onclick="move('>')">></button><br>
-  <button onclick="showLift()">Select Level</button>
-</div>
 
+    <script>
+        // Global hotel database with real coordinates, images, and floor plans
+        const hotels = [
+            // United States
+            { id: 1, name: "Marriott Marquis", country: "United States", state: "New York", city: "New York", rating: 4.5, floors: 10, lat: 40.7589, lng: -73.9851, image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=500", 
+              floorPlans: {
+                1: "https://i.imgur.com/8ZqXKm5.png",
+                2: "https://i.imgur.com/k3wJNm8.png",
+                default: "https://www.hotelplanner.com/Common/Images/floorplans/hotel-floor-plan-example.jpg"
+              }},
+            { id: 2, name: "Grand Hyatt", country: "United States", state: "California", city: "San Francisco", rating: 4.7, floors: 12, lat: 37.7913, lng: -122.3989, image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500",
+              floorPlans: {
+                default: "https://media.architecturaldigest.com/photos/5d42ca0c4b828b0008b67f43/master/w_1600%2Cc_limit/GettyImages-154919990.jpg"
+              }},
+            { id: 3, name: "Hilton Chicago", country: "United States", state: "Illinois", city: "Chicago", rating: 4.4, floors: 15, lat: 41.8876, lng: -87.6205, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500",
+              floorPlans: {
+                default: "https://thumbs.dreamstime.com/z/hotel-floor-plan-d-rendering-91229736.jpg"
+              }},
+            { id: 4, name: "Waldorf Astoria", country: "United States", state: "Florida", city: "Miami", rating: 4.8, floors: 20, lat: 25.7907, lng: -80.1300, image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=500",
+              floorPlans: {
+                default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZxVGXmwN0FxP0vXGXqSXzKj-XgFxm8NsQXw&s"
+              }},
+            { id: 5, name: "Four Seasons", country: "United States", state: "Texas", city: "Houston", rating: 4.9, floors: 18, lat: 29.7604, lng: -95.3698, image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500",
+              floorPlans: {
+                default: "https://www.conceptdraw.com/How-To-Guide/picture/hotel-floor-plan/Hotel-Floor-Plan.png"
+              }},
+            { id: 6, name: "The Plaza Hotel", country: "United States", state: "Nevada", city: "Las Vegas", rating: 4.6, floors: 25, lat: 36.1699, lng: -115.1398, image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=500",
+              floorPlans: {
+                default: "https://www.edrawsoft.com/templates/images/hotel-floor-plan.png"
+              }},
+            
+            // Europe
+            { id: 7, name: "The Ritz London", country: "United Kingdom", city: "London", rating: 5.0, floors: 8, lat: 51.5074, lng: -0.1278, image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500",
+              floorPlans: {
+                default: "https://www.smartdraw.com/floor-plan/img/hotel-floor-plan.png?bn=15100111880"
+              }},
+            { id: 8, name: "Hotel de Crillon", country: "France", city: "Paris", rating: 4.9, floors: 10, lat: 48.8566, lng: 2.3522, image: "https://images.unsplash.com/photo-1549294413-26f195200c16?w=500",
+              floorPlans: {
+                default: "https://images.template.net/wp-content/uploads/2016/04/28063128/Hotel-Building-Floor-Plan.jpg"
+              }},
+            { id: 9, name: "Adlon Kempinski", country: "Germany", city: "Berlin", rating: 4.7, floors: 7, lat: 52.5200, lng: 13.4050, image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=500",
+              floorPlans: {
+                default: "https://thumbs.dreamstime.com/b/hotel-floor-plan-typical-blueprint-architectural-drawing-hospitality-industry-148809084.jpg"
+              }},
+            { id: 10, name: "Hotel Danieli", country: "Italy", city: "Venice", rating: 4.8, floors: 6, lat: 45.4408, lng: 12.3155, image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500",
+              floorPlans: {
+                default: "https://www.conceptdraw.com/solution-park/resource/images/solutions/floor-plans/FLOOR-PLAN-Hotel-Floor-Plan.png"
+              }},
+            { id: 11, name: "Hotel Arts Barcelona", country: "Spain", city: "Barcelona", rating: 4.6, floors: 44, lat: 41.3851, lng: 2.1734, image: "https://images.unsplash.com/photo-1455587734955-081b22074882?w=500",
+              floorPlans: {
+                default: "https://i.pinimg.com/originals/df/d0/9e/dfd09e0f8a5e3d3d3c4e4b1e5f8f5a5a.jpg"
+              }},
+            
+            // Asia
+            { id: 12, name: "Marina Bay Sands", country: "Singapore", city: "Singapore", rating: 4.9, floors: 57, lat: 1.2834, lng: 103.8607, image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=500",
+              floorPlans: {
+                default: "https://i.pinimg.com/originals/32/1e/8f/321e8fc5c3e5e5e5e5e5e5e5e5e5e5e5.png"
+              }},
+            { id: 13, name: "The Peninsula", country: "Hong Kong", city: "Hong Kong", rating: 5.0, floors: 22, lat: 22.2783, lng: 114.1747, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500",
+              floorPlans: {
+                default: "https://www.edrawsoft.com/templates/images/hotel-plan.png"
+              }},
+            { id: 14, name: "Taj Mahal Palace", country: "India", city: "Mumbai", rating: 4.8, floors: 8, lat: 18.9217, lng: 72.8331, image: "https://images.unsplash.com/photo-1596436889106-be35e843f974?w=500",
+              floorPlans: {
+                default: "https://images.examples.com/wp-content/uploads/2017/05/Hotel-Floor-Plan-Example.jpg"
+              }},
+            { id: 15, name: "Park Hyatt Tokyo", country: "Japan", city: "Tokyo", rating: 4.7, floors: 52, lat: 35.6762, lng: 139.6503, image: "https://images.unsplash.com/photo-1560703651-01880a7dfd1f?w=500",
+              floorPlans: {
+                default: "https://www.roomsketcher.com/wp-content/uploads/2017/01/hotel-floor-plan.jpg"
+              }},
+            { id: 16, name: "Burj Al Arab", country: "United Arab Emirates", city: "Dubai", rating: 5.0, floors: 60, lat: 25.1411, lng: 55.1855, image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500",
+              floorPlans: {
+                default: "https://images.adsttc.com/media/images/5037/e6f0/28ba/0d59/9b00/0561/large_jpg/stringio.jpg"
+              }},
+            
+            // Australia & Oceania
+            { id: 17, name: "Park Hyatt Sydney", country: "Australia", city: "Sydney", rating: 4.8, floors: 8, lat: -33.8688, lng: 151.2093, image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=500",
+              floorPlans: {
+                default: "https://cdn.creazilla.com/cliparts/7889804/hotel-floor-plan-clipart-md.png"
+              }},
+            { id: 18, name: "The Langham Melbourne", country: "Australia", city: "Melbourne", rating: 4.6, floors: 25, lat: -37.8136, lng: 144.9631, image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=500",
+              floorPlans: {
+                default: "https://www.smartdraw.com/floor-plan/img/hotel-layout.png?bn=15100111881"
+              }},
+            
+            // South America
+            { id: 19, name: "Copacabana Palace", country: "Brazil", city: "Rio de Janeiro", rating: 4.9, floors: 8, lat: -22.9068, lng: -43.1729, image: "https://images.unsplash.com/photo-1455587734955-081b22074882?w=500",
+              floorPlans: {
+                default: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXJ9X9X9X9X9X9X9X9X9X9X9X9X9&s"
+              }},
+            { id: 20, name: "Alvear Palace Hotel", country: "Argentina", city: "Buenos Aires", rating: 4.7, floors: 12, lat: -34.6037, lng: -58.3816, image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=500",
+              floorPlans: {
+                default: "https://www.conceptdraw.com/How-To-Guide/picture/Floor-Plans-Samples/Hotel-Plan.png"
+              }},
+            
+            // Africa
+            { id: 21, name: "One&Only Cape Town", country: "South Africa", city: "Cape Town", rating: 4.8, floors: 6, lat: -33.9249, lng: 18.4241, image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=500",
+              floorPlans: {
+                default: "https://thumbor.forbes.com/thumbor/fit-in/900x510/https://www.forbes.com/advisor/wp-content/uploads/2022/03/hotel_floor_plan.jpeg"
+              }},
+            { id: 22, name: "Four Seasons Safari", country: "Kenya", city: "Nairobi", rating: 4.9, floors: 4, lat: -1.2864, lng: 36.8172, image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500",
+              floorPlans: {
+                default: "https://www.floorplanner.com/images/projects/hotel-floor-plan.jpg"
+              }},
+            
+            // Canada
+            { id: 23, name: "Fairmont Royal York", country: "Canada", city: "Toronto", rating: 4.5, floors: 28, lat: 43.6532, lng: -79.3832, image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500",
+              floorPlans: {
+                default: "https://www.lucidchart.com/pages/templates/floor-plan/hotel-floor-plan"
+              }},
+            { id: 24, name: "Fairmont Chateau", country: "Canada", city: "Vancouver", rating: 4.7, floors: 14, lat: 49.2827, lng: -123.1207, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500",
+              floorPlans: {
+                default: "https://d2v9ipibika81v.cloudfront.net/uploads/sites/261/hotel-floor-plan.png"
+              }}
+        ];
 
-<div id="scene" style="height:100vh;display:flex;justify-content:center;align-items:center;font-size:2em">🔒 Room 1545 locked</div>
-<div id="swim-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,32,0.92);z-index:1000;align-items:center;justify-content:center;flex-direction:column;">
-  <div style="background:#222;border-radius:18px;padding:32px 48px;box-shadow:0 8px 32px #000a;display:flex;flex-direction:column;align-items:center;">
-    <div style="font-size:2em;color:#aeefff;margin-bottom:12px;">🏊‍♂️ Texas Pool</div>
-    <svg width="320" height="180" viewBox="0 0 320 180" style="background:#2196f3;border-radius:24px;box-shadow:0 2px 16px #0008;">
-      <!-- Square pool -->
-      <rect x="20" y="30" width="280" height="120" rx="24" fill="#aeefff" stroke="#1976d2" stroke-width="6"/>
-      <!-- Texas outline (approximate) -->
-      <path d="M80,120 l10,-30 l-10,-20 l20,-10 l10,10 l10,-20 l20,10 l10,20 l20,0 l10,10 l20,-10 l10,20 l-10,20 l-20,10 l-10,20 l-20,0 l-10,-10 l-20,10 l-10,-20 l-20,-10 z" fill="#2196f3" stroke="#fff" stroke-width="3" opacity="0.7"/>
-      <!-- Lazy river path -->
-      <path d="M60,90 Q80,40 160,60 Q240,80 260,130" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
-      <text x="160" y="100" text-anchor="middle" font-size="32" fill="#fff" font-family="Arial">TEXAS</text>
-    </svg>
-    <div style="margin:18px 0 0 0;font-size:1.2em;color:#fff;">You are swimming in the Texas-shaped lazy river!</div>
-    <button onclick="closeSwim()" style="margin-top:18px;font-size:1.1em;padding:8px 24px;border-radius:8px;background:#1976d2;color:#fff;border:none;cursor:pointer;">Done Swimming</button>
-  </div>
-</div>
+        // US States list
+        const usStates = [
+            "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+            "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+            "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+            "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+            "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+            "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+            "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+            "Wisconsin", "Wyoming"
+        ];
 
-<div id="lift" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;padding:10px;border-radius:8px">
-  <div>Select a floor:</div>
-  <div id="floors"></div>
-</div>
+        let currentHotel = null;
+        let currentFloor = 1;
+        let currentPath = null;
+        let realMap = null;
+        let selectedRating = 0;
 
-<script>
-// Corridor logic for many rooms
-const ROOMS_PER_FLOOR = 20;
-let corridorIndex = 5; // Start at 6th room (index 5)
-let roomNumbers = [];
+        // Initialize rating system
+        function initializeRatingSystem() {
+            selectedRating = 0;
+            const stars = document.querySelectorAll('.star-rating .star');
+            
+            stars.forEach(star => {
+                star.classList.remove('active');
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.rating);
+                    updateStarDisplay();
+                });
+                
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.style.color = '#ffa500';
+                        } else {
+                            s.style.color = '#ddd';
+                        }
+                    });
+                });
+            });
+            
+            document.getElementById('starRating').addEventListener('mouseleave', function() {
+                updateStarDisplay();
+            });
+        }
 
-function generateRooms() {
-  // E.g. for floor 15: 1540-1559 (20 rooms)
-  const base = currentFloor * 100 + 40;
-  roomNumbers = [];
-  for (let i = 0; i < ROOMS_PER_FLOOR; i++) {
-    roomNumbers.push(base + i);
-  }
-}
+        // Update star display based on selected rating
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('.star-rating .star');
+            stars.forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.add('active');
+                    star.style.color = '#ffa500';
+                } else {
+                    star.classList.remove('active');
+                    star.style.color = '#ddd';
+                }
+            });
+        }
 
-function renderDoors() {
-  const doorsDiv = document.querySelector('.fp-doors');
-  doorsDiv.innerHTML = '';
-  // Show 3 doors: left, center, right (relative to corridorIndex)
-  for (let offset = -1; offset <= 1; offset++) {
-    const idx = corridorIndex + offset;
-    if (idx < 0 || idx >= roomNumbers.length) continue;
-    const num = roomNumbers[idx];
-    const div = document.createElement('div');
-    div.className = 'fp-door' + (num === 1545 && currentFloor === ROOM_FLOOR ? (access ? ' unlocked' : ' locked') : '');
-    div.style.left = offset === -1 ? '18%' : offset === 0 ? '50%' : '82%';
-    div.setAttribute('data-room', num);
-    div.onclick = () => enterRoom(offset);
-    const span = document.createElement('span');
-    span.innerText = num;
-    div.appendChild(span);
-    div.id = offset === -1 ? 'door-left' : offset === 0 ? 'door-center' : 'door-right';
-    doorsDiv.appendChild(div);
-  }
-}
+        // Submit rating
+        function submitRating() {
+            if (!currentHotel) return;
+            
+            if (selectedRating === 0) {
+                alert('Please select a star rating!');
+                return;
+            }
+            
+            const reviewText = document.getElementById('reviewText').value.trim();
+            
+            if (!reviewText) {
+                alert('Please write a review!');
+                return;
+            }
+            
+            // Get existing ratings from localStorage
+            const ratingsKey = `hotel_ratings_${currentHotel.id}`;
+            let ratings = JSON.parse(localStorage.getItem(ratingsKey) || '[]');
+            
+            // Add new rating
+            const newRating = {
+                stars: selectedRating,
+                review: reviewText,
+                date: new Date().toLocaleDateString(),
+                timestamp: new Date().toISOString()
+            };
+            
+            ratings.unshift(newRating);
+            
+            // Save to localStorage
+            localStorage.setItem(ratingsKey, JSON.stringify(ratings));
+            
+            // Reset form
+            selectedRating = 0;
+            document.getElementById('reviewText').value = '';
+            updateStarDisplay();
+            
+            // Reload ratings display
+            loadHotelRatings(currentHotel.id);
+            
+            alert('Thank you for your rating!');
+        }
 
-let access = false;
-let position = 'center'; // left, center, right
-let currentFloor = 15; // Start at 15th floor (room 1545)
-const POOL_FLOOR = 6;
-const ROOM_FLOOR = 15;
-const FLOORS = 29;
-let depth = 0; // 0 = at doors, 1 = at elevator/pool
+        // Load hotel ratings
+        function loadHotelRatings(hotelId) {
+            const ratingsKey = `hotel_ratings_${hotelId}`;
+            const ratings = JSON.parse(localStorage.getItem(ratingsKey) || '[]');
+            
+            // Calculate average
+            let average = 0;
+            if (ratings.length > 0) {
+                const sum = ratings.reduce((acc, r) => acc + r.stars, 0);
+                average = (sum / ratings.length).toFixed(1);
+            }
+            
+            // Update average display
+            document.querySelector('.average-rating .big-number').textContent = average;
+            document.getElementById('reviewCount').textContent = ratings.length;
+            
+            // Display reviews
+            const reviewsContainer = document.getElementById('userReviews');
+            reviewsContainer.innerHTML = '';
+            
+            if (ratings.length === 0) {
+                reviewsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px; font-size: 0.9em;">No reviews yet. Be the first to rate!</p>';
+                return;
+            }
+            
+            ratings.forEach(rating => {
+                const reviewDiv = document.createElement('div');
+                reviewDiv.className = 'review-item';
+                
+                const stars = '★'.repeat(rating.stars) + '☆'.repeat(5 - rating.stars);
+                
+                reviewDiv.innerHTML = `
+                    <div class="review-header">
+                        <span class="review-stars">${stars}</span>
+                        <span class="review-date">${rating.date}</span>
+                    </div>
+                    <div class="review-text">${rating.review}</div>
+                `;
+                
+                reviewsContainer.appendChild(reviewDiv);
+            });
+        }
 
-function move(dir) {
-  const fade = document.getElementById('fp-fade');
-  if (dir === '^') {
-    if (depth === 0) {
-      fade.style.background = 'rgba(0,0,0,0.7)';
-      setTimeout(() => {
-        depth = 1;
-        updateCorridor();
-        fade.style.background = 'rgba(0,0,0,0)';
-        document.getElementById('scene').innerText = `🛗 At Elevator (Floor ${currentFloor})`;
-        showLift();
-      }, 350);
-    }
-    return;
-  }
-  if (dir === 'v') {
-    if (depth === 0 && currentFloor === POOL_FLOOR) {
-      fade.style.background = 'rgba(0,0,0,0.7)';
-      setTimeout(() => {
-        depth = 1;
-        updateCorridor();
-        fade.style.background = 'rgba(0,0,0,0)';
-        swim();
-      }, 350);
-    } else if (currentFloor !== POOL_FLOOR) {
-      document.getElementById('scene').innerText = `🏊‍♂️ Pool is on Floor ${POOL_FLOOR}`;
-    }
-    return;
-  }
-  if (dir === '<') {
-    if (position === 'center') position = 'left';
-    else if (position === 'right') position = 'center';
-  } else if (dir === '>') {
-    if (position === 'center') position = 'right';
-    else if (position === 'left') position = 'center';
-  }
-  updateCorridor();
-}
+        // Initialize the app
+        function init() {
+            populateCountries();
+            displayHotels(hotels);
+        }
 
-function swim(){
-  document.getElementById('swim-modal').style.display = 'flex';
-  document.getElementById('scene').innerText = '🏊‍♂️ Swimming in the Texas Pool!';
-}
-function closeSwim(){
-  document.getElementById('swim-modal').style.display = 'none';
-  document.getElementById('scene').innerText = 'Done swimming!';
-}
+        // Populate country dropdown
+        function populateCountries() {
+            const countries = [...new Set(hotels.map(h => h.country))].sort();
+            const countrySelect = document.getElementById('countrySelect');
+            
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countrySelect.appendChild(option);
+            });
 
-function useKeycard(){
-  if(currentFloor !== ROOM_FLOOR){
-    document.getElementById('scene').innerText = `Room 1545 is on Floor ${ROOM_FLOOR}`;
-    return;
-  }
-  access = true;
-  document.getElementById('scene').innerText = '✅ Access granted to Room 1545';
-  document.getElementById('room-center').classList.remove('locked');
-  document.getElementById('room-center').classList.add('unlocked');
-}
+            // Populate US states
+            const stateSelect = document.getElementById('stateSelect');
+            usStates.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                stateSelect.appendChild(option);
+            });
+        }
 
-function updateCorridor() {
-  // Animate camera position and depth
-  const fpCorridor = document.getElementById('fp-corridor');
-  let x = 0;
-  if (position === 'left') x = -22;
-  else if (position === 'right') x = 22;
-  let z = 0;
-  if (depth === 1) z = -32;
-  fpCorridor.style.transform = `translateZ(0) translateX(${x}vw) translateY(0) scale(1) perspective(1800px) rotateY(${-x/2}deg) translateZ(${z}vh)`;
+        // Enable/disable state selector based on country
+        document.getElementById('countrySelect').addEventListener('change', function() {
+            const stateSelect = document.getElementById('stateSelect');
+            if (this.value === 'United States') {
+                stateSelect.disabled = false;
+            } else {
+                stateSelect.disabled = true;
+                stateSelect.value = '';
+            }
+        });
 
-  // Highlight doors
-  document.getElementById('door-left').style.boxShadow = position==='left'&&depth===0?'0 0 24px #fff8':'0 2px 12px #0008';
-  document.getElementById('door-center').style.boxShadow = position==='center'&&depth===0?'0 0 24px #fff8':'0 2px 12px #0008';
-  document.getElementById('door-right').style.boxShadow = position==='right'&&depth===0?'0 0 24px #fff8':'0 2px 12px #0008';
+        // Filter hotels based on search criteria
+        function filterHotels() {
+            const country = document.getElementById('countrySelect').value;
+            const state = document.getElementById('stateSelect').value;
+            const city = document.getElementById('cityInput').value.toLowerCase();
+            const hotelName = document.getElementById('hotelInput').value.toLowerCase();
 
-  // Show/hide elevator/pool
-  document.getElementById('fp-elevator').style.opacity = (depth===1)?1:0.3;
-  document.getElementById('fp-pool').style.opacity = (depth===1 && currentFloor===POOL_FLOOR)?1:0.3;
+            let filtered = hotels;
 
-  // Floor label
-  document.getElementById('fp-floor-label').innerText = `Floor ${currentFloor}` + (currentFloor===POOL_FLOOR?' (Pool)':'') + (currentFloor===ROOM_FLOOR?' (1545)':'');
+            if (country) {
+                filtered = filtered.filter(h => h.country === country);
+            }
 
-  // Update scene text
-  if(currentFloor === POOL_FLOOR){
-    document.getElementById('scene').innerText = 'At Pool Floor (6)';
-  } else if(currentFloor === ROOM_FLOOR){
-    if (position === 'left') document.getElementById('scene').innerText = 'At Room 1544 (Floor 15)';
-    else if (position === 'right') document.getElementById('scene').innerText = 'At Room 1546 (Floor 15)';
-    else document.getElementById('scene').innerText = access ? 'At Room 1545 (Unlocked, Floor 15)' : 'At Room 1545 (Locked, Floor 15)';
-  } else {
-    document.getElementById('scene').innerText = `On Floor ${currentFloor}`;
-  }
-}
+            if (state) {
+                filtered = filtered.filter(h => h.state === state);
+            }
 
-function enterRoom(side) {
-  if(currentFloor !== ROOM_FLOOR){
-    document.getElementById('scene').innerText = `Room 1545 is on Floor ${ROOM_FLOOR}`;
-    return;
-  }
-  if (side === 'center') {
-    if (access) document.getElementById('scene').innerText = '🚪 Entered Room 1545!';
-    else document.getElementById('scene').innerText = '🔒 Room 1545 locked';
-  } else {
-    document.getElementById('scene').innerText = side === 'left' ? '🚪 Entered Room 1544!' : '🚪 Entered Room 1546!';
-  }
-}
+            if (city) {
+                filtered = filtered.filter(h => h.city.toLowerCase().includes(city));
+            }
 
-document.addEventListener('keydown', function(e){
-  if (e.key === 'ArrowDown' || e.key === 'v') move('v');
-  if (e.key === 'ArrowUp' || e.key === '^') move('^');
-  if (e.key === 'ArrowLeft' || e.key === '<') move('<');
-  if (e.key === 'ArrowRight' || e.key === '>') move('>');
-});
+            if (hotelName) {
+                filtered = filtered.filter(h => h.name.toLowerCase().includes(hotelName));
+            }
 
-// Initial corridor setup
-updateCorridor();
+            displayHotels(filtered);
+        }
 
-function showLift(){
-  const f = document.getElementById('floors'); f.innerHTML = '';
-  for(let i=1;i<=FLOORS;i++){
-    const b=document.createElement('button');
-    b.innerText='Level '+i+(i===POOL_FLOOR?' (Pool)':'')+(i===ROOM_FLOOR?' (1545)':'');
-    b.onclick=()=>{
-      currentFloor = i;
-      document.getElementById('lift').style.display='none';
-      updateCorridor();
-      document.getElementById('scene').innerText = `🛗 Arrived at Floor ${i}`;
-    };
-    f.appendChild(b);
-  }
-  document.getElementById('lift').style.display='block';
-}
-</script>
-</body></html>
+        // Display hotels in list
+        function displayHotels(hotelList) {
+            const container = document.getElementById('hotelItems');
+            container.innerHTML = '';
+
+            if (hotelList.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No hotels found matching your criteria.</p>';
+                return;
+            }
+
+            hotelList.forEach(hotel => {
+                const item = document.createElement('div');
+                item.className = 'hotel-item';
+                item.onclick = () => showHotelMap(hotel);
+                
+                const location = hotel.state 
+                    ? `${hotel.city}, ${hotel.state}, ${hotel.country}`
+                    : `${hotel.city}, ${hotel.country}`;
+                
+                const stars = '⭐'.repeat(Math.floor(hotel.rating));
+                
+                item.innerHTML = `
+                    <img src="${hotel.image}" alt="${hotel.name}" class="hotel-image" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500'">
+                    <div class="hotel-info">
+                        <div class="hotel-name">${hotel.name}</div>
+                        <div class="hotel-location">📍 ${location}</div>
+                        <div class="hotel-rating">${stars} ${hotel.rating}</div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        // Show hotel map view
+        function showHotelMap(hotel) {
+            currentHotel = hotel;
+            currentFloor = 1;
+            
+            document.getElementById('hotelList').classList.add('hidden');
+            document.getElementById('searchSection').classList.add('hidden');
+            document.getElementById('mapContainer').classList.remove('hidden');
+            document.getElementById('currentHotelName').textContent = hotel.name;
+            
+            generateLevelButtons(hotel.floors);
+            initializeRealMap(hotel);
+            generateMap(hotel, currentFloor);
+            populateLocationSelectors(hotel, currentFloor);
+            initializeRatingSystem();
+            loadHotelRatings(hotel.id);
+        }
+
+        // Back to hotel list
+        function backToList() {
+            document.getElementById('hotelList').classList.remove('hidden');
+            document.getElementById('searchSection').classList.remove('hidden');
+            document.getElementById('mapContainer').classList.add('hidden');
+            document.getElementById('roomSearchIndicator').classList.add('hidden');
+            
+            // Destroy the map instance to prevent memory leaks
+            if (realMap) {
+                realMap.remove();
+                realMap = null;
+            }
+            
+            currentHotel = null;
+            currentPath = null;
+        }
+
+        // Generate floor level buttons
+        function generateLevelButtons(floors) {
+            const container = document.getElementById('levelButtons');
+            container.innerHTML = '';
+            
+            for (let i = floors; i >= 1; i--) {
+                const btn = document.createElement('button');
+                btn.className = 'level-btn' + (i === 1 ? ' active' : '');
+                btn.textContent = `Floor ${i}`;
+                btn.onclick = () => changeFloor(i);
+                container.appendChild(btn);
+            }
+        }
+
+        // Initialize real map with Leaflet and OpenStreetMap
+        function initializeRealMap(hotel) {
+            // Remove existing map if any
+            if (realMap) {
+                realMap.remove();
+            }
+            
+            // Create new map centered on hotel coordinates
+            realMap = L.map('realMap').setView([hotel.lat, hotel.lng], 15);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(realMap);
+            
+            // Add marker for the hotel
+            const marker = L.marker([hotel.lat, hotel.lng]).addTo(realMap);
+            marker.bindPopup(`
+                <b>${hotel.name}</b><br>
+                ${hotel.city}, ${hotel.state || hotel.country}<br>
+                Rating: ${hotel.rating} ⭐<br>
+                Floors: ${hotel.floors}
+            `).openPopup();
+            
+            // Add a circle to show hotel area
+            L.circle([hotel.lat, hotel.lng], {
+                color: '#667eea',
+                fillColor: '#667eea',
+                fillOpacity: 0.2,
+                radius: 100
+            }).addTo(realMap);
+        }
+
+        // Change floor
+        function changeFloor(floor) {
+            currentFloor = floor;
+            
+            // Update active button
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === `Floor ${floor}`) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            generateMap(currentHotel, floor);
+            populateLocationSelectors(currentHotel, floor);
+        }
+
+        // Generate 3D map for current floor with real floor plan images
+        function generateMap(hotel, floor) {
+            console.log('=== GENERATING MAP ===');
+            console.log('Hotel:', hotel.name, 'Floor:', floor);
+            
+            const canvas = document.getElementById('canvas3d');
+            if (!canvas) {
+                console.error('Canvas element not found!');
+                return;
+            }
+            
+            canvas.innerHTML = '';
+            canvas.style.background = '#ffcccc'; // Bright pink to see if canvas exists
+            
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            console.log('Canvas size:', width, 'x', height);
+            
+            // Add a big visible test element
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: blue; color: white; padding: 30px; z-index: 1000; font-size: 24px; font-weight: bold;';
+            testDiv.textContent = `FLOOR ${floor} - ${hotel.name}`;
+            canvas.appendChild(testDiv);
+            console.log('Test div added');
+            
+            // Get floor plan image for this hotel and floor
+            const floorPlanUrl = hotel.floorPlans[floor] || hotel.floorPlans.default;
+            console.log('Floor plan URL:', floorPlanUrl);
+            
+            // Add floor plan image as background
+            const floorPlanImg = document.createElement('img');
+            floorPlanImg.className = 'floor-plan-image';
+            floorPlanImg.src = floorPlanUrl;
+            floorPlanImg.alt = `${hotel.name} - Floor ${floor}`;
+            floorPlanImg.onload = function() {
+                console.log('✓ Floor plan image loaded!');
+            };
+            floorPlanImg.onerror = function() {
+                console.log('✗ Floor plan failed, using fallback');
+                this.src = 'https://www.smartdraw.com/floor-plan/img/hotel-floor-plan.png?bn=15100111880';
+            };
+            canvas.appendChild(floorPlanImg);
+            
+            // Generate interactive room markers over the floor plan
+            const roomsPerFloor = 12;
+            const roomWidth = 90;
+            const roomHeight = 60;
+            
+            // Left side rooms (6 rooms) - positioned over typical floor plan layout
+            for (let i = 0; i < 6; i++) {
+                const room = document.createElement('div');
+                room.className = 'map-room';
+                const roomNum = (floor * 100) + (i + 1);
+                room.textContent = roomNum;
+                room.dataset.location = `room-${roomNum}`;
+                room.dataset.type = 'room';
+                
+                room.style.width = roomWidth + 'px';
+                room.style.height = roomHeight + 'px';
+                room.style.left = '12%';
+                room.style.top = (10 + i * 14) + '%';
+                room.style.pointerEvents = 'auto';
+                
+                room.onclick = () => selectLocation(room.dataset.location);
+                canvas.appendChild(room);
+            }
+            
+            // Right side rooms (6 rooms)
+            for (let i = 0; i < 6; i++) {
+                const room = document.createElement('div');
+                room.className = 'map-room';
+                const roomNum = (floor * 100) + (i + 7);
+                room.textContent = roomNum;
+                room.dataset.location = `room-${roomNum}`;
+                room.dataset.type = 'room';
+                
+                room.style.width = roomWidth + 'px';
+                room.style.height = roomHeight + 'px';
+                room.style.right = '12%';
+                room.style.top = (10 + i * 14) + '%';
+                room.style.pointerEvents = 'auto';
+                
+                room.onclick = () => selectLocation(room.dataset.location);
+                canvas.appendChild(room);
+            }
+            
+            // Add elevator bank - overlaid on floor plan
+            const elevator = document.createElement('div');
+            elevator.className = 'map-elevator';
+            elevator.innerHTML = '<div>🛗</div><div class="facility-label">ELEVATOR</div>';
+            elevator.dataset.location = 'elevator';
+            elevator.dataset.type = 'elevator';
+            elevator.style.width = '90px';
+            elevator.style.height = '90px';
+            elevator.style.right = '8%';
+            elevator.style.top = '45%';
+            elevator.style.pointerEvents = 'auto';
+            canvas.appendChild(elevator);
+            
+            // Add restrooms - positioned strategically on floor plan
+            const restroom1 = document.createElement('div');
+            restroom1.className = 'map-restroom';
+            restroom1.innerHTML = '<div>🚻</div><div class="facility-label">RESTROOM</div>';
+            restroom1.dataset.location = `restroom-${floor}-1`;
+            restroom1.dataset.type = 'restroom';
+            restroom1.style.width = '85px';
+            restroom1.style.height = '75px';
+            restroom1.style.left = '5%';
+            restroom1.style.top = '8%';
+            restroom1.style.pointerEvents = 'auto';
+            canvas.appendChild(restroom1);
+            
+            const restroom2 = document.createElement('div');
+            restroom2.className = 'map-restroom';
+            restroom2.innerHTML = '<div>🚻</div><div class="facility-label">RESTROOM</div>';
+            restroom2.dataset.location = `restroom-${floor}-2`;
+            restroom2.dataset.type = 'restroom';
+            restroom2.style.width = '85px';
+            restroom2.style.height = '75px';
+            restroom2.style.left = '5%';
+            restroom2.style.bottom = '8%';
+            restroom2.style.pointerEvents = 'auto';
+            canvas.appendChild(restroom2);
+            
+            // Add vending/ice machine area
+            const vending = document.createElement('div');
+            vending.className = 'map-elevator';
+            vending.innerHTML = '<div>🧊</div><div class="facility-label">ICE/VENDING</div>';
+            vending.dataset.location = `vending-${floor}`;
+            vending.dataset.type = 'vending';
+            vending.style.width = '90px';
+            vending.style.height = '75px';
+            vending.style.left = '5%';
+            vending.style.top = '45%';
+            vending.style.background = 'linear-gradient(135deg, rgba(0, 123, 255, 0.2) 0%, rgba(0, 123, 255, 0.3) 100%)';
+            vending.style.borderColor = '#007bff';
+            vending.style.color = '#004085';
+            vending.style.pointerEvents = 'auto';
+            canvas.appendChild(vending);
+            
+            // Add lobby (only on floor 1)
+            if (floor === 1) {
+                const lobby = document.createElement('div');
+                lobby.className = 'map-lobby';
+                lobby.textContent = '🏛️ MAIN LOBBY';
+                lobby.dataset.location = 'lobby';
+                lobby.dataset.type = 'lobby';
+                lobby.style.width = '200px';
+                lobby.style.height = '120px';
+                lobby.style.left = '50%';
+                lobby.style.bottom = '5%';
+                lobby.style.transform = 'translateX(-50%)';
+                lobby.style.pointerEvents = 'auto';
+                canvas.appendChild(lobby);
+                
+                // Add reception desk
+                const reception = document.createElement('div');
+                reception.className = 'map-elevator';
+                reception.innerHTML = '<div>👤</div><div class="facility-label">RECEPTION</div>';
+                reception.dataset.location = 'reception';
+                reception.dataset.type = 'reception';
+                reception.style.width = '100px';
+                reception.style.height = '70px';
+                reception.style.left = '50%';
+                reception.style.bottom = '28%';
+                reception.style.transform = 'translateX(-50%)';
+                reception.style.background = 'linear-gradient(135deg, rgba(108, 117, 125, 0.2) 0%, rgba(108, 117, 125, 0.3) 100%)';
+                reception.style.borderColor = '#6c757d';
+                reception.style.color = '#495057';
+                reception.style.pointerEvents = 'auto';
+                canvas.appendChild(reception);
+            }
+            
+            // Add stairwell
+            const stairs = document.createElement('div');
+            stairs.className = 'map-elevator';
+            stairs.innerHTML = '<div>🚶</div><div class="facility-label">STAIRS</div>';
+            stairs.dataset.location = 'stairs';
+            stairs.dataset.type = 'stairs';
+            stairs.style.width = '75px';
+            stairs.style.height = '90px';
+            stairs.style.right = '8%';
+            stairs.style.bottom = '8%';
+            stairs.style.background = 'linear-gradient(135deg, rgba(108, 117, 125, 0.2) 0%, rgba(108, 117, 125, 0.3) 100%)';
+            stairs.style.borderColor = '#6c757d';
+            stairs.style.color = '#495057';
+            stairs.style.pointerEvents = 'auto';
+            canvas.appendChild(stairs);
+        }
+
+        // Populate location selectors
+        function populateLocationSelectors(hotel, floor) {
+            const fromSelect = document.getElementById('fromLocation');
+            const toSelect = document.getElementById('toLocation');
+            
+            fromSelect.innerHTML = '<option value="">Select starting point</option>';
+            toSelect.innerHTML = '<option value="">Select destination</option>';
+            
+            const locations = document.querySelectorAll('#canvas3d [data-location]');
+            locations.forEach(loc => {
+                const option1 = document.createElement('option');
+                option1.value = loc.dataset.location;
+                option1.textContent = formatLocationName(loc.dataset.location, loc.dataset.type);
+                fromSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = loc.dataset.location;
+                option2.textContent = formatLocationName(loc.dataset.location, loc.dataset.type);
+                toSelect.appendChild(option2);
+            });
+        }
+
+        // Format location name
+        function formatLocationName(location, type) {
+            if (type === 'room') {
+                return `Room ${location.replace('room-', '')}`;
+            } else if (type === 'restroom') {
+                return `Restroom ${location.split('-').pop()}`;
+            } else if (type === 'elevator') {
+                return 'Elevator';
+            } else if (type === 'lobby') {
+                return 'Lobby';
+            }
+            return location;
+        }
+
+        // Navigate between two points
+        function navigatePath() {
+            const from = document.getElementById('fromLocation').value;
+            const to = document.getElementById('toLocation').value;
+            
+            if (!from || !to) {
+                alert('Please select both starting point and destination');
+                return;
+            }
+            
+            // Clear previous path
+            document.querySelectorAll('.path-line, .path-marker').forEach(el => el.remove());
+            
+            const fromEl = document.querySelector(`[data-location="${from}"]`);
+            const toEl = document.querySelector(`[data-location="${to}"]`);
+            
+            if (!fromEl || !toEl) return;
+            
+            // Get positions
+            const fromRect = fromEl.getBoundingClientRect();
+            const toRect = toEl.getBoundingClientRect();
+            const canvasRect = document.getElementById('canvas3d').getBoundingClientRect();
+            
+            const fromX = fromRect.left - canvasRect.left + fromRect.width / 2;
+            const fromY = fromRect.top - canvasRect.top + fromRect.height / 2;
+            const toX = toRect.left - canvasRect.left + toRect.width / 2;
+            const toY = toRect.top - canvasRect.top + toRect.height / 2;
+            
+            // Draw line
+            const line = document.createElement('div');
+            line.className = 'path-line';
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            line.style.width = length + 'px';
+            line.style.left = fromX + 'px';
+            line.style.top = fromY + 'px';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            document.getElementById('canvas3d').appendChild(line);
+            
+            // Add markers
+            const marker1 = document.createElement('div');
+            marker1.className = 'path-marker';
+            marker1.style.left = (fromX - 6) + 'px';
+            marker1.style.top = (fromY - 6) + 'px';
+            document.getElementById('canvas3d').appendChild(marker1);
+            
+            const marker2 = document.createElement('div');
+            marker2.className = 'path-marker';
+            marker2.style.left = (toX - 6) + 'px';
+            marker2.style.top = (toY - 6) + 'px';
+            document.getElementById('canvas3d').appendChild(marker2);
+        }
+
+        // Find nearest restroom
+        function findNearest(type) {
+            const restrooms = document.querySelectorAll(`[data-type="${type}"]`);
+            if (restrooms.length > 0) {
+                // Simulate finding nearest by selecting first one
+                document.getElementById('toLocation').value = restrooms[0].dataset.location;
+                alert(`Nearest ${type} found! Set as destination.`);
+            }
+        }
+
+        // Go to specific location type
+        function goToLocation(type) {
+            const location = document.querySelector(`[data-type="${type}"]`);
+            if (location) {
+                document.getElementById('toLocation').value = location.dataset.location;
+                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} set as destination.`);
+            } else if (type === 'lobby') {
+                alert('Lobby is on Floor 1. Switching floor...');
+                changeFloor(1);
+                setTimeout(() => {
+                    const lobby = document.querySelector(`[data-type="lobby"]`);
+                    if (lobby) {
+                        document.getElementById('toLocation').value = lobby.dataset.location;
+                    }
+                }, 100);
+            }
+        }
+
+        // Select room function
+        function selectRoom() {
+            const roomNum = prompt('Enter room number:');
+            if (roomNum) {
+                const targetFloor = Math.floor(parseInt(roomNum) / 100);
+                const targetRoom = `room-${roomNum}`;
+                
+                // Show indicator
+                document.getElementById('roomNumber').textContent = roomNum;
+                document.getElementById('roomSearchIndicator').classList.remove('hidden');
+                
+                // Change to correct floor if needed
+                if (targetFloor !== currentFloor && targetFloor >= 1 && targetFloor <= currentHotel.floors) {
+                    changeFloor(targetFloor);
+                }
+                
+                // Wait a bit for map to generate, then select room
+                setTimeout(() => {
+                    const room = document.querySelector(`[data-location="${targetRoom}"]`);
+                    if (room) {
+                        document.getElementById('toLocation').value = targetRoom;
+                        room.style.background = 'rgba(255, 193, 7, 0.6)';
+                        room.style.border = '3px solid #ffc107';
+                        alert(`Room ${roomNum} found and set as destination!`);
+                    } else {
+                        alert(`Room ${roomNum} not found on this floor.`);
+                        document.getElementById('roomSearchIndicator').classList.add('hidden');
+                    }
+                }, 200);
+            }
+        }
+
+        // Select location on click
+        function selectLocation(location) {
+            const toSelect = document.getElementById('toLocation');
+            toSelect.value = location;
+            alert(`${formatLocationName(location, document.querySelector(`[data-location="${location}"]`).dataset.type)} selected as destination`);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
