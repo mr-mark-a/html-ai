@@ -461,29 +461,35 @@
         .rating-input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            border-radius: 25px;
             margin-bottom: 10px;
             font-size: 0.9em;
             resize: vertical;
             min-height: 60px;
+            background: linear-gradient(45deg, rgba(0, 0, 0, 0.8), rgba(50, 50, 50, 0.8));
+            color: white;
+            outline: none;
         }
 
         .submit-rating-btn {
-            background: #ffa500;
-            color: white;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
             border: none;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 25px;
             width: 100%;
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
             margin-bottom: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
         }
 
         .submit-rating-btn:hover {
-            background: #ff8c00;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
         }
 
         .user-reviews {
@@ -491,15 +497,16 @@
             overflow-y: auto;
             margin-top: 15px;
             padding-top: 15px;
-            border-top: 2px solid #e0e0e0;
+            border-top: 2px solid rgba(255, 165, 0, 0.3);
         }
 
         .review-item {
-            background: #f8f9fa;
+            background: rgba(0, 0, 0, 0.7);
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 10px;
             border-left: 3px solid #ffa500;
+            backdrop-filter: blur(10px);
         }
 
         .review-header {
@@ -509,28 +516,29 @@
         }
 
         .review-stars {
-            color: #ffa500;
+            color: #FFD700;
             font-size: 0.9em;
         }
 
         .review-date {
-            color: #999;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.8em;
         }
 
         .review-text {
-            color: #555;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 0.9em;
             line-height: 1.4;
         }
 
         .average-rating {
-            background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
-            color: white;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: center;
             margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
         }
 
         .average-rating .big-number {
@@ -676,10 +684,13 @@
     </style>
 </head>
 <body>
+    <div class="stars" id="stars"></div>
+    
     <div class="container">
         <header>
-            <h1>🏨 Global Hotel Navigator</h1>
-            <p class="tagline">Navigate hotels worldwide with precision</p>
+            <div class="hotel-icon">🏨</div>
+            <h1>Mars Hotel Navigator</h1>
+            <p class="tagline">Premium hotel navigation across the galaxy</p>
         </header>
 
         <!-- Search Section -->
@@ -1607,6 +1618,26 @@
 
         // Initialize on load
         window.addEventListener('load', init);
+
+        // Create animated stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 30;
+            
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Create stars when page loads
+        createStars();
     </script>
 </body>
 </html>
