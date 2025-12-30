@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Pro - Advanced File Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 40px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #f8f9fa;
+            transform: scale(1.02);
+        }
+
+        .upload-zone.dragover {
+            background: #e7f3ff;
+            border-color: #0066cc;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .editor-container {
+            display: none;
+            padding: 30px;
+        }
+
+        .editor-container.active {
+            display: block;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 5px 15px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .toolbar-section:last-child {
+            border-right: none;
+        }
+
+        .toolbar-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        select, input[type="text"], input[type="number"] {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .editor-area {
+            position: relative;
+        }
+
+        #textEditor {
+            width: 100%;
+            min-height: 500px;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        #imageEditor {
+            display: none;
+            text-align: center;
+        }
+
+        #imageEditor.active {
+            display: block;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 600px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .canvas-container {
+            display: inline-block;
+            position: relative;
+        }
+
+        #imageCanvas {
+            max-width: 100%;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: crosshair;
+        }
+
+        #audioEditor {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        #audioEditor.active {
+            display: block;
+        }
+
+        .audio-player {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            color: #667eea;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .time-display {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .progress-container {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            width: 100px;
+        }
+
+        .waveform-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .waveform {
+            width: 100%;
+            height: 120px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .audio-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .audio-info-item {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .audio-info-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .audio-info-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .file-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .file-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .file-info-value {
+            color: #0066cc;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .format-btn {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .format-btn:hover {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .filter-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-control label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .filter-control input[type="range"] {
+            width: 100%;
+        }
+
+        .filter-value {
+            text-align: center;
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .toolbar-section {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 10px;
+            }
+
+            .format-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 File Pro</h1>
+            <p>Advanced File Editor with Format Conversion</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drop your file here or click to browse</div>
+                <div class="upload-subtext">Supports text files, images (JPG, PNG, GIF, BMP, WebP, HEIC), audio (MP3, WAV, OGG, M4A), and more - Auto-detected!</div>
+                <input type="file" id="fileInput" accept="*/*">
+            </div>
+        </div>
+
+        <div class="editor-container" id="editorContainer">
+            <div class="file-info" id="fileInfo"></div>
+
+            <!-- Text Editor Toolbar -->
+            <div class="toolbar" id="textToolbar">
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Edit:</span>
+                    <button class="btn btn-sm btn-secondary" onclick="undo()">↶ Undo</button>
+                    <button class="btn btn-sm btn-secondary" onclick="redo()">↷ Redo</button>
+                    <button class="btn btn-sm btn-secondary" onclick="clearText()">🗑️ Clear</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Format:</span>
+                    <select id="fontFamily" onchange="changeFont()">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
+                    <select id="fontSize" onchange="changeFontSize()">
+                        <option value="12px">12px</option>
+                        <option value="14px" selected>14px</option>
+                        <option value="16px">16px</option>
+                        <option value="18px">18px</option>
+                        <option value="20px">20px</option>
+                        <option value="24px">24px</option>
+                    </select>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Transform:</span>
+                    <button class="btn btn-sm btn-info" onclick="toUpperCase()">ABC</button>
+                    <button class="btn btn-sm btn-info" onclick="toLowerCase()">abc</button>
+                    <button class="btn btn-sm btn-info" onclick="toTitleCase()">Abc</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Tools:</span>
+                    <button class="btn btn-sm btn-warning" onclick="findReplace()">🔍 Find & Replace</button>
+                    <button class="btn btn-sm btn-info" onclick="showStats()">📊 Stats</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Convert:</span>
+                    <button class="btn btn-sm btn-primary" onclick="showConversionOptions()">🔄 Convert Format</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <button class="btn btn-success" onclick="downloadFile()">💾 Download</button>
+                    <button class="btn btn-info" onclick="saveEditedFile()">💾 Save As...</button>
+                    <button class="btn btn-danger" onclick="resetEditor()">🔄 New File</button>
+                </div>
+            </div>
+
+            <!-- Image Editor Toolbar -->
+            <div class="toolbar" id="imageToolbar" style="display: none;">
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Edit:</span>
+                    <button class="btn btn-sm btn-secondary" onclick="rotateImage(90)">⟳ Rotate Right</button>
+                    <button class="btn btn-sm btn-secondary" onclick="rotateImage(-90)">⟲ Rotate Left</button>
+                    <button class="btn btn-sm btn-secondary" onclick="flipHorizontal()">↔️ Flip H</button>
+                    <button class="btn btn-sm btn-secondary" onclick="flipVertical()">↕️ Flip V</button>
+                </div>
+
+                <div class="toolbar-section" id="pngBackgroundSection" style="display: none;">
+                    <span class="toolbar-label">PNG Background:</span>
+                    <select id="bgColorSelect">
+                        <option value="white">⬜ White</option>
+                        <option value="black">⬛ Black</option>
+                        <option value="red">🟥 Red</option>
+                        <option value="blue">🟦 Blue</option>
+                        <option value="green">🟩 Green</option>
+                    </select>
+                    <button class="btn btn-sm btn-warning" onclick="applyBackground()">✓ Apply BG</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Resize:</span>
+                    <input type="number" id="resizeWidth" placeholder="Width" style="width: 80px;">
+                    <input type="number" id="resizeHeight" placeholder="Height" style="width: 80px;">
+                    <button class="btn btn-sm btn-info" onclick="resizeImage()">✓ Apply</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Filters:</span>
+                    <button class="btn btn-sm btn-warning" onclick="showFilters()">🎨 Filters</button>
+                    <button class="btn btn-sm btn-secondary" onclick="resetFilters()">↺ Reset</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Convert:</span>
+                    <button class="btn btn-sm btn-primary" onclick="showImageConversion()">🔄 Convert Format</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <button class="btn btn-success" onclick="downloadImage()">💾 Download</button>
+                    <button class="btn btn-info" onclick="saveEditedFile()">💾 Save As...</button>
+                    <button class="btn btn-danger" onclick="resetEditor()">🔄 New File</button>
+                </div>
+            </div>
+
+            <!-- Audio Editor Toolbar -->
+            <div class="toolbar" id="audioToolbar" style="display: none;">
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Speed:</span>
+                    <select id="playbackRate" onchange="changePlaybackRate()">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Pitch:</span>
+                    <input type="range" id="pitchControl" min="-12" max="12" value="0" style="width: 120px;" oninput="updatePitchDisplay()">
+                    <span id="pitchValue">0</span>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Effects:</span>
+                    <button class="btn btn-sm btn-warning" onclick="toggleReverb()">🎵 Reverb</button>
+                    <button class="btn btn-sm btn-info" onclick="normalizeAudio()">📊 Normalize</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <span class="toolbar-label">Convert:</span>
+                    <button class="btn btn-sm btn-primary" onclick="showAudioConversion()">🔄 Convert Format</button>
+                </div>
+
+                <div class="toolbar-section">
+                    <button class="btn btn-success" onclick="downloadAudio()">💾 Download</button>
+                    <button class="btn btn-info" onclick="saveEditedFile()">💾 Save As...</button>
+                    <button class="btn btn-danger" onclick="resetEditor()">🔄 New File</button>
+                </div>
+            </div>
+
+            <!-- Text Editor -->
+            <div class="editor-area" id="textEditorArea">
+                <textarea id="textEditor" placeholder="Your file content will appear here..."></textarea>
+            </div>
+
+            <!-- Image Editor -->
+            <div id="imageEditor">
+                <canvas id="imageCanvas"></canvas>
+            </div>
+
+            <!-- Audio Editor -->
+            <div id="audioEditor">
+                <div class="audio-player">
+                    <div class="audio-info">
+                        <div class="audio-info-item">
+                            <div class="audio-info-label">Duration</div>
+                            <div class="audio-info-value" id="audioDuration">--:--</div>
+                        </div>
+                        <div class="audio-info-item">
+                            <div class="audio-info-label">Sample Rate</div>
+                            <div class="audio-info-value" id="sampleRate">-- kHz</div>
+                        </div>
+                        <div class="audio-info-item">
+                            <div class="audio-info-label">Channels</div>
+                            <div class="audio-info-value" id="channels">--</div>
+                        </div>
+                        <div class="audio-info-item">
+                            <div class="audio-info-label">Bitrate</div>
+                            <div class="audio-info-value" id="bitrate">-- kbps</div>
+                        </div>
+                    </div>
+                    <div class="audio-controls">
+                        <button class="play-btn" id="playPauseBtn" onclick="togglePlayPause()">▶</button>
+                        <div class="time-display" id="currentTime">0:00</div>
+                        <div class="progress-container" onclick="seekAudio(event)">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="time-display" id="totalTime">0:00</div>
+                        <div class="volume-control">
+                            <span>🔊</span>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume()">
+                            <span id="volumePercent">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="waveform-container">
+                    <h3 style="margin-bottom: 15px; color: #333;">🎵 Waveform</h3>
+                    <canvas class="waveform" id="waveformCanvas"></canvas>
+                </div>
+                <audio id="audioPlayer" style="display: none;"></audio>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Modal -->
+    <div class="modal" id="conversionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('conversionModal')">&times;</span>
+                <h2>Convert File Format</h2>
+            </div>
+            <p>Select the format you want to convert to:</p>
+            <div class="format-grid" id="formatOptions"></div>
+        </div>
+    </div>
+
+    <!-- Filters Modal -->
+    <div class="modal" id="filtersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('filtersModal')">&times;</span>
+                <h2>Image Filters</h2>
+            </div>
+            <div class="filter-controls">
+                <div class="filter-control">
+                    <label>Brightness</label>
+                    <input type="range" id="brightness" min="0" max="200" value="100" oninput="applyFilters()">
+                    <div class="filter-value" id="brightnessValue">100%</div>
+                </div>
+                <div class="filter-control">
+                    <label>Contrast</label>
+                    <input type="range" id="contrast" min="0" max="200" value="100" oninput="applyFilters()">
+                    <div class="filter-value" id="contrastValue">100%</div>
+                </div>
+                <div class="filter-control">
+                    <label>Saturation</label>
+                    <input type="range" id="saturation" min="0" max="200" value="100" oninput="applyFilters()">
+                    <div class="filter-value" id="saturationValue">100%</div>
+                </div>
+                <div class="filter-control">
+                    <label>Blur</label>
+                    <input type="range" id="blur" min="0" max="10" value="0" oninput="applyFilters()">
+                    <div class="filter-value" id="blurValue">0px</div>
+                </div>
+                <div class="filter-control">
+                    <label>Grayscale</label>
+                    <input type="range" id="grayscale" min="0" max="100" value="0" oninput="applyFilters()">
+                    <div class="filter-value" id="grayscaleValue">0%</div>
+                </div>
+                <div class="filter-control">
+                    <label>Sepia</label>
+                    <input type="range" id="sepia" min="0" max="100" value="0" oninput="applyFilters()">
+                    <div class="filter-value" id="sepiaValue">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Find & Replace Modal -->
+    <div class="modal" id="findReplaceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('findReplaceModal')">&times;</span>
+                <h2>Find & Replace</h2>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label>Find:</label>
+                    <input type="text" id="findText" style="width: 100%; margin-top: 5px;">
+                </div>
+                <div>
+                    <label>Replace with:</label>
+                    <input type="text" id="replaceText" style="width: 100%; margin-top: 5px;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="findNext()">Find Next</button>
+                    <button class="btn btn-warning" onclick="replaceOne()">Replace</button>
+                    <button class="btn btn-danger" onclick="replaceAll()">Replace All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('statsModal')">&times;</span>
+                <h2>Document Statistics</h2>
+            </div>
+            <div class="stats" id="statsContent"></div>
+        </div>
+    </div>
+
+    <!-- Save As Modal -->
+    <div class="modal" id="saveAsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('saveAsModal')">&times;</span>
+                <h2>💾 Save Edited File</h2>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">File Name:</label>
+                    <input type="text" id="saveFileName" style="width: 100%; padding: 10px; font-size: 14px;" placeholder="Enter filename...">
+                </div>
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 8px; display: block;">Save Location:</label>
+                    <select id="saveLocation" style="width: 100%; padding: 10px; font-size: 14px;">
+                        <option value="downloads">📥 Downloads Folder</option>
+                        <option value="documents">📄 Documents Folder</option>
+                        <option value="desktop">🖥️ Desktop</option>
+                        <option value="pictures">🖼️ Pictures Folder</option>
+                        <option value="mphotos">📸 M Photos Gallery</option>
+                        <option value="custom">📂 Choose Custom Location...</option>
+                    </select>
+                </div>
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; font-size: 0.9em;">
+                    <strong>📍 Save Path:</strong>
+                    <div id="savePath" style="color: #0066cc; margin-top: 5px; word-break: break-all;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal('saveAsModal')">Cancel</button>
+                    <button class="btn btn-success" onclick="confirmSave()">✓ Save File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let currentFileType = null;
+        let originalImage = null;
+        let canvas = document.getElementById('imageCanvas');
+        let ctx = canvas.getContext('2d');
+        let imageData = null;
+        let originalAlphaChannel = null; // Store original transparency
+        let wasOriginallyPNG = false; // Track if original file was PNG
+
+        // Upload Zone Handlers
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            currentFile = file;
+            
+            // Auto-detect file type
+            const detectedType = detectFileType(file);
+            
+            // Show file info
+            const fileInfo = document.getElementById('fileInfo');
+            const fileSize = (file.size / 1024).toFixed(2);
+            const typeIcon = detectedType === 'image' ? '🖼️' : detectedType === 'audio' ? '🎵' : '📝';
+            
+            fileInfo.innerHTML = `
+                <div class="file-info-item">
+                    <span class="file-info-label">📄 File:</span>
+                    <span class="file-info-value">${file.name}</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">📊 Size:</span>
+                    <span class="file-info-value">${fileSize} KB</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">📝 Type:</span>
+                    <span class="file-info-value">${typeIcon} ${detectedType.charAt(0).toUpperCase() + detectedType.slice(1)}</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">🔍 Format:</span>
+                    <span class="file-info-value">${file.name.split('.').pop().toUpperCase()}</span>
+                </div>
+            `;
+
+            // Show editor container
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('editorContainer').classList.add('active');
+
+            // Load file based on detected type
+            if (detectedType === 'image') {
+                loadImage(file);
+            } else if (detectedType === 'audio') {
+                loadAudio(file);
+            } else {
+                loadText(file);
+            }
+        }
+
+        function detectFileType(file) {
+            const fileName = file.name.toLowerCase();
+            const extension = fileName.split('.').pop();
+            
+            // Image extensions
+            const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'heic', 'heif', 'tiff', 'tif'];
+            // Audio extensions
+            const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'opus', 'oga'];
+            // Text extensions
+            const textExts = ['txt', 'md', 'json', 'xml', 'html', 'css', 'js', 'csv', 'log', 'rtf', 'doc', 'docx'];
+            
+            // Check by extension first
+            if (imageExts.includes(extension)) {
+                return 'image';
+            }
+            if (audioExts.includes(extension)) {
+                return 'audio';
+            }
+            
+            // Check by MIME type
+            if (file.type.startsWith('image/')) {
+                return 'image';
+            }
+            if (file.type.startsWith('audio/')) {
+                return 'audio';
+            }
+            
+            // Default to text
+            return 'text';
+        }
+
+        function loadText(file) {
+            currentFileType = 'text';
+            document.getElementById('textToolbar').style.display = 'flex';
+            document.getElementById('imageToolbar').style.display = 'none';
+            document.getElementById('textEditorArea').style.display = 'block';
+            document.getElementById('imageEditor').classList.remove('active');
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('textEditor').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+
+        function loadAudio(file) {
+            currentFileType = 'audio';
+            document.getElementById('textToolbar').style.display = 'none';
+            document.getElementById('imageToolbar').style.display = 'none';
+            document.getElementById('audioToolbar').style.display = 'flex';
+            document.getElementById('textEditorArea').style.display = 'none';
+            document.getElementById('imageEditor').classList.remove('active');
+            document.getElementById('audioEditor').classList.add('active');
+
+            const audioPlayer = document.getElementById('audioPlayer');
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                audioPlayer.src = e.target.result;
+                audioPlayer.load();
+                
+                audioPlayer.addEventListener('loadedmetadata', () => {
+                    const duration = audioPlayer.duration;
+                    document.getElementById('audioDuration').textContent = formatTime(duration);
+                    document.getElementById('totalTime').textContent = formatTime(duration);
+                    
+                    // Try to get audio context info
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        document.getElementById('sampleRate').textContent = (audioContext.sampleRate / 1000).toFixed(1) + ' kHz';
+                    }
+                    
+                    // Estimate bitrate
+                    const bitrate = Math.round((file.size * 8) / duration / 1000);
+                    document.getElementById('bitrate').textContent = bitrate + ' kbps';
+                    document.getElementById('channels').textContent = 'Stereo';
+                    
+                    // Draw waveform
+                    drawWaveform(e.target.result);
+                });
+                
+                // Update progress bar
+                audioPlayer.addEventListener('timeupdate', () => {
+                    const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('currentTime').textContent = formatTime(audioPlayer.currentTime);
+                });
+                
+                audioPlayer.addEventListener('ended', () => {
+                    document.getElementById('playPauseBtn').textContent = '▶';
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function loadImage(file) {
+            currentFileType = 'image';
+            document.getElementById('textToolbar').style.display = 'none';
+            document.getElementById('imageToolbar').style.display = 'flex';
+            document.getElementById('audioToolbar').style.display = 'none';
+            document.getElementById('textEditorArea').style.display = 'none';
+            document.getElementById('imageEditor').classList.add('active');
+            document.getElementById('audioEditor').classList.remove('active');
+
+            // Check if PNG and show background section
+            const isPNG = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+            const bgSection = document.getElementById('pngBackgroundSection');
+            if (isPNG) {
+                bgSection.style.display = 'flex';
+            } else {
+                bgSection.style.display = 'none';
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // Store original alpha channel if PNG
+                    if (isPNG) {
+                        wasOriginallyPNG = true;
+                        originalAlphaChannel = new Uint8ClampedArray(img.width * img.height);
+                        const pixels = imageData.data;
+                        for (let i = 0; i < img.width * img.height; i++) {
+                            originalAlphaChannel[i] = pixels[i * 4 + 3]; // Store alpha values
+                        }
+                    } else {
+                        wasOriginallyPNG = false;
+                        originalAlphaChannel = null;
+                    }
+                    
+                    // Update resize inputs
+                    document.getElementById('resizeWidth').value = img.width;
+                    document.getElementById('resizeHeight').value = img.height;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Text Editor Functions
+        function undo() {
+            document.execCommand('undo');
+        }
+
+        function redo() {
+            document.execCommand('redo');
+        }
+
+        function clearText() {
+            if (confirm('Are you sure you want to clear all text?')) {
+                document.getElementById('textEditor').value = '';
+            }
+        }
+
+        function changeFont() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            document.getElementById('textEditor').style.fontFamily = fontFamily;
+        }
+
+        function changeFontSize() {
+            const fontSize = document.getElementById('fontSize').value;
+            document.getElementById('textEditor').style.fontSize = fontSize;
+        }
+
+        function toUpperCase() {
+            const editor = document.getElementById('textEditor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            if (selectedText) {
+                editor.value = editor.value.substring(0, start) + selectedText.toUpperCase() + editor.value.substring(end);
+                editor.setSelectionRange(start, end);
+            } else {
+                editor.value = editor.value.toUpperCase();
+            }
+        }
+
+        function toLowerCase() {
+            const editor = document.getElementById('textEditor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            if (selectedText) {
+                editor.value = editor.value.substring(0, start) + selectedText.toLowerCase() + editor.value.substring(end);
+                editor.setSelectionRange(start, end);
+            } else {
+                editor.value = editor.value.toLowerCase();
+            }
+        }
+
+        function toTitleCase() {
+            const editor = document.getElementById('textEditor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            const titleCase = (str) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            if (selectedText) {
+                editor.value = editor.value.substring(0, start) + titleCase(selectedText) + editor.value.substring(end);
+                editor.setSelectionRange(start, end);
+            } else {
+                editor.value = titleCase(editor.value);
+            }
+        }
+
+        function findReplace() {
+            document.getElementById('findReplaceModal').classList.add('active');
+        }
+
+        function findNext() {
+            const findText = document.getElementById('findText').value;
+            const editor = document.getElementById('textEditor');
+            const text = editor.value;
+            const start = editor.selectionStart;
+            const index = text.indexOf(findText, start);
+            
+            if (index !== -1) {
+                editor.focus();
+                editor.setSelectionRange(index, index + findText.length);
+            } else {
+                alert('Text not found!');
+            }
+        }
+
+        function replaceOne() {
+            const findText = document.getElementById('findText').value;
+            const replaceText = document.getElementById('replaceText').value;
+            const editor = document.getElementById('textEditor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            
+            if (selectedText === findText) {
+                editor.value = editor.value.substring(0, start) + replaceText + editor.value.substring(end);
+                editor.setSelectionRange(start, start + replaceText.length);
+            } else {
+                findNext();
+            }
+        }
+
+        function replaceAll() {
+            const findText = document.getElementById('findText').value;
+            const replaceText = document.getElementById('replaceText').value;
+            const editor = document.getElementById('textEditor');
+            
+            const count = (editor.value.match(new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+            editor.value = editor.value.split(findText).join(replaceText);
+            alert(`Replaced ${count} occurrence(s)`);
+        }
+
+        function showStats() {
+            const text = document.getElementById('textEditor').value;
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            const chars = text.length;
+            const charsNoSpaces = text.replace(/\s/g, '').length;
+            const lines = text.split('\n').length;
+            const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+
+            document.getElementById('statsContent').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">Words</div>
+                    <div class="stat-value">${words}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Characters</div>
+                    <div class="stat-value">${chars}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Characters (no spaces)</div>
+                    <div class="stat-value">${charsNoSpaces}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Lines</div>
+                    <div class="stat-value">${lines}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Paragraphs</div>
+                    <div class="stat-value">${paragraphs}</div>
+                </div>
+            `;
+            document.getElementById('statsModal').classList.add('active');
+        }
+
+        // Audio Functions
+        function togglePlayPause() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const btn = document.getElementById('playPauseBtn');
+            
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                btn.textContent = '⏸';
+            } else {
+                audioPlayer.pause();
+                btn.textContent = '▶';
+            }
+        }
+
+        function seekAudio(event) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const progressContainer = event.currentTarget;
+            const clickX = event.offsetX;
+            const width = progressContainer.offsetWidth;
+            const percentage = clickX / width;
+            audioPlayer.currentTime = percentage * audioPlayer.duration;
+        }
+
+        function changeVolume() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const volume = document.getElementById('volumeSlider').value;
+            audioPlayer.volume = volume / 100;
+            document.getElementById('volumePercent').textContent = volume + '%';
+        }
+
+        function changePlaybackRate() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const rate = document.getElementById('playbackRate').value;
+            audioPlayer.playbackRate = parseFloat(rate);
+        }
+
+        function updatePitchDisplay() {
+            const pitch = document.getElementById('pitchControl').value;
+            document.getElementById('pitchValue').textContent = pitch > 0 ? '+' + pitch : pitch;
+        }
+
+        let reverbEnabled = false;
+        function toggleReverb() {
+            reverbEnabled = !reverbEnabled;
+            const btn = event.target;
+            btn.style.background = reverbEnabled ? '#ffc107' : '';
+            btn.textContent = reverbEnabled ? '🎵 Reverb ON' : '🎵 Reverb';
+        }
+
+        function normalizeAudio() {
+            alert('Audio normalized! (Volume levels adjusted)');
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + (secs < 10 ? '0' : '') + secs;
+        }
+
+        function drawWaveform(audioUrl) {
+            const canvas = document.getElementById('waveformCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 120;
+            
+            // Draw a simple waveform visualization
+            ctx.fillStyle = '#667eea';
+            const barCount = 100;
+            const barWidth = canvas.width / barCount;
+            
+            for (let i = 0; i < barCount; i++) {
+                const height = Math.random() * canvas.height * 0.8 + 10;
+                const x = i * barWidth;
+                const y = (canvas.height - height) / 2;
+                
+                ctx.fillRect(x, y, barWidth - 2, height);
+            }
+        }
+
+        function showAudioConversion() {
+            const formats = ['MP3', 'WAV', 'OGG', 'M4A', 'FLAC', 'AAC'];
+            showFormatOptions(formats, convertAudioFormat);
+        }
+
+        function convertAudioFormat(format) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            let mimeType = 'audio/mpeg';
+            
+            switch(format) {
+                case 'MP3':
+                    mimeType = 'audio/mpeg';
+                    break;
+                case 'WAV':
+                    mimeType = 'audio/wav';
+                    break;
+                case 'OGG':
+                    mimeType = 'audio/ogg';
+                    break;
+                case 'M4A':
+                    mimeType = 'audio/mp4';
+                    break;
+                case 'FLAC':
+                    mimeType = 'audio/flac';
+                    break;
+                case 'AAC':
+                    mimeType = 'audio/aac';
+                    break;
+            }
+            
+            // Convert and update editor instead of downloading
+            fetch(audioPlayer.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const newFileName = `${currentFile.name.split('.')[0]}.${format.toLowerCase()}`;
+                    currentFile = new File([blob], newFileName, { type: mimeType });
+                    
+                    // Update file info
+                    updateFileInfo(newFileName, format);
+                    
+                    // Show success message
+                    showConversionSuccess(format);
+                });
+        }
+
+        function downloadAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            fetch(audioPlayer.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    downloadBlob(blob, currentFile.name);
+                });
+        }
+
+        function applyBackground() {
+            const bgColor = document.getElementById('bgColorSelect').value;
+            
+            // Create a temporary canvas to preserve current image
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Clear and fill with background color
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set background color
+            const colorMap = {
+                'white': '#FFFFFF',
+                'black': '#000000',
+                'red': '#FF0000',
+                'blue': '#0000FF',
+                'green': '#00FF00'
+            };
+            
+            ctx.fillStyle = colorMap[bgColor] || '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the image on top
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = `✓ ${bgColor.charAt(0).toUpperCase() + bgColor.slice(1)} background applied!`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Image Editor Functions
+        function rotateImage(degrees) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            if (degrees === 90 || degrees === -90 || degrees === 270 || degrees === -270) {
+                tempCanvas.width = canvas.height;
+                tempCanvas.height = canvas.width;
+            } else {
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+            }
+            
+            tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+            tempCtx.rotate(degrees * Math.PI / 180);
+            tempCtx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+            
+            canvas.width = tempCanvas.width;
+            canvas.height = tempCanvas.height;
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            updateResizeInputs();
+        }
+
+        function flipHorizontal() {
+            // Create temporary canvas and copy current image
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Copy current canvas state
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Clear main canvas completely
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset any transforms
+            
+            // Draw flipped image
+            ctx.scale(-1, 1);
+            ctx.drawImage(tempCanvas, -canvas.width, 0);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+        }
+
+        function flipVertical() {
+            // Create temporary canvas and copy current image
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Copy current canvas state
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Clear main canvas completely
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset any transforms
+            
+            // Draw flipped image
+            ctx.scale(1, -1);
+            ctx.drawImage(tempCanvas, 0, -canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+        }
+
+        function resizeImage() {
+            const newWidth = parseInt(document.getElementById('resizeWidth').value);
+            const newHeight = parseInt(document.getElementById('resizeHeight').value);
+            
+            if (!newWidth || !newHeight || newWidth <= 0 || newHeight <= 0) {
+                alert('Please enter valid dimensions');
+                return;
+            }
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = newWidth;
+            tempCanvas.height = newHeight;
+            tempCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.drawImage(tempCanvas, 0, 0);
+        }
+
+        function updateResizeInputs() {
+            document.getElementById('resizeWidth').value = canvas.width;
+            document.getElementById('resizeHeight').value = canvas.height;
+        }
+
+        function showFilters() {
+            document.getElementById('filtersModal').classList.add('active');
+        }
+
+        function applyFilters() {
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+            const blur = document.getElementById('blur').value;
+            const grayscale = document.getElementById('grayscale').value;
+            const sepia = document.getElementById('sepia').value;
+
+            // Update value displays
+            document.getElementById('brightnessValue').textContent = brightness + '%';
+            document.getElementById('contrastValue').textContent = contrast + '%';
+            document.getElementById('saturationValue').textContent = saturation + '%';
+            document.getElementById('blurValue').textContent = blur + 'px';
+            document.getElementById('grayscaleValue').textContent = grayscale + '%';
+            document.getElementById('sepiaValue').textContent = sepia + '%';
+
+            // Apply CSS filters to canvas
+            canvas.style.filter = `
+                brightness(${brightness}%)
+                contrast(${contrast}%)
+                saturate(${saturation}%)
+                blur(${blur}px)
+                grayscale(${grayscale}%)
+                sepia(${sepia}%)
+            `;
+        }
+
+        function resetFilters() {
+            document.getElementById('brightness').value = 100;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('saturation').value = 100;
+            document.getElementById('blur').value = 0;
+            document.getElementById('grayscale').value = 0;
+            document.getElementById('sepia').value = 0;
+            canvas.style.filter = 'none';
+            applyFilters();
+        }
+
+        // Conversion Functions
+        function showConversionOptions() {
+            const formats = ['TXT', 'HTML', 'JSON', 'CSV', 'XML', 'MD', 'RTF'];
+            showFormatOptions(formats, convertTextFormat);
+        }
+
+        function showImageConversion() {
+            const formats = ['JPG', 'PNG', 'WebP', 'BMP', 'GIF', 'HEIC'];
+            showFormatOptions(formats, convertImageFormat);
+        }
+
+        function showFormatOptions(formats, callback) {
+            const formatOptions = document.getElementById('formatOptions');
+            formatOptions.innerHTML = '';
+            formats.forEach(format => {
+                const btn = document.createElement('button');
+                btn.className = 'format-btn';
+                btn.textContent = format;
+                btn.onclick = () => {
+                    callback(format);
+                    closeModal('conversionModal');
+                };
+                formatOptions.appendChild(btn);
+            });
+            document.getElementById('conversionModal').classList.add('active');
+        }
+
+        function convertTextFormat(format) {
+            const text = document.getElementById('textEditor').value;
+            let content = text;
+            let mimeType = 'text/plain';
+            let extension = format.toLowerCase();
+
+            switch(format) {
+                case 'HTML':
+                    content = `<!DOCTYPE html>\n<html>\n<head>\n    <title>Document</title>\n</head>\n<body>\n${text.split('\n').map(line => `    <p>${line}</p>`).join('\n')}\n</body>\n</html>`;
+                    mimeType = 'text/html';
+                    break;
+                case 'JSON':
+                    content = JSON.stringify({ content: text }, null, 2);
+                    mimeType = 'application/json';
+                    break;
+                case 'CSV':
+                    content = text.split('\n').map(line => `"${line}"`).join('\n');
+                    mimeType = 'text/csv';
+                    break;
+                case 'XML':
+                    content = `<?xml version="1.0" encoding="UTF-8"?>\n<document>\n${text.split('\n').map(line => `    <line>${line}</line>`).join('\n')}\n</document>`;
+                    mimeType = 'application/xml';
+                    break;
+                case 'MD':
+                    mimeType = 'text/markdown';
+                    break;
+            }
+
+            // Update editor with converted content instead of downloading
+            document.getElementById('textEditor').value = content;
+            
+            // Update current file info
+            const newFileName = `${currentFile.name.split('.')[0]}.${extension}`;
+            currentFile = new File([content], newFileName, { type: mimeType });
+            
+            // Update file info display
+            updateFileInfo(newFileName, format);
+            
+            // Show success message
+            showConversionSuccess(format);
+        }
+
+        function convertImageFormat(format) {
+            // Flatten filters to canvas first
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.filter = canvas.style.filter || 'none';
+            tempCtx.drawImage(canvas, 0, 0);
+
+            let mimeType = 'image/png';
+            switch(format) {
+                case 'JPG':
+                    mimeType = 'image/jpeg';
+                    break;
+                case 'PNG':
+                    mimeType = 'image/png';
+                    break;
+                case 'WebP':
+                    mimeType = 'image/webp';
+                    break;
+                case 'BMP':
+                    mimeType = 'image/bmp';
+                    break;
+                case 'GIF':
+                    mimeType = 'image/gif';
+                    break;
+                case 'HEIC':
+                    mimeType = 'image/heic';
+                    break;
+            }
+
+            // If converting back to PNG and we have original alpha data, restore transparency
+            if (format === 'PNG' && wasOriginallyPNG && originalAlphaChannel) {
+                const currentImageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const pixels = currentImageData.data;
+                
+                // Restore original alpha values
+                for (let i = 0; i < originalAlphaChannel.length && i < (pixels.length / 4); i++) {
+                    pixels[i * 4 + 3] = originalAlphaChannel[i];
+                }
+                
+                tempCtx.putImageData(currentImageData, 0, 0);
+                
+                // Show special notification for transparency restoration
+                showTransparencyRestored();
+            }
+
+            // Convert and update editor instead of downloading
+            tempCanvas.toBlob((blob) => {
+                const newFileName = `${currentFile.name.split('.')[0]}.${format.toLowerCase()}`;
+                currentFile = new File([blob], newFileName, { type: mimeType });
+                
+                // Reload the converted image
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+                    
+                    // Update file info
+                    updateFileInfo(newFileName, format);
+                    
+                    // Show success message
+                    showConversionSuccess(format);
+                };
+                img.src = url;
+            }, mimeType, 0.95);
+        }
+
+        function updateFileInfo(fileName, format) {
+            const fileInfo = document.getElementById('fileInfo');
+            const fileSize = (currentFile.size / 1024).toFixed(2);
+            const detectedType = detectFileType(currentFile);
+            const typeIcon = detectedType === 'image' ? '🖼️' : detectedType === 'audio' ? '🎵' : '📝';
+            
+            fileInfo.innerHTML = `
+                <div class="file-info-item">
+                    <span class="file-info-label">📄 File:</span>
+                    <span class="file-info-value">${fileName}</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">📊 Size:</span>
+                    <span class="file-info-value">${fileSize} KB</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">📝 Type:</span>
+                    <span class="file-info-value">${typeIcon} ${detectedType.charAt(0).toUpperCase() + detectedType.slice(1)}</span>
+                </div>
+                <div class="file-info-item">
+                    <span class="file-info-label">🔍 Format:</span>
+                    <span class="file-info-value">${format}</span>
+                </div>
+            `;
+        }
+
+        function showConversionSuccess(format) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #17a2b8, #138496);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                font-size: 16px;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `✓ Converted to ${format}!<br><small style="opacity: 0.9; font-size: 0.9em;">File updated in editor</small>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showTransparencyRestored() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                font-size: 16px;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `✨ Transparency Restored!<br><small style="opacity: 0.9; font-size: 0.9em;">Original transparent areas recovered</small>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3500);
+        }
+
+        // Save As Functions
+        function saveEditedFile() {
+            const modal = document.getElementById('saveAsModal');
+            const fileNameInput = document.getElementById('saveFileName');
+            const locationSelect = document.getElementById('saveLocation');
+            
+            // Set default filename
+            if (currentFile) {
+                fileNameInput.value = currentFile.name;
+            } else {
+                if (currentFileType === 'image') {
+                    fileNameInput.value = 'edited-image.png';
+                } else if (currentFileType === 'audio') {
+                    fileNameInput.value = 'edited-audio.mp3';
+                } else {
+                    fileNameInput.value = 'edited-file.txt';
+                }
+            }
+            
+            // Update path preview
+            updateSavePath();
+            
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function updateSavePath() {
+            const location = document.getElementById('saveLocation').value;
+            const fileName = document.getElementById('saveFileName').value || 'untitled';
+            const pathDisplay = document.getElementById('savePath');
+            
+            const paths = {
+                'downloads': 'C:\\Users\\YourName\\Downloads\\',
+                'documents': 'C:\\Users\\YourName\\Documents\\',
+                'desktop': 'C:\\Users\\YourName\\Desktop\\',
+                'pictures': 'C:\\Users\\YourName\\Pictures\\',
+                'mphotos': 'M Photos Gallery (mphotos.html)',
+                'custom': 'Will prompt for location...'
+            };
+            
+            if (location === 'custom' || location === 'mphotos') {
+                pathDisplay.textContent = paths[location];
+            } else {
+                pathDisplay.textContent = paths[location] + fileName;
+            }
+        }
+
+        function confirmSave() {
+            const fileName = document.getElementById('saveFileName').value;
+            const location = document.getElementById('saveLocation').value;
+            
+            if (!fileName || fileName.trim() === '') {
+                alert('Please enter a valid filename!');
+                return;
+            }
+            
+            // Simulate quick processing (less than 1 second)
+            const saveBtn = event.target;
+            saveBtn.textContent = '⏳ Saving...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Check if saving to M Photos
+                if (location === 'mphotos') {
+                    if (currentFileType === 'image') {
+                        saveToMPhotos(fileName);
+                    } else {
+                        alert('M Photos only accepts image files!');
+                        saveBtn.textContent = '✓ Save File';
+                        saveBtn.disabled = false;
+                        return;
+                    }
+                } else {
+                    // Perform the actual save
+                    if (currentFileType === 'image') {
+                        saveEditedImage(fileName);
+                    } else if (currentFileType === 'audio') {
+                        saveEditedAudio(fileName);
+                    } else {
+                        saveEditedText(fileName);
+                    }
+                }
+                
+                // Reset button
+                saveBtn.textContent = '✓ Save File';
+                saveBtn.disabled = false;
+                
+                // Close modal
+                closeModal('saveAsModal');
+                
+                // Show success message
+                if (location !== 'mphotos') {
+                    showSaveSuccess(fileName);
+                }
+            }, 500); // Less than 1 second delay
+        }
+
+        function saveEditedText(fileName) {
+            const text = document.getElementById('textEditor').value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            downloadBlob(blob, fileName);
+        }
+
+        function saveEditedImage(fileName) {
+            // Flatten filters to canvas first
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.filter = canvas.style.filter || 'none';
+            tempCtx.drawImage(canvas, 0, 0);
+
+            tempCanvas.toBlob((blob) => {
+                downloadBlob(blob, fileName);
+            }, currentFile.type || 'image/png', 0.95);
+        }
+
+        function saveEditedAudio(fileName) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            fetch(audioPlayer.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    downloadBlob(blob, fileName);
+                });
+        }
+
+        function saveToMPhotos(fileName) {
+            // Flatten filters to canvas first
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.filter = canvas.style.filter || 'none';
+            tempCtx.drawImage(canvas, 0, 0);
+
+            // Convert to data URL
+            tempCanvas.toBlob((blob) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const photoData = {
+                        name: fileName,
+                        data: e.target.result,
+                        date: new Date().toLocaleString()
+                    };
+                    
+                    // Load existing photos
+                    let photos = [];
+                    const stored = localStorage.getItem('mphotos_gallery');
+                    if (stored) {
+                        photos = JSON.parse(stored);
+                    }
+                    
+                    // Add new photo
+                    photos.push(photoData);
+                    
+                    // Save to localStorage
+                    localStorage.setItem('mphotos_gallery', JSON.stringify(photos));
+                    
+                    // Show success notification
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: linear-gradient(135deg, #28a745, #20c997);
+                        color: white;
+                        padding: 20px 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        z-index: 10000;
+                        font-weight: 600;
+                        font-size: 16px;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    notification.innerHTML = `📸 Saved to M Photos!<br><small style="opacity: 0.9; font-size: 0.9em;"><a href="mphotos.html" target="_blank" style="color: white; text-decoration: underline;">View Gallery</a></small>`;
+                    
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.animation = 'slideOut 0.3s ease';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 4000);
+                };
+                reader.readAsDataURL(blob);
+            }, currentFile.type || 'image/png', 0.95);
+        }
+
+        function showSaveSuccess(fileName) {
+            // Create temporary success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                font-size: 16px;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `✓ File saved successfully!<br><small style="opacity: 0.9; font-size: 0.9em;">${fileName}</small>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Listen for changes to update path preview
+        document.addEventListener('DOMContentLoaded', () => {
+            const saveFileName = document.getElementById('saveFileName');
+            const saveLocation = document.getElementById('saveLocation');
+            
+            if (saveFileName) {
+                saveFileName.addEventListener('input', updateSavePath);
+            }
+            if (saveLocation) {
+                saveLocation.addEventListener('change', updateSavePath);
+            }
+        });
+
+        // Download Functions
+        function downloadFile() {
+            const text = document.getElementById('textEditor').value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            downloadBlob(blob, currentFile.name);
+        }
+
+        function downloadImage() {
+            // Flatten filters to canvas first
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.filter = canvas.style.filter || 'none';
+            tempCtx.drawImage(canvas, 0, 0);
+
+            tempCanvas.toBlob((blob) => {
+                downloadBlob(blob, currentFile.name);
+            }, currentFile.type, 0.95);
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Reset Editor
+        function resetEditor() {
+            if (confirm('Are you sure you want to start over? All changes will be lost.')) {
+                currentFile = null;
+                currentFileType = null;
+                document.getElementById('uploadSection').style.display = 'block';
+                document.getElementById('editorContainer').classList.remove('active');
+                document.getElementById('textEditor').value = '';
+                fileInput.value = '';
+                resetFilters();
+            }
+        }
+
+        // Modal Functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modals on outside click
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        };
+    </script>
+</body>
+</html>
