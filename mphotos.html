@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M Photos - Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 0 auto 30px;
+            max-width: 1400px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-right: 15px;
+            border-right: 2px solid #e0e0e0;
+        }
+
+        .toolbar-section:last-child {
+            border-right: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .location-select {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            cursor: pointer;
+        }
+
+        .selection-count {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .location-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .location-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-item:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .location-item.selected {
+            border-color: #28a745;
+            background: #e7f9ed;
+        }
+
+        .location-icon {
+            font-size: 1.5em;
+        }
+
+        .location-info {
+            flex: 1;
+        }
+
+        .location-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .location-path {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .location-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .delete-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .photo-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .photo-item.selected {
+            border: 4px solid #28a745;
+            transform: scale(0.95);
+        }
+
+        .photo-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .selection-checkbox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 25px;
+            height: 25px;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .photo-info {
+            padding: 15px;
+        }
+
+        .photo-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .photo-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📸 M Photos</h1>
+        <p>Your Personal Photo Gallery & File Manager</p>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-section">
+            <span class="selection-count" id="selectionCount">0 selected</span>
+            <button class="btn btn-primary" onclick="selectAll()">✓ Select All</button>
+            <button class="btn btn-warning" onclick="clearSelection()">✗ Clear</button>
+        </div>
+        <div class="toolbar-section">
+            <button class="btn btn-success" onclick="showCopyModal()" id="copyBtn" disabled>📋 Copy To...</button>
+            <button class="btn btn-info" onclick="showMoveModal()" id="moveBtn" disabled>➡️ Move To...</button>
+        </div>
+        <div class="toolbar-section">
+            <button class="btn btn-danger" onclick="deleteSelected()" id="deleteBtn" disabled>🗑️ Delete</button>
+        </div>
+        <div class="toolbar-section">
+            <select class="location-select" id="currentLocation" onchange="changeLocation()">
+                <option value="mphotos">📸 M Photos (Default)</option>
+            </select>
+            <button class="btn btn-primary" onclick="detectDrives()">🔍 Detect Drives</button>
+        </div>
+    </div>
+
+    <div class="gallery" id="photoGallery">
+        <div class="empty-state">
+            <h2>No Photos Yet</h2>
+            <p>Upload photos from File Pro to see them here!</p>
+        </div>
+    </div>
+
+    <!-- Copy Modal -->
+    <div class="modal" id="copyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('copyModal')">&times;</span>
+                <h2>📋 Copy Photos To...</h2>
+            </div>
+            <p>Select destination location:</p>
+            <div class="location-list" id="copyLocationList"></div>
+            <div class="delete-actions">
+                <button class="btn btn-warning" onclick="closeModal('copyModal')">Cancel</button>
+                <button class="btn btn-success" onclick="confirmCopy()">✓ Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Modal -->
+    <div class="modal" id="moveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-close" onclick="closeModal('moveModal')">&times;</span>
+                <h2>➡️ Move Photos To...</h2>
+            </div>
+            <p>Select destination location:</p>
+            <div class="location-list" id="moveLocationList"></div>
+            <div class="delete-actions">
+                <button class="btn btn-warning" onclick="closeModal('moveModal')">Cancel</button>
+                <button class="btn btn-info" onclick="confirmMove()">✓ Move</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Photos will be saved here from File Pro
+        let savedPhotos = [];
+        let selectedPhotos = new Set();
+        let currentLocation = 'mphotos';
+        let availableLocations = {
+            'mphotos': { name: 'M Photos (Default)', icon: '📸', path: 'localStorage' }
+        };
+        let selectedDestination = null;
+
+        // Load photos from localStorage
+        function loadPhotos() {
+            const key = `${currentLocation}_gallery`;
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                savedPhotos = JSON.parse(stored);
+                displayPhotos();
+            } else {
+                savedPhotos = [];
+                displayPhotos();
+            }
+        }
+
+        function displayPhotos() {
+            const gallery = document.getElementById('photoGallery');
+            
+            if (savedPhotos.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Photos Yet</h2>
+                        <p>Upload photos from File Pro or copy/move from other locations!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            gallery.innerHTML = '';
+            savedPhotos.forEach((photo, index) => {
+                const item = document.createElement('div');
+                item.className = 'photo-item';
+                item.id = `photo-${index}`;
+                if (selectedPhotos.has(index)) {
+                    item.classList.add('selected');
+                }
+                item.innerHTML = `
+                    <input type="checkbox" class="selection-checkbox" onchange="toggleSelection(${index})" ${selectedPhotos.has(index) ? 'checked' : ''}>
+                    <img src="${photo.data}" alt="${photo.name}">
+                    <div class="photo-info">
+                        <div class="photo-name">${photo.name}</div>
+                        <div class="photo-date">${photo.date}</div>
+                    </div>
+                `;
+                gallery.appendChild(item);
+            });
+            
+            updateSelectionCount();
+        }
+
+        function toggleSelection(index) {
+            if (selectedPhotos.has(index)) {
+                selectedPhotos.delete(index);
+            } else {
+                selectedPhotos.add(index);
+            }
+            displayPhotos();
+            updateButtons();
+        }
+
+        function selectAll() {
+            selectedPhotos.clear();
+            savedPhotos.forEach((_, index) => selectedPhotos.add(index));
+            displayPhotos();
+            updateButtons();
+        }
+
+        function clearSelection() {
+            selectedPhotos.clear();
+            displayPhotos();
+            updateButtons();
+        }
+
+        function updateSelectionCount() {
+            document.getElementById('selectionCount').textContent = `${selectedPhotos.size} selected`;
+        }
+
+        function updateButtons() {
+            const hasSelection = selectedPhotos.size > 0;
+            document.getElementById('copyBtn').disabled = !hasSelection;
+            document.getElementById('moveBtn').disabled = !hasSelection;
+            document.getElementById('deleteBtn').disabled = !hasSelection;
+        }
+
+        function detectDrives() {
+            // Simulate drive detection
+            const drives = ['C', 'D', 'E', 'F'];
+            const detectedDrives = [];
+            
+            // Add some simulated external drives
+            if (Math.random() > 0.5) {
+                availableLocations['external_d'] = {
+                    name: 'External Drive (D:)',
+                    icon: '💾',
+                    path: 'D:\\M Photos\\'
+                };
+                detectedDrives.push('D:');
+            }
+            
+            if (Math.random() > 0.7) {
+                availableLocations['external_e'] = {
+                    name: 'External Drive (E:)',
+                    icon: '💿',
+                    path: 'E:\\M Photos\\'
+                };
+                detectedDrives.push('E:');
+            }
+            
+            updateLocationDropdown();
+            
+            if (detectedDrives.length > 0) {
+                showNotification(`✓ Detected drives: ${detectedDrives.join(', ')}`, 'success');
+            } else {
+                showNotification('No external drives detected', 'info');
+            }
+        }
+
+        function updateLocationDropdown() {
+            const select = document.getElementById('currentLocation');
+            select.innerHTML = '';
+            
+            for (const [key, location] of Object.entries(availableLocations)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${location.icon} ${location.name}`;
+                if (key === currentLocation) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
+        function changeLocation() {
+            currentLocation = document.getElementById('currentLocation').value;
+            clearSelection();
+            loadPhotos();
+            showNotification(`Switched to ${availableLocations[currentLocation].name}`, 'info');
+        }
+
+        function showCopyModal() {
+            populateLocationList('copyLocationList');
+            document.getElementById('copyModal').classList.add('active');
+        }
+
+        function showMoveModal() {
+            populateLocationList('moveLocationList');
+            document.getElementById('moveModal').classList.add('active');
+        }
+
+        function populateLocationList(listId) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            selectedDestination = null;
+            
+            for (const [key, location] of Object.entries(availableLocations)) {
+                if (key === currentLocation) continue; // Skip current location
+                
+                const item = document.createElement('div');
+                item.className = 'location-item';
+                item.onclick = () => selectDestination(key, listId);
+                item.innerHTML = `
+                    <div class="location-icon">${location.icon}</div>
+                    <div class="location-info">
+                        <div class="location-name">${location.name}</div>
+                        <div class="location-path">${location.path}</div>
+                    </div>
+                    ${key === 'mphotos' ? '<span class="location-badge">Default</span>' : ''}
+                `;
+                list.appendChild(item);
+            }
+        }
+
+        function selectDestination(key, listId) {
+            selectedDestination = key;
+            const items = document.getElementById(listId).querySelectorAll('.location-item');
+            items.forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        function confirmCopy() {
+            if (!selectedDestination) {
+                alert('Please select a destination!');
+                return;
+            }
+            
+            const photosToC = Array.from(selectedPhotos).map(i => savedPhotos[i]);
+            const destKey = `${selectedDestination}_gallery`;
+            
+            let destPhotos = [];
+            const stored = localStorage.getItem(destKey);
+            if (stored) {
+                destPhotos = JSON.parse(stored);
+            }
+            
+            destPhotos.push(...photosToC);
+            localStorage.setItem(destKey, JSON.stringify(destPhotos));
+            
+            closeModal('copyModal');
+            showNotification(`✓ Copied ${photosToC.length} photo(s) to ${availableLocations[selectedDestination].name}`, 'success');
+            clearSelection();
+        }
+
+        function confirmMove() {
+            if (!selectedDestination) {
+                alert('Please select a destination!');
+                return;
+            }
+            
+            const photosToMove = Array.from(selectedPhotos).map(i => savedPhotos[i]);
+            const destKey = `${selectedDestination}_gallery`;
+            
+            // Copy to destination
+            let destPhotos = [];
+            const stored = localStorage.getItem(destKey);
+            if (stored) {
+                destPhotos = JSON.parse(stored);
+            }
+            destPhotos.push(...photosToMove);
+            localStorage.setItem(destKey, JSON.stringify(destPhotos));
+            
+            // Remove from source
+            const remainingPhotos = savedPhotos.filter((_, i) => !selectedPhotos.has(i));
+            const sourceKey = `${currentLocation}_gallery`;
+            localStorage.setItem(sourceKey, JSON.stringify(remainingPhotos));
+            
+            closeModal('moveModal');
+            showNotification(`✓ Moved ${photosToMove.length} photo(s) to ${availableLocations[selectedDestination].name}`, 'success');
+            
+            clearSelection();
+            loadPhotos();
+        }
+
+        function deleteSelected() {
+            if (!confirm(`Delete ${selectedPhotos.size} photo(s)? This cannot be undone.`)) {
+                return;
+            }
+            
+            const remainingPhotos = savedPhotos.filter((_, i) => !selectedPhotos.has(i));
+            const key = `${currentLocation}_gallery`;
+            localStorage.setItem(key, JSON.stringify(remainingPhotos));
+            
+            showNotification(`✓ Deleted ${selectedPhotos.size} photo(s)`, 'success');
+            clearSelection();
+            loadPhotos();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showNotification(message, type = 'info') {
+            const colors = {
+                'success': 'linear-gradient(135deg, #28a745, #20c997)',
+                'info': 'linear-gradient(135deg, #17a2b8, #138496)',
+                'warning': 'linear-gradient(135deg, #ffc107, #ff9800)',
+                'error': 'linear-gradient(135deg, #dc3545, #c82333)'
+            };
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type]};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Listen for storage events from other pages
+        window.addEventListener('storage', (e) => {
+            if (e.key && e.key.endsWith('_gallery')) {
+                loadPhotos();
+            }
+        });
+
+        // Close modals on outside click
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        };
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Load photos on page load
+        loadPhotos();
+        updateButtons();
+    </script>
+</body>
+</html>

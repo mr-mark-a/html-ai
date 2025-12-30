@@ -176,6 +176,96 @@
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
+        
+        /* Pedal Control */
+        #pedalContainer {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #pedalControl {
+            width: 120px;
+            height: 200px;
+            background: linear-gradient(135deg, #333, #555);
+            border: 4px solid #888;
+            border-radius: 15px 15px 30px 30px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -10px 20px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+            user-select: none;
+        }
+        
+        #pedalControl.pressed {
+            transform: translateY(15px) scale(0.98);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #222, #444);
+        }
+        
+        #pedalControl::before {
+            content: '⚡';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            opacity: 0.7;
+        }
+        
+        #pedalControl.pressed::before {
+            color: #ffd700;
+            opacity: 1;
+            animation: pulse 0.3s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+        
+        #speedometer {
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border: 3px solid #0f0;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            font-family: 'Courier New', monospace;
+        }
+        
+        #speedBar {
+            width: 120px;
+            height: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #speedBarFill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0f0, #ff0, #f00);
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        
+        .pedal-label {
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
     </style>
 </head>
 <body>
@@ -230,6 +320,15 @@
         <button id="goToStoreBtn" style="margin-top:10px; background:#ffd700; color:#222; border:none; border-radius:8px; padding:0.6em 1.4em; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px #ffd70055;">Go to Store</button>
     </div>
 </div>
+
+<!-- Pedal Control -->
+<div id="pedalContainer">
+    <div id="speedometer">Speed: <span id="speedValue">0</span> km/h</div>
+    <div id="speedBar"><div id="speedBarFill"></div></div>
+    <div id="pedalControl"></div>
+    <div class="pedal-label">HOLD TO ACCELERATE</div>
+</div>
+
 <script>
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsPanel = document.getElementById('settingsPanel');
@@ -254,10 +353,69 @@ document.getElementById('signOutBtn').onclick = function() {
     window.location.href = 'index.html';
 };
 let gameRunning = false;
+
+// Pedal Control Variables
+let pedalPressed = false;
+let currentSpeed = 0; // Speed from 0 to 100
+const maxSpeed = 180; // Max speed in km/h
+const baseSpeed = 5.4; // Base truck movement speed
+const maxSpeedMultiplier = 3; // Speed can go up to 3x base speed
+let pedalPressStartTime = 0;
+
+const pedalControl = document.getElementById('pedalControl');
+const speedValue = document.getElementById('speedValue');
+const speedBarFill = document.getElementById('speedBarFill');
+
+// Pedal event handlers
+pedalControl.addEventListener('mousedown', startPedal);
+pedalControl.addEventListener('touchstart', startPedal, { passive: false });
+window.addEventListener('mouseup', stopPedal);
+window.addEventListener('touchend', stopPedal);
+
+function startPedal(e) {
+    e.preventDefault();
+    pedalPressed = true;
+    pedalPressStartTime = Date.now();
+    pedalControl.classList.add('pressed');
+}
+
+function stopPedal() {
+    pedalPressed = false;
+    pedalControl.classList.remove('pressed');
+}
+
+// Update speed based on pedal state
+function updateSpeed() {
+    if (pedalPressed && !gameOver) {
+        // Accelerate
+        currentSpeed = Math.min(100, currentSpeed + 2);
+    } else {
+        // Decelerate
+        currentSpeed = Math.max(0, currentSpeed - 3);
+    }
+    
+    // Update display
+    const displaySpeed = Math.round((currentSpeed / 100) * maxSpeed);
+    speedValue.textContent = displaySpeed;
+    speedBarFill.style.width = currentSpeed + '%';
+    
+    requestAnimationFrame(updateSpeed);
+}
+updateSpeed();
+
+// Get current truck speed based on pedal pressure
+function getTruckSpeed() {
+    const speedMultiplier = 1 + (currentSpeed / 100) * (maxSpeedMultiplier - 1);
+    return baseSpeed * speedMultiplier;
+}
+
 const startStopBtn = document.getElementById('startStopBtn');
 startStopBtn.onclick = function() {
     hideCongratsAndFireworks();
     document.getElementById('raceCar').src = 'race-images/race.png';
+    currentSpeed = 0;
+    pedalPressed = false;
+    pedalControl.classList.remove('pressed');
     // Refresh the page when Start Game is clicked
     window.location.reload();
 };
@@ -383,7 +541,7 @@ function trucksLoop(ts) {
     // Move trucks
     for (let i = trucks.length - 1; i >= 0; i--) {
         const truck = trucks[i];
-        truck.y += 5.4; // speed (pixels per frame), was 3.6
+        truck.y += getTruckSpeed(); // Use pedal-controlled speed
         truck.elem.style.top = truck.y + 'px';
         // Collision detection
         if (!gameOver && truck.lane === carLane) {
