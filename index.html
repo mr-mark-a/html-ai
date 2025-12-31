@@ -3,1019 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login System</title>
+    <title>Secure Access</title>
     <style>
-        .promo-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 2px solid #4CAF50;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        .promo-input {
-            padding: 8px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 250px;
-        }
-        .promo-btn {
-            padding: 8px 15px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        .promo-btn:hover {
-            background-color: #45a049;
-        }
-        .heart-btn {
-            padding: 8px 15px;
-            font-size: 20px;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        .heart-btn:hover {
-            background-color: #c0392b;
-        }
-        .promo-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        .promo-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            white-space: pre-line;
-        }
-        .promo-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .promo-info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        .premium-badge {
-            display: inline-block;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 8px;
-            animation: shimmer 2s infinite;
+            min-height: 100vh;
+            font-size: 14px;
         }
-        @keyframes shimmer {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .unlimited-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 8px;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .ad-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 2px solid #ff9800;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #fff9e6 0%, #ffe6cc 100%);
-        }
-        .ad-btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-            font-weight: bold;
-        }
-        .ad-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .ad-form {
-            margin-top: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            display: none;
-        }
-        .ad-form input, .ad-form textarea {
-            width: 100%;
-            padding: 8px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .ad-form textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        .ad-form button {
-            margin-top: 10px;
-        }
-        .image-preview {
-            margin-top: 10px;
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            display: none;
-        }
-        .image-preview.active {
-            display: block;
-        }
-        .select-photo-btn {
-            background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .select-photo-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .ads-display {
-            margin-top: 20px;
-        }
-        .ad-card {
-            background: white;
-            border: 2px solid #ff9800;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        .ad-card h4 {
-            margin: 0 0 10px 0;
-            color: #ff5722;
-        }
-        .ad-card p {
-            margin: 5px 0;
-            color: #333;
-        }
-        .ad-card img {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: 8px;
-            margin: 10px 0;
-            display: block;
-        }
-        .ad-card a {
-            color: #2196F3;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .ad-card a:hover {
-            text-decoration: underline;
-        }
-        .ad-delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .ad-delete-btn:hover {
-            background: #d32f2f;
-        }
-        .ad-badge {
-            display: inline-block;
-            background: #4CAF50;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            margin-left: 5px;
-        }
-        /* Popup Ad Styles */
-        .ad-popup-overlay {
-            display: none;
+        #passwordScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease-in;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 99999;
         }
-        .ad-popup-overlay.active {
-            display: flex;
-        }
-        .ad-popup {
+        .password-container {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
+            padding: 40px;
+            border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            position: relative;
-            animation: slideIn 0.4s ease-out;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
         }
-        .ad-popup-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #f44336;
+        .password-container h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        .password-container input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .password-container button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            line-height: 1;
-        }
-        .ad-popup-close:hover {
-            background: #d32f2f;
-            transform: scale(1.1);
-        }
-        .ad-popup-header {
-            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
-            color: white;
-            padding: 15px;
-            margin: -25px -25px 20px -25px;
-            border-radius: 12px 12px 0 0;
-        }
-        .ad-popup-title {
-            font-size: 22px;
-            margin: 0;
-            font-weight: bold;
-        }
-        .ad-popup-content {
-            margin: 15px 0;
-        }
-        .ad-popup-link {
-            display: inline-block;
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        .ad-popup-link:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .ad-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
-            color: white;
-            padding: 15px 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 9998;
-            display: none;
             cursor: pointer;
-            animation: slideInRight 0.5s ease-out;
+            font-weight: bold;
         }
-        .ad-notification.active {
-            display: block;
+        .password-container button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        @keyframes slideInRight {
-            from { transform: translateX(400px); }
-            to { transform: translateX(0); }
+        .password-error {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+        .lock-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome</h1>
-    <div id="loginForm">
-        <label for="nameInput">Enter your name:</label>
-        <input type="text" id="nameInput">
-        <button id="submitBtn">Submit</button>
-        
-        <div class="promo-section">
-            <h3>Have a Promo Code?</h3>
-            <input type="text" id="promoInput" class="promo-input" placeholder="Enter promo code">
-            <button id="heartBtn" class="heart-btn" title="Insert Heart">❤️</button>
-            <button id="applyPromoBtn" class="promo-btn">Apply Code</button>
-            <button id="clearPromoBtn" class="promo-btn" style="background-color: #f44336;">Clear</button>
-            <div id="promoMessage" class="promo-message"></div>
-            <div class="promo-info">
-                <small>💡 Tip: Use the ❤️ button to insert a heart symbol for special codes!</small>
-            </div>
+    <!-- Password Protection Screen -->
+    <div id="passwordScreen">
+        <div class="password-container">
+            <div class="lock-icon">🔒</div>
+            <h2>Secure Access Required</h2>
+            <p>Please enter the password to continue</p>
+            <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
+            <button id="accessBtn">Access</button>
+            <p class="password-error" id="passwordError">❌ Incorrect password</p>
         </div>
-        
-        <div class="ad-section">
-            <h3>📢 Advertisement Space</h3>
-            <button id="addAdBtn" class="ad-btn">+ Add My Ad</button>
-            <button id="viewAdsBtn" class="ad-btn" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">View All Ads</button>
-            
-            <div id="adForm" class="ad-form">
-                <h4>Create Your Advertisement</h4>
-                <input type="text" id="adTitle" placeholder="Ad Title (e.g., Amazing Product!)" maxlength="100">
-                <textarea id="adDescription" placeholder="Ad Description (Tell people about your product/service)" maxlength="500"></textarea>
-                <input type="url" id="adLink" placeholder="Website Link (optional, e.g., https://example.com)">
-                <input type="text" id="adContact" placeholder="Contact Info (optional, e.g., email or phone)">
-                <input type="text" id="adImage" placeholder="Image URL (select from M Photos)" readonly style="background: #f5f5f5;">
-                <a href="mphotos.html?selectForAd=true" target="_blank" class="select-photo-btn">📸 Select Image from M Photos</a>
-                <img id="imagePreview" class="image-preview" alt="Ad image preview">
-                <div>
-                    <button id="submitAdBtn" class="ad-btn">✓ Publish Ad</button>
-                    <button id="cancelAdBtn" class="ad-btn" style="background: linear-gradient(135deg, #757575 0%, #616161 100%);">✗ Cancel</button>
-                </div>
-            </div>
-            
-            <div id="adsDisplay" class="ads-display"></div>
-        </div>
-    </div>
-    <div id="quizSection" style="display: none;">
-        <h2>Extreme Cat Quiz</h2>
-        <p>Answer all questions to pass:</p>
-        <div>
-            <label>1. What is the fastest cat breed?</label>
-            <input type="text" id="q1">
-        </div>
-        <div>
-            <label>2. How much years did the cat live that longest ever lived?</label>
-            <input type="text" id="q2">
-        </div>
-        <div>
-            <label>3. What is the largest cat breed?</label>
-            <input type="text" id="q3">
-        </div>
-        <div>
-            <label>4. How many toes do cats have?</label>
-            <input type="text" id="q4">
-        </div>
-        <div>
-            <label>5. What color are cats' eyes at birth?</label>
-            <input type="text" id="q5">
-        </div>
-        <button id="quizBtn">Submit Answers</button>
-    </div>
-    <div id="userInfo" style="display: none;">
-        <h2>Welcome back, <span id="userName"></span>!</h2>
-        <p>Your info: <span id="userData"></span></p>
-    </div>
-
-    <!-- Ad Popup Modal -->
-    <div id="adPopupOverlay" class="ad-popup-overlay">
-        <div class="ad-popup">
-            <button id="closePopupBtn" class="ad-popup-close">×</button>
-            <div class="ad-popup-header">
-                <h3 class="ad-popup-title" id="popupAdTitle">Advertisement</h3>
-            </div>
-            <div class="ad-popup-content" id="popupAdContent"></div>
-        </div>
-    </div>
-
-    <!-- Ad Notification -->
-    <div id="adNotification" class="ad-notification">
-        <strong>📢 New Ad Available!</strong> Click to view
     </div>
 
     <script>
-        const nameInput = document.getElementById('nameInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const quizSection = document.getElementById('quizSection');
-        const quizBtn = document.getElementById('quizBtn');
-        const userInfo = document.getElementById('userInfo');
-        const userName = document.getElementById('userName');
-        const userData = document.getElementById('userData');
-        const loginForm = document.getElementById('loginForm');
-        
-        // Promo code elements
-        const promoInput = document.getElementById('promoInput');
-        const heartBtn = document.getElementById('heartBtn');
-        const applyPromoBtn = document.getElementById('applyPromoBtn');
-        const clearPromoBtn = document.getElementById('clearPromoBtn');
-        const promoMessage = document.getElementById('promoMessage');
+        // ========== PASSWORD PROTECTION ==========
+        const SITE_PASSWORD = '000054';
+        const passwordScreen = document.getElementById('passwordScreen');
+        const passwordInput = document.getElementById('passwordInput');
+        const accessBtn = document.getElementById('accessBtn');
+        const passwordError = document.getElementById('passwordError');
 
-        // Ad elements
-        const addAdBtn = document.getElementById('addAdBtn');
-        const viewAdsBtn = document.getElementById('viewAdsBtn');
-        const adForm = document.getElementById('adForm');
-        const submitAdBtn = document.getElementById('submitAdBtn');
-        const cancelAdBtn = document.getElementById('cancelAdBtn');
-        const adTitle = document.getElementById('adTitle');
-        const adDescription = document.getElementById('adDescription');
-        const adLink = document.getElementById('adLink');
-        const adContact = document.getElementById('adContact');
-        const adImage = document.getElementById('adImage');
-        const imagePreview = document.getElementById('imagePreview');
-        const adsDisplay = document.getElementById('adsDisplay');
-
-        // Promo code definitions with expiration dates
-        const promoCodes = {
-            'M0A1R8K!': {
-                type: 'yearly',
-                discount: '50% off yearly subscription',
-                validFrom: new Date('2025-12-30'),
-                validUntil: new Date('2026-12-30'),
-                premium: false
-            },
-            '2C0A2T6!': {
-                type: 'yearly',
-                discount: '40% off yearly subscription',
-                validFrom: new Date('2025-12-30'),
-                validUntil: new Date('2026-12-30'),
-                premium: false
-            },
-            'A1C9E3F❤': {
-                type: 'yearly',
-                discount: 'Free yearly subscription + bonus content',
-                validFrom: new Date('2025-12-30'),
-                validUntil: new Date('2026-12-30'),
-                premium: true,
-                features: ['Ad-free experience', 'Priority support', 'Exclusive content']
-            },
-            '2J0A25!': {
-                type: 'monthly',
-                discount: '25% off monthly subscription',
-                validFrom: new Date('2025-12-30'),
-                validUntil: new Date('2026-01-30'),
-                premium: false
-            },
-            'K3A9T1E!': {
-                type: 'monthly',
-                discount: '30% off monthly subscription',
-                validFrom: new Date('2025-12-30'),
-                validUntil: new Date('2026-01-30'),
-                premium: false
-            },
-            '❤❤❤❤❤❤❤❤': {
-                type: 'unlimited',
-                discount: 'LIFETIME PREMIUM ACCESS',
-                validFrom: new Date('2025-12-30'),
-                validUntil: null, // No expiration
-                premium: true,
-                features: ['Unlimited access forever', 'All premium features', 'VIP support', 'Early access to new features', 'Exclusive member badge', 'Ad-free experience']
-            }
-        };
-
-        // Function to check if promo code is valid
-        function validatePromoCode(code) {
-            const currentDate = new Date('2025-12-30'); // Current date
-            const promoData = promoCodes[code];
-            
-            if (!promoData) {
-                return { valid: false, message: '❌ Invalid promo code.' };
-            }
-            
-            // Check expiration (null validUntil means unlimited)
-            if (promoData.validUntil !== null) {
-                if (currentDate < promoData.validFrom || currentDate > promoData.validUntil) {
-                    const expiredDate = promoData.validUntil.toLocaleDateString('en-US', { 
-                        year: 'numeric', month: 'short', day: 'numeric' 
-                    });
-                    return { 
-                        valid: false, 
-                        message: `❌ This ${promoData.type} promo code expired on ${expiredDate}.` 
-                    };
-                }
-            }
-            
-            let message = '';
-            if (promoData.type === 'unlimited') {
-                message = `🌟 UNLIMITED CODE! ${promoData.discount} activated!`;
-            } else {
-                const validUntilFormatted = promoData.validUntil.toLocaleDateString('en-US', { 
-                    year: 'numeric', month: 'short', day: 'numeric' 
-                });
-                message = `✅ Success! ${promoData.discount} applied! Valid until ${validUntilFormatted}.`;
-            }
-            
-            // Add premium features to message
-            if (promoData.premium && promoData.features) {
-                message += '\n\n🎁 PREMIUM FEATURES UNLOCKED:\n';
-                promoData.features.forEach(feature => {
-                    message += `✓ ${feature}\n`;
-                });
-            }
-            
-            return { 
-                valid: true, 
-                message: message,
-                data: promoData
-            };
+        // Check if already authenticated
+        if (sessionStorage.getItem('authenticated') === 'true') {
+            window.location.href = 'marks-games.html';
         }
 
-        // Heart button click handler
-        heartBtn.addEventListener('click', () => {
-            const cursorPosition = promoInput.selectionStart;
-            const textBefore = promoInput.value.substring(0, cursorPosition);
-            const textAfter = promoInput.value.substring(cursorPosition);
-            promoInput.value = textBefore + '❤' + textAfter;
-            promoInput.focus();
-            promoInput.setSelectionRange(cursorPosition + 1, cursorPosition + 1);
-        });
-
-        // Apply promo code button
-        applyPromoBtn.addEventListener('click', () => {
-            const code = promoInput.value.trim();
-            
-            if (!code) {
-                showPromoMessage('⚠️ Please enter a promo code.', 'error');
-                return;
-            }
-            
-            const result = validatePromoCode(code);
-            
-            if (result.valid) {
-                // Store promo code in localStorage
-                localStorage.setItem('appliedPromoCode', code);
-                localStorage.setItem('promoCodeData', JSON.stringify(result.data));
-                
-                // Add badge for premium/unlimited codes
-                let badgeHTML = '';
-                if (result.data.type === 'unlimited') {
-                    badgeHTML = '<span class="unlimited-badge">∞ UNLIMITED</span>';
-                } else if (result.data.premium) {
-                    badgeHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
-                }
-                
-                showPromoMessage(result.message + badgeHTML, 'success');
-            } else {
-                showPromoMessage(result.message, 'error');
-            }
-        });
-
-        // Clear promo code button
-        clearPromoBtn.addEventListener('click', () => {
-            promoInput.value = '';
-            promoMessage.style.display = 'none';
-            localStorage.removeItem('appliedPromoCode');
-            localStorage.removeItem('promoCodeData');
-            promoInput.focus();
-        });
-
-        // Show promo message
-        function showPromoMessage(message, type) {
-            promoMessage.innerHTML = message;
-            promoMessage.className = 'promo-message promo-' + type;
-            promoMessage.style.display = 'block';
-        }
-
-        // Allow applying promo on Enter key
-        promoInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                applyPromoBtn.click();
-            }
-        });
-
-        // Check if there's an existing promo code on page load
-        window.addEventListener('load', () => {
-            const savedPromoCode = localStorage.getItem('appliedPromoCode');
-            if (savedPromoCode) {
-                promoInput.value = savedPromoCode;
-                const result = validatePromoCode(savedPromoCode);
-                if (result.valid) {
-                    // Add badge for premium/unlimited codes
-                    let badgeHTML = '';
-                    if (result.data.type === 'unlimited') {
-                        badgeHTML = '<span class="unlimited-badge">∞ UNLIMITED</span>';
-                    } else if (result.data.premium) {
-                        badgeHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
-                    }
-                    showPromoMessage('✨ ' + result.message + badgeHTML, 'success');
-                } else {
-                    // Clear expired promo code
-                    localStorage.removeItem('appliedPromoCode');
-                    localStorage.removeItem('promoCodeData');
-                }
-            }
-        });
-
-        // Quiz inputs
-        const q1 = document.getElementById('q1');
-        const q2 = document.getElementById('q2');
-        const q3 = document.getElementById('q3');
-        const q4 = document.getElementById('q4');
-        const q5 = document.getElementById('q5');
-
-        // Correct answers (case insensitive, trimmed)
-        const correctAnswers = {
-            q1: ['cheetah', 'cheetah cat'],
-            q2: ['22', '22 years'],
-            q3: ['maine coon'],
-            q4: ['18'],
-            q5: ['blue']
-        };
-
-        // Function to check answers
-        function checkQuiz() {
-            const answers = {
-                q1: q1.value.trim().toLowerCase(),
-                q2: q2.value.trim().toLowerCase(),
-                q3: q3.value.trim().toLowerCase(),
-                q4: q4.value.trim().toLowerCase(),
-                q5: q5.value.trim().toLowerCase()
-            };
-
-            let allCorrect = true;
-            for (let key in answers) {
-                if (!correctAnswers[key].includes(answers[key])) {
-                    allCorrect = false;
-                    break;
-                }
-            }
-
-            return allCorrect;
-        }
-
-        submitBtn.addEventListener('click', () => {
-            const name = nameInput.value.trim();
-            if (name) {
-                const storedData = localStorage.getItem(name);
-                if (storedData) {
-                    // Existing user
-                    window.location.href = 'marks-games.html';
-                } else {
-                    // New user, show quiz
-                    loginForm.style.display = 'none';
-                    quizSection.style.display = 'block';
-                }
-            } else {
-                alert('Please enter a name.');
-            }
-        });
-
-        quizBtn.addEventListener('click', () => {
-            if (checkQuiz()) {
-                const name = nameInput.value.trim();
-                const userDataObj = { name: name, info: 'Passed extreme cat quiz' };
-                localStorage.setItem(name, JSON.stringify(userDataObj));
+        accessBtn.addEventListener('click', () => {
+            if (passwordInput.value === SITE_PASSWORD) {
+                sessionStorage.setItem('authenticated', 'true');
                 window.location.href = 'marks-games.html';
             } else {
-                alert('Some answers are wrong. Try again.');
+                passwordError.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         });
 
-        // Allow submitting quiz on Enter from any input
-        [q1, q2, q3, q4, q5].forEach(input => {
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    quizBtn.click();
-                }
-            });
-        });
-
-        // ========== ADVERTISEMENT SYSTEM ==========
-        
-        // Load ads from localStorage
-        function loadAds() {
-            const ads = JSON.parse(localStorage.getItem('websiteAds') || '[]');
-            return ads;
-        }
-
-        // Save ads to localStorage
-        function saveAds(ads) {
-            localStorage.setItem('websiteAds', JSON.stringify(ads));
-        }
-
-        // Display all ads
-        function displayAds() {
-            const ads = loadAds();
-            adsDisplay.innerHTML = '';
-            
-            if (ads.length === 0) {
-                adsDisplay.innerHTML = '<p style="color: #999; text-align: center;">No ads yet. Be the first to advertise!</p>';
-                return;
-            }
-
-            ads.forEach((ad, index) => {
-                const adCard = document.createElement('div');
-                adCard.className = 'ad-card';
-                
-                const datePosted = new Date(ad.date).toLocaleDateString('en-US', { 
-                    year: 'numeric', month: 'short', day: 'numeric' 
-                });
-                
-                adCard.innerHTML = `
-                    <button class="ad-delete-btn" onclick="deleteAd(${index})">Delete</button>
-                    <h4>${escapeHtml(ad.title)}<span class="ad-badge">AD</span></h4>
-                    ${ad.image ? `<img src="${escapeHtml(ad.image)}" alt="${escapeHtml(ad.title)}">` : ''}
-                    <p>${escapeHtml(ad.description)}</p>
-                    ${ad.link ? `<p>🔗 <a href="${escapeHtml(ad.link)}" target="_blank">Visit Website</a></p>` : ''}
-                    ${ad.contact ? `<p>📞 Contact: ${escapeHtml(ad.contact)}</p>` : ''}
-                    <p style="font-size: 11px; color: #999;">Posted: ${datePosted}</p>
-                `;
-                
-                adsDisplay.appendChild(adCard);
-            });
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Delete ad
-        window.deleteAd = function(index) {
-            if (confirm('Are you sure you want to delete this ad?')) {
-                const ads = loadAds();
-                ads.splice(index, 1);
-                saveAds(ads);
-                displayAds();
-            }
-        };
-
-        // Show add ad form
-        addAdBtn.addEventListener('click', () => {
-            adForm.style.display = adForm.style.display === 'none' ? 'block' : 'none';
-            if (adForm.style.display === 'block') {
-                adTitle.focus();
+        passwordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                accessBtn.click();
             }
         });
 
-        // View all ads
-        viewAdsBtn.addEventListener('click', () => {
-            displayAds();
-            adsDisplay.scrollIntoView({ behavior: 'smooth' });
+        passwordInput.addEventListener('input', () => {
+            passwordError.style.display = 'none';
         });
-
-        // Submit ad
-        submitAdBtn.addEventListener('click', () => {
-            const title = adTitle.value.trim();
-            const description = adDescription.value.trim();
-            const link = adLink.value.trim();
-            const contact = adContact.value.trim();
-            const image = adImage.value.trim();
-
-            if (!title) {
-                alert('Please enter an ad title.');
-                adTitle.focus();
-                return;
-            }
-
-            if (!description) {
-                alert('Please enter an ad description.');
-                adDescription.focus();
-                return;
-            }
-
-            // Create new ad
-            const newAd = {
-                title: title,
-                description: description,
-                link: link,
-                contact: contact,
-                image: image,
-                date: new Date().toISOString()
-            };
-
-            // Save ad
-            const ads = loadAds();
-            ads.unshift(newAd); // Add to beginning
-            saveAds(ads);
-
-            // Clear form
-            adTitle.value = '';
-            adDescription.value = '';
-            adLink.value = '';
-            adContact.value = '';
-            adImage.value = '';
-            imagePreview.classList.remove('active');
-            adForm.style.display = 'none';
-
-            // Display updated ads
-            displayAds();
-            
-            alert('✅ Your ad has been published successfully!');
-            adsDisplay.scrollIntoView({ behavior: 'smooth' });
-        });
-
-        // Cancel ad creation
-        cancelAdBtn.addEventListener('click', () => {
-            adTitle.value = '';
-            adDescription.value = '';
-            adLink.value = '';
-            adContact.value = '';
-            adImage.value = '';
-            imagePreview.classList.remove('active');
-            adForm.style.display = 'none';
-        });
-
-        // Load ads on page load
-        window.addEventListener('load', () => {
-            displayAds();
-        });
-
-        // ========== POPUP AD SYSTEM ==========
-        
-        const adPopupOverlay = document.getElementById('adPopupOverlay');
-        const closePopupBtn = document.getElementById('closePopupBtn');
-        const popupAdTitle = document.getElementById('popupAdTitle');
-        const popupAdContent = document.getElementById('popupAdContent');
-        const adNotification = document.getElementById('adNotification');
-
-        let popupTimer = null;
-        let shownPopupIndexes = [];
-
-        // Show popup ad
-        function showPopupAd(ad) {
-            if (!ad) return;
-
-            popupAdTitle.textContent = ad.title;
-            
-            let contentHTML = '';
-            
-            if (ad.image) {
-                contentHTML += `<img src="${escapeHtml(ad.image)}" alt="${escapeHtml(ad.title)}" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-bottom: 15px; display: block;">`;
-            }
-            
-            contentHTML += `<p style="font-size: 16px; color: #333;">${escapeHtml(ad.description)}</p>`;
-            
-            if (ad.link) {
-                contentHTML += `<a href="${escapeHtml(ad.link)}" target="_blank" class="ad-popup-link">🔗 Visit Website</a>`;
-            }
-            
-            if (ad.contact) {
-                contentHTML += `<p style="margin-top: 15px; color: #666;">📞 Contact: ${escapeHtml(ad.contact)}</p>`;
-            }
-
-            popupAdContent.innerHTML = contentHTML;
-            adPopupOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-        }
-
-        // Listen for image selection from mphotos.html
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'selectedAdImage') {
-                const imageUrl = e.newValue;
-                if (imageUrl) {
-                    adImage.value = imageUrl;
-                    imagePreview.src = imageUrl;
-                    imagePreview.classList.add('active');
-                    localStorage.removeItem('selectedAdImage');
-                }
-            }
-        });
-
-        // Check for selected image on page load
-        window.addEventListener('load', () => {
-            const selectedImage = localStorage.getItem('selectedAdImage');
-            if (selectedImage) {
-                adImage.value = selectedImage;
-                imagePreview.src = selectedImage;
-                imagePreview.classList.add('active');
-                localStorage.removeItem('selectedAdImage');
-            }
-        });
-
-        // Close popup ad
-        function closePopupAd() {
-            adPopupOverlay.classList.remove('active');
-            document.body.style.overflow = 'auto'; // Re-enable scrolling
-        }
-
-        closePopupBtn.addEventListener('click', closePopupAd);
-        
-        // Close popup when clicking overlay
-        adPopupOverlay.addEventListener('click', (e) => {
-            if (e.target === adPopupOverlay) {
-                closePopupAd();
-            }
-        });
-
-        // Show random popup ad
-        function showRandomPopup() {
-            const ads = loadAds();
-            
-            if (ads.length === 0) return;
-
-            // Get ads that haven't been shown yet
-            let availableAds = ads.filter((ad, index) => !shownPopupIndexes.includes(index));
-            
-            // If all ads shown, reset
-            if (availableAds.length === 0) {
-                shownPopupIndexes = [];
-                availableAds = ads;
-            }
-
-            // Pick random ad
-            const randomIndex = Math.floor(Math.random() * ads.length);
-            const selectedAd = ads[randomIndex];
-            shownPopupIndexes.push(randomIndex);
-
-            // Show notification first
-            adNotification.classList.add('active');
-            
-            // Auto-show popup after 3 seconds, or on notification click
-            setTimeout(() => {
-                adNotification.classList.remove('active');
-                showPopupAd(selectedAd);
-            }, 3000);
-        }
-
-        // Notification click shows popup immediately
-        adNotification.addEventListener('click', () => {
-            adNotification.classList.remove('active');
-            const ads = loadAds();
-            if (ads.length > 0) {
-                const randomIndex = Math.floor(Math.random() * ads.length);
-                showPopupAd(ads[randomIndex]);
-            }
-        });
-
-        // Schedule random popup ads
-        function scheduleRandomPopups() {
-            const ads = loadAds();
-            if (ads.length === 0) return;
-
-            // Random interval between 15-45 seconds
-            const minInterval = 15000; // 15 seconds
-            const maxInterval = 45000; // 45 seconds
-            const randomInterval = Math.floor(Math.random() * (maxInterval - minInterval + 1)) + minInterval;
-
-            popupTimer = setTimeout(() => {
-                showRandomPopup();
-                scheduleRandomPopups(); // Schedule next popup
-            }, randomInterval);
-        }
-
-        // Start popup system
-        window.addEventListener('load', () => {
-            // Wait 10 seconds before first popup
-            setTimeout(() => {
-                const ads = loadAds();
-                if (ads.length > 0) {
-                    showRandomPopup();
-                    scheduleRandomPopups();
-                }
-            }, 10000);
-        });
-
-        // Trigger popup on certain user actions (optional)
-        let clickCount = 0;
-        document.addEventListener('click', () => {
-            clickCount++;
-            // Show popup every 15 clicks
-            if (clickCount >= 15) {
-                clickCount = 0;
-                const ads = loadAds();
-                if (ads.length > 0 && !adPopupOverlay.classList.contains('active')) {
-                    showRandomPopup();
-                }
-            }
-        });
-
-        // ESC key closes popup
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && adPopupOverlay.classList.contains('active')) {
-                closePopupAd();
-            }
-        });
-
     </script>
 </body>
 </html>
