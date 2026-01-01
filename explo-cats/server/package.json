@@ -1,11 +1,14 @@
 {
-  "name": "server",
+  "name": "explo-cats-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Multiplayer Exploding Kittens card game server",
   "main": "back-end.js",
   "scripts": {
     "start": "node back-end.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "keywords": [],
   "author": "",

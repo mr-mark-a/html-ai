@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Explo-Cats Card Game</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -592,11 +592,16 @@
         let selectedCards = [];
         let socket;
         
+        // Server URL - Update this with your Heroku app URL
+        const SERVER_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://YOUR-HEROKU-APP-NAME.herokuapp.com'; // Replace with your Heroku URL
+        
         // Initialize socket connection
         if (typeof io === 'undefined') {
-            alert('Socket.IO not loaded. Please ensure you are accessing the page through http://localhost:3000/front-end.html');
+            alert('Socket.IO not loaded. Please ensure you are accessing the page correctly');
         } else {
-            socket = io();
+            socket = io(SERVER_URL);
             
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
