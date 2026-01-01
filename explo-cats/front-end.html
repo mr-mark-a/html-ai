@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explo-Cats Card Game</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+        }
+        
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        h1 {
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .room-code {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .room-code h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+        
+        .room-code .code {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 3px;
+        }
+        
+        .player-list {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .player-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-item.host {
+            border: 2px solid #667eea;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+            min-height: 80vh;
+        }
+        
+        .game-info {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .players-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+        
+        .player-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .player-card.current-turn {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+        
+        .player-card.dead {
+            opacity: 0.5;
+            background: #e0e0e0;
+        }
+        
+        .player-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .card-count {
+            font-size: 2em;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        
+        .my-hand {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .cards-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            min-height: 150px;
+        }
+        
+        .card {
+            min-width: 100px;
+            width: 100px;
+            height: 140px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card.selected {
+            transform: translateY(-15px);
+            border-color: #667eea;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .card.exploding_kitten {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+        
+        .card.defuse {
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            color: white;
+        }
+        
+        .card.nope {
+            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+            color: #333;
+        }
+        
+        .card.skip {
+            background: linear-gradient(135deg, #74c0fc 0%, #339af0 100%);
+            color: white;
+        }
+        
+        .card.attack {
+            background: linear-gradient(135deg, #ff922b 0%, #fd7e14 100%);
+            color: white;
+        }
+        
+        .card.shuffle {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+            color: white;
+        }
+        
+        .card.see_future {
+            background: linear-gradient(135deg, #f06595 0%, #e64980 100%);
+            color: white;
+        }
+        
+        .card.beard_cat, .card.hringg, .card.tacocat {
+            background: linear-gradient(135deg, #96f2d7 0%, #38d9a9 100%);
+            color: #333;
+        }
+        
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            padding: 10px;
+            background: #ffe0e0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .success {
+            color: #51cf66;
+            padding: 10px;
+            background: #e0ffe0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success.active {
+            display: block;
+        }
+        
+        .deck-area {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        .deck-pile {
+            width: 100px;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid #333;
+            border-radius: 10px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+        
+        .turn-indicator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .target-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .target-option {
+            padding: 15px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .target-option:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+        
+        .target-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Menu -->
+        <div class="screen active" id="menu-screen">
+            <h1>🐱 Explo-Cats 💣</h1>
+            <div class="menu-buttons">
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20">
+                <button onclick="showHostScreen()">Host Game</button>
+                <button onclick="showJoinScreen()">Join Game</button>
+            </div>
+        </div>
+        
+        <!-- Host Screen -->
+        <div class="screen" id="host-screen">
+            <h1>Host Game</h1>
+            <div class="room-code">
+                <h3>Share this code with players:</h3>
+                <div class="code" id="host-room-code">------</div>
+            </div>
+            <div class="player-list">
+                <h2>Players in Lobby</h2>
+                <div id="host-player-list"></div>
+            </div>
+            <div class="menu-buttons">
+                <button onclick="startGame()" id="start-game-btn">Start Game</button>
+                <button onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Join Screen -->
+        <div class="screen" id="join-screen">
+            <h1>Join Game</h1>
+            <div class="error" id="join-error"></div>
+            <div class="menu-buttons">
+                <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="6" style="text-transform: uppercase;">
+                <button onclick="joinGame()">Join Game</button>
+                <button onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Waiting Screen -->
+        <div class="screen" id="waiting-screen">
+            <h1>Waiting for Host...</h1>
+            <div class="room-code">
+                <h3>Room Code:</h3>
+                <div class="code" id="waiting-room-code">------</div>
+            </div>
+            <div class="player-list">
+                <h2>Players in Lobby</h2>
+                <div id="waiting-player-list"></div>
+            </div>
+            <div class="menu-buttons">
+                <button onclick="backToMenu()">Leave Game</button>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div class="screen" id="game-screen">
+            <div class="game-board">
+                <div class="game-info">
+                    <div class="info-item deck-area">
+                        <div>Draw Pile</div>
+                        <div class="deck-pile" id="deck-count">0</div>
+                    </div>
+                    <div class="info-item" id="turn-info">
+                        <div class="turn-indicator">Waiting...</div>
+                    </div>
+                </div>
+                
+                <div class="players-area" id="players-area"></div>
+                
+                <div class="my-hand">
+                    <h2>Your Hand</h2>
+                    <div class="cards-container" id="my-cards"></div>
+                    <div class="action-buttons">
+                        <button onclick="drawCard()" id="draw-btn">Draw Card</button>
+                        <button onclick="playSelectedCards()" id="play-btn" disabled>Play Card(s)</button>
+                        <button onclick="endTurn()" id="end-turn-btn" style="display: none;">End Turn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modals -->
+        <div class="modal" id="target-modal">
+            <div class="modal-content">
+                <h2>Select Target Player</h2>
+                <div class="target-selector" id="target-selector"></div>
+                <div class="menu-buttons">
+                    <button onclick="closeTargetModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="exploded-modal">
+            <div class="modal-content">
+                <h2>💥 You Exploded! 💥</h2>
+                <p>You drew an exploding kitten and had no defuse!</p>
+                <div class="menu-buttons">
+                    <button onclick="closeExplodedModal()">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="winner-modal">
+            <div class="modal-content">
+                <h2>🎉 Game Over! 🎉</h2>
+                <p id="winner-text"></p>
+                <div class="menu-buttons">
+                    <button onclick="backToMenu()">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="defuse-modal">
+            <div class="modal-content">
+                <h2>💣 You drew an Exploding Kitten!</h2>
+                <p>You used a Defuse! Place the kitten back in the deck:</p>
+                <input type="number" id="kitten-position" min="0" placeholder="Position (0 = top)">
+                <div class="menu-buttons">
+                    <button onclick="placeKitten()">Place Kitten</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="see-future-modal">
+            <div class="modal-content">
+                <h2>🔮 Top 3 Cards</h2>
+                <div id="future-cards"></div>
+                <div class="menu-buttons">
+                    <button onclick="closeSeeFutureModal()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check if we're accessing the page correctly
+        if (window.location.protocol === 'file:') {
+            document.body.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; text-align: center;">
+                    <div style="background: white; padding: 40px; border-radius: 20px; max-width: 600px;">
+                        <h1 style="color: #764ba2; margin-bottom: 20px;">⚠️ Server Not Running</h1>
+                        <p style="font-size: 18px; margin-bottom: 20px;">Please start the game server first!</p>
+                        <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; text-align: left;">
+                            <p style="margin-bottom: 10px; font-weight: bold;">Steps to run:</p>
+                            <ol style="padding-left: 20px;">
+                                <li>Open terminal/command prompt</li>
+                                <li>Navigate to: d:\\marks shortcuts\\SOFT\\html-ai\\explo-cats\\server</li>
+                                <li>Run: npm start</li>
+                                <li>Open browser to: <strong>http://localhost:3000/front-end.html</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            `;
+            throw new Error('Must access through server');
+        }
+        
+        // Initialize variables first
+        let playerName = '';
+        let roomCode = '';
+        let mySocketId = '';
+        let gameState = null;
+        let selectedCards = [];
+        let socket;
+        
+        // Initialize socket connection
+        if (typeof io === 'undefined') {
+            alert('Socket.IO not loaded. Please ensure you are accessing the page through http://localhost:3000/front-end.html');
+        } else {
+            socket = io();
+            
+            socket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+                alert('Cannot connect to game server. Please ensure the server is running!');
+            });
+        }
+        
+        // Card icons and names
+        const cardIcons = {
+            exploding_kitten: '💣',
+            defuse: '🛡️',
+            nope: '🚫',
+            skip: '⏭️',
+            attack: '⚔️',
+            shuffle: '🔀',
+            see_future: '🔮',
+            beard_cat: '🧔',
+            hringg: '📯',
+            tacocat: '🌮'
+        };
+        
+        const cardNames = {
+            exploding_kitten: 'Exploding Kitten',
+            defuse: 'Defuse',
+            nope: 'Nope',
+            skip: 'Skip',
+            attack: 'Attack',
+            shuffle: 'Shuffle',
+            see_future: 'See Future',
+            beard_cat: 'Beard Cat',
+            hringg: 'Hringg',
+            tacocat: 'Tacocat'
+        };
+        
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function showHostScreen() {
+            playerName = document.getElementById('player-name-input').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            socket.emit('host-game', playerName);
+        }
+        
+        function showJoinScreen() {
+            playerName = document.getElementById('player-name-input').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            showScreen('join-screen');
+        }
+        
+        function joinGame() {
+            roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if (!roomCode) {
+                showError('join-error', 'Please enter a room code');
+                return;
+            }
+            socket.emit('join-game', { roomCode, playerName });
+        }
+        
+        function startGame() {
+            socket.emit('start-game', roomCode);
+        }
+        
+        function backToMenu() {
+            location.reload();
+        }
+        
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+            setTimeout(() => errorEl.classList.remove('active'), 3000);
+        }
+        
+        // Socket event handlers
+        socket.on('room-created', (data) => {
+            roomCode = data.roomCode;
+            document.getElementById('host-room-code').textContent = roomCode;
+            showScreen('host-screen');
+        });
+        
+        socket.on('join-success', (data) => {
+            roomCode = data.roomCode;
+            document.getElementById('waiting-room-code').textContent = roomCode;
+            showScreen('waiting-screen');
+        });
+        
+        socket.on('join-error', (message) => {
+            showError('join-error', message);
+        });
+        
+        socket.on('player-list-update', (playerList) => {
+            updatePlayerList('host-player-list', playerList);
+            updatePlayerList('waiting-player-list', playerList);
+            
+            // Enable start button if at least 2 players
+            const startBtn = document.getElementById('start-game-btn');
+            if (startBtn) {
+                startBtn.disabled = playerList.length < 2;
+            }
+        });
+        
+        socket.on('game-started', () => {
+            showScreen('game-screen');
+        });
+        
+        socket.on('game-state-update', (state) => {
+            gameState = state;
+            updateGameUI();
+        });
+        
+        socket.on('turn-changed', (data) => {
+            const isMyTurn = data.currentPlayerId === socket.id;
+            document.getElementById('turn-info').innerHTML = `
+                <div class="turn-indicator">
+                    ${isMyTurn ? "🎯 Your Turn!" : `⏳ ${data.currentPlayerName}'s Turn`}
+                </div>
+            `;
+            
+            document.getElementById('draw-btn').disabled = !isMyTurn;
+        });
+        
+        socket.on('card-drawn', (card) => {
+            console.log('Drew card:', card);
+        });
+        
+        socket.on('drew-exploding-kitten', (data) => {
+            if (data.hasDefuse) {
+                document.getElementById('defuse-modal').classList.add('active');
+            }
+        });
+        
+        socket.on('player-exploded', () => {
+            document.getElementById('exploded-modal').classList.add('active');
+        });
+        
+        socket.on('kitten-placed', () => {
+            closeDefuseModal();
+        });
+        
+        socket.on('see-future', (cards) => {
+            const futureCardsEl = document.getElementById('future-cards');
+            futureCardsEl.innerHTML = cards.map((card, i) => `
+                <div class="card ${card.type}">
+                    <div class="card-icon">${cardIcons[card.type]}</div>
+                    <div>${cardNames[card.type]}</div>
+                    <div style="font-size: 10px; margin-top: 5px;">Position ${i + 1}</div>
+                </div>
+            `).join('');
+            document.getElementById('see-future-modal').classList.add('active');
+        });
+        
+        socket.on('game-over', (data) => {
+            document.getElementById('winner-text').textContent = 
+                data.winnerId === socket.id ? 
+                'You won! 🎉' : 
+                `${data.winner} won!`;
+            document.getElementById('winner-modal').classList.add('active');
+        });
+        
+        socket.on('error', (message) => {
+            alert(message);
+        });
+        
+        // UI update functions
+        function updatePlayerList(elementId, players) {
+            const listEl = document.getElementById(elementId);
+            listEl.innerHTML = players.map(p => `
+                <div class="player-item ${p.isHost ? 'host' : ''}">
+                    <span>${p.name}</span>
+                    ${p.isHost ? '<span class="badge">Host</span>' : ''}
+                </div>
+            `).join('');
+        }
+        
+        function updateGameUI() {
+            if (!gameState) return;
+            
+            // Update deck count
+            document.getElementById('deck-count').textContent = gameState.deckCount;
+            
+            // Update players area
+            const playersArea = document.getElementById('players-area');
+            playersArea.innerHTML = gameState.players.map(p => {
+                const isCurrentTurn = p.id === gameState.currentPlayerId;
+                return `
+                    <div class="player-card ${isCurrentTurn ? 'current-turn' : ''} ${!p.alive ? 'dead' : ''}">
+                        <h3>${p.name} ${p.id === socket.id ? '(You)' : ''}</h3>
+                        <div class="card-count">${p.cardCount} 🃏</div>
+                        <div>${p.alive ? '✅ Alive' : '💀 Dead'}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update my hand
+            const myCardsEl = document.getElementById('my-cards');
+            myCardsEl.innerHTML = gameState.myHand.map(card => `
+                <div class="card ${card.type} ${selectedCards.includes(card.id) ? 'selected' : ''}" 
+                     onclick="toggleCardSelection('${card.id}')">
+                    <div class="card-icon">${cardIcons[card.type]}</div>
+                    <div>${cardNames[card.type]}</div>
+                </div>
+            `).join('');
+            
+            updateActionButtons();
+        }
+        
+        function toggleCardSelection(cardId) {
+            const index = selectedCards.indexOf(cardId);
+            if (index > -1) {
+                selectedCards.splice(index, 1);
+            } else {
+                selectedCards.push(cardId);
+            }
+            updateGameUI();
+        }
+        
+        function updateActionButtons() {
+            const playBtn = document.getElementById('play-btn');
+            playBtn.disabled = selectedCards.length === 0;
+        }
+        
+        // Game actions
+        function drawCard() {
+            socket.emit('draw-card', roomCode);
+        }
+        
+        function playSelectedCards() {
+            if (selectedCards.length === 0) return;
+            
+            const cards = selectedCards.map(id => 
+                gameState.myHand.find(c => c.id === id)
+            );
+            
+            const cardType = cards[0].type;
+            
+            // Single card actions
+            if (selectedCards.length === 1) {
+                if (['skip', 'attack', 'shuffle', 'see_future'].includes(cardType)) {
+                    socket.emit('play-card', { roomCode, cardId: selectedCards[0] });
+                    selectedCards = [];
+                } else {
+                    alert('This card cannot be played alone');
+                }
+            }
+            // Combo cards (2 or 3 matching)
+            else if (selectedCards.length === 2 || selectedCards.length === 3) {
+                // Check if all cards match
+                if (!cards.every(c => c.type === cardType)) {
+                    alert('All selected cards must be the same type');
+                    return;
+                }
+                
+                if (['beard_cat', 'hringg', 'tacocat'].includes(cardType)) {
+                    showTargetSelector(selectedCards.length);
+                } else {
+                    alert('These cards cannot be combined');
+                }
+            } else {
+                alert('Select 1, 2, or 3 cards');
+            }
+            
+            updateGameUI();
+        }
+        
+        function showTargetSelector(comboSize) {
+            const targetSelector = document.getElementById('target-selector');
+            const alivePlayers = gameState.players.filter(p => 
+                p.alive && p.id !== socket.id && p.cardCount > 0
+            );
+            
+            targetSelector.innerHTML = alivePlayers.map(p => `
+                <div class="target-option" onclick="selectTarget('${p.id}', ${comboSize})">
+                    ${p.name}<br>
+                    ${p.cardCount} cards
+                </div>
+            `).join('');
+            
+            document.getElementById('target-modal').classList.add('active');
+        }
+        
+        function selectTarget(targetId, comboSize) {
+            if (comboSize === 2) {
+                // Steal random card
+                socket.emit('play-combo', { 
+                    roomCode, 
+                    cardIds: selectedCards, 
+                    targetPlayerId: targetId 
+                });
+            } else if (comboSize === 3) {
+                // Ask for specific card
+                const cardType = prompt('What card type do you want? (e.g., defuse, skip, beard_cat)');
+                if (cardType) {
+                    socket.emit('play-combo', { 
+                        roomCode, 
+                        cardIds: selectedCards, 
+                        targetPlayerId: targetId,
+                        requestedCard: cardType
+                    });
+                }
+            }
+            
+            selectedCards = [];
+            closeTargetModal();
+        }
+        
+        function closeTargetModal() {
+            document.getElementById('target-modal').classList.remove('active');
+        }
+        
+        function placeKitten() {
+            const position = parseInt(document.getElementById('kitten-position').value) || 0;
+            socket.emit('place-exploding-kitten', { roomCode, position });
+        }
+        
+        function closeDefuseModal() {
+            document.getElementById('defuse-modal').classList.remove('active');
+            document.getElementById('kitten-position').value = '';
+        }
+        
+        function closeExplodedModal() {
+            document.getElementById('exploded-modal').classList.remove('active');
+        }
+        
+        function closeSeeFutureModal() {
+            document.getElementById('see-future-modal').classList.remove('active');
+        }
+        
+        function endTurn() {
+            selectedCards = [];
+            updateGameUI();
+        }
+    </script>
+</body>
+</html>
