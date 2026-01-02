@@ -423,9 +423,94 @@
             color: white;
             border-color: #764ba2;
         }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-screen.hidden {
+            display: none;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loading-content h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+        
+        .loading-status {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f0f0f0;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-content">
+            <h2>🐱 Connecting to Game Server</h2>
+            <div class="loading-status" id="loading-status">Initializing...</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar">0%</div>
+            </div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    
     <div class="container">
         <!-- Main Menu -->
         <div class="screen active" id="menu-screen">
@@ -562,28 +647,6 @@
     </div>
     
     <script>
-        // Check if we're accessing the page correctly
-        if (window.location.protocol === 'file:') {
-            document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; text-align: center;">
-                    <div style="background: white; padding: 40px; border-radius: 20px; max-width: 600px;">
-                        <h1 style="color: #764ba2; margin-bottom: 20px;">⚠️ Server Not Running</h1>
-                        <p style="font-size: 18px; margin-bottom: 20px;">Please start the game server first!</p>
-                        <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; text-align: left;">
-                            <p style="margin-bottom: 10px; font-weight: bold;">Steps to run:</p>
-                            <ol style="padding-left: 20px;">
-                                <li>Open terminal/command prompt</li>
-                                <li>Navigate to: d:\\marks shortcuts\\SOFT\\html-ai\\explo-cats\\server</li>
-                                <li>Run: npm start</li>
-                                <li>Open browser to: <strong>http://localhost:3000/front-end.html</strong></li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            `;
-            throw new Error('Must access through server');
-        }
-        
         // Initialize variables first
         let playerName = '';
         let roomCode = '';
@@ -591,21 +654,109 @@
         let gameState = null;
         let selectedCards = [];
         let socket;
+        let connectionProgress = 0;
+        let progressInterval;
         
-        // Server URL - Update this with your Heroku app URL
+        // Update loading progress
+        function updateProgress(percent, status) {
+            const progressBar = document.getElementById('progress-bar');
+            const loadingStatus = document.getElementById('loading-status');
+            
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = Math.round(percent) + '%';
+            }
+            
+            if (loadingStatus && status) {
+                loadingStatus.textContent = status;
+            }
+        }
+        
+        // Hide loading screen
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+        }
+        
+        // Simulate connection progress
+        function startConnectionProgress() {
+            connectionProgress = 0;
+            updateProgress(0, 'Connecting to server...');
+            
+            progressInterval = setInterval(() => {
+                if (connectionProgress < 90) {
+                    // Slow down as we approach completion
+                    const increment = connectionProgress < 30 ? 5 : 
+                                     connectionProgress < 60 ? 3 : 1;
+                    connectionProgress += increment;
+                    
+                    let status = 'Connecting to server...';
+                    if (connectionProgress > 20 && connectionProgress < 50) {
+                        status = 'Waking up server...';
+                    } else if (connectionProgress >= 50 && connectionProgress < 80) {
+                        status = 'Establishing connection...';
+                    } else if (connectionProgress >= 80) {
+                        status = 'Almost ready...';
+                    }
+                    
+                    updateProgress(connectionProgress, status);
+                }
+            }, 200);
+        }
+        
+        // Start loading
+        startConnectionProgress();
+        
+        // Server URL - Render.com deployment
         const SERVER_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000' 
-            : 'https://explo-cats-game-693012ac5a1c.herokuapp.com';
+            : 'https://explode-kits.onrender.com';
         
         // Initialize socket connection
         if (typeof io === 'undefined') {
-            alert('Socket.IO not loaded. Please ensure you are accessing the page correctly');
+            updateProgress(100, 'Error: Socket.IO not loaded');
+            setTimeout(() => {
+                alert('Socket.IO not loaded. Please ensure you are accessing the page correctly');
+                hideLoadingScreen();
+            }, 1000);
         } else {
-            socket = io(SERVER_URL);
+            socket = io(SERVER_URL, {
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+            
+            socket.on('connect', () => {
+                console.log('Connected to server!');
+                connectionProgress = 100;
+                updateProgress(100, 'Connected successfully! ✓');
+                setTimeout(hideLoadingScreen, 500);
+            });
             
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
-                alert('Cannot connect to game server. Please ensure the server is running!');
+                updateProgress(connectionProgress, 'Connection error, retrying...');
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+            
+            socket.on('reconnect_attempt', (attemptNumber) => {
+                updateProgress(Math.min(connectionProgress, 80), `Reconnecting (attempt ${attemptNumber})...`);
+            });
+            
+            socket.on('reconnect_failed', () => {
+                updateProgress(100, 'Connection failed ✗');
+                setTimeout(() => {
+                    alert('Cannot connect to game server. Please check your internet connection and try again.');
+                    hideLoadingScreen();
+                }, 1000);
             });
         }
         
