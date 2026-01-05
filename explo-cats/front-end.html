@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explo-Cats Card Game</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+        }
+        
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        h1 {
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .room-code {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .room-code h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+        
+        .room-code .code {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 3px;
+        }
+        
+        .player-list {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .player-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-item.host {
+            border: 2px solid #667eea;
+        }
+        
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+            min-height: 80vh;
+        }
+        
+        .game-info {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .players-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+        
+        .player-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .player-card.current-turn {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+        
+        .player-card.dead {
+            opacity: 0.5;
+            background: #e0e0e0;
+        }
+        
+        .player-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .card-count {
+            font-size: 2em;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        
+        .my-hand {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .cards-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            min-height: 150px;
+        }
+        
+        .card {
+            min-width: 100px;
+            width: 100px;
+            height: 140px;
+            background: white;
+            border: 3px solid #000;
+            border-radius: 12px;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.3s ease, 
+                        filter 0.3s ease,
+                        opacity 0.3s ease;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 9px;
+            display: block;
+        }
+        
+        .card-stack {
+            position: relative;
+        }
+        
+        .card-stack::before,
+        .card-stack::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #f0f0f0;
+            background-image: url('assets/cards/card-back.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #000;
+            border-radius: 12px;
+            z-index: -1;
+        }
+        
+        .card-stack::before {
+            top: -5px;
+            left: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-stack::after {
+            top: -10px;
+            left: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-count-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000;
+            border: 2px solid #000;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card:hover {
+            transform: translateY(-12px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+            z-index: 10;
+        }
+        
+        .card.selected {
+            transform: translateY(-20px) scale(1.08);
+            border-color: #667eea;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.6), 0 0 20px rgba(102, 126, 234, 0.4);
+            animation: cardSelected 1s ease-in-out infinite;
+            z-index: 20;
+        }
+        
+        .card.played {
+            animation: cardPlayed 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        .card.drawn {
+            animation: cardDrawn 0.6s ease-out;
+        }
+        
+        .screen.exploding {
+            animation: screenShake 0.5s ease-in-out;
+        }
+        
+        .card.exploding_kitten {
+            background: radial-gradient(circle at center, #ff4444 0%, #aa0000 100%);
+            color: white;
+            border-color: #660000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card.exploding_kitten.exploding {
+            animation: explosion 0.8s ease-out forwards;
+        }
+        
+        .card.exploding_kitten::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(0, 0, 0, 0.1) 10px,
+                rgba(0, 0, 0, 0.1) 20px
+            );
+            pointer-events: none;
+        }
+        
+        .card.defuse {
+            background: linear-gradient(180deg, #66ff66 0%, #00cc44 100%);
+            color: #003311;
+            border-color: #006622;
+            box-shadow: 0 2px 8px rgba(0, 200, 0, 0.3);
+        }
+        
+        .card.nope {
+            background: radial-gradient(circle at center, #ff6666 0%, #dd2222 100%);
+            color: white;
+            border-color: #990000;
+        }
+        
+        .card.skip {
+            background: linear-gradient(180deg, #66ccff 0%, #0088cc 100%);
+            color: white;
+            border-color: #004466;
+        }
+        
+        .card.attack {
+            background: linear-gradient(180deg, #ffcc44 0%, #ff9900 100%);
+            color: #663300;
+            border-color: #cc6600;
+        }
+        
+        .card.shuffle {
+            background: linear-gradient(180deg, #e8d5b7 0%, #c8a882 100%);
+            color: #4a3820;
+            border-color: #8b6f47;
+        }
+        
+        .card.see_future {
+            background: linear-gradient(180deg, #ff99cc 0%, #dd3377 100%);
+            color: white;
+            border-color: #990055;
+        }
+        
+        .card.favor {
+            background: linear-gradient(180deg, #666666 0%, #333333 100%);
+            color: white;
+            border-color: #000000;
+        }
+        
+        .card.tacocat {
+            background: linear-gradient(180deg, #ffee88 0%, #ccaa00 100%);
+            color: #664400;
+            border-color: #886600;
+        }
+        
+        .card.beard_cat {
+            background: linear-gradient(180deg, #d4a574 0%, #8b6f47 100%);
+            color: #2a1810;
+            border-color: #5c4a3a;
+        }
+        
+        .card.hringg {
+            background: linear-gradient(180deg, #a8e6a1 0%, #4a9d3f 100%);
+            color: #1a3a15;
+            border-color: #2d5f28;
+        }
+        
+        .card-icon {
+            font-size: 45px;
+            margin: 5px 0;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+        }
+        
+        .card-title {
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: auto;
+            padding: 3px 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            padding: 10px;
+            background: #ffe0e0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .success {
+            color: #51cf66;
+            padding: 10px;
+            background: #e0ffe0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success.active {
+            display: block;
+        }
+        
+        .deck-area {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        .deck-pile {
+            width: 100px;
+            height: 140px;
+            border: 3px solid #000;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 0 auto;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: url('assets/cards/card-back.jpg');
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .deck-pile::after {
+            content: attr(data-count);
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .turn-indicator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .target-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .target-option {
+            padding: 15px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .target-option:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+        
+        .target-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+        }
+        
+        #spectator-screen .player-card {
+            position: relative;
+        }
+        
+        .spectator-cards {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .spectator-cards .card {
+            width: 60px;
+            height: 84px;
+            font-size: 8px;
+            cursor: default;
+        }
+        
+        .spectator-cards .card:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Video Chat Styles */
+        .video-chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 400px;
+            z-index: 100;
+            justify-content: flex-end;
+        }
+        
+        .video-box {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            position: relative;
+            border: 2px solid #667eea;
+        }
+        
+        /* Dynamic sizing based on number of players */
+        .video-chat-container.players-1 .video-box {
+            width: 180px;
+            height: 135px;
+        }
+        
+        .video-chat-container.players-2 .video-box {
+            width: 160px;
+            height: 120px;
+        }
+        
+        .video-chat-container.players-3 .video-box,
+        .video-chat-container.players-4 .video-box {
+            width: 140px;
+            height: 105px;
+        }
+        
+        .video-chat-container.players-5 .video-box,
+        .video-chat-container.players-6 .video-box {
+            width: 120px;
+            height: 90px;
+        }
+        
+        .video-chat-container.players-7 .video-box,
+        .video-chat-container.players-8 .video-box {
+            width: 100px;
+            height: 75px;
+        }
+        
+        .video-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .video-box .player-name-tag {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .video-box .audio-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .video-box .audio-indicator.speaking {
+            background: rgba(102, 126, 234, 0.9);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        #countdown-display {
+            animation: countdownPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes countdownPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        /* Card Animations */
+        @keyframes cardSelected {
+            0%, 100% {
+                transform: translateY(-20px) scale(1.08);
+            }
+            50% {
+                transform: translateY(-25px) scale(1.12);
+            }
+        }
+        
+        @keyframes cardPlayed {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.3) rotateY(90deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8) rotateY(180deg) translateY(-100px);
+            }
+        }
+        
+        @keyframes cardDrawn {
+            0% {
+                opacity: 0;
+                transform: translateY(-50px) rotateY(180deg) scale(0.5);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(0) rotateY(0deg) scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes explosion {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            25% {
+                transform: scale(1.2) rotate(5deg);
+                filter: brightness(2) hue-rotate(45deg);
+            }
+            50% {
+                transform: scale(0.8) rotate(-5deg);
+                filter: brightness(3) hue-rotate(90deg);
+            }
+            75% {
+                transform: scale(1.3) rotate(3deg);
+                filter: brightness(2) hue-rotate(135deg);
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+                filter: brightness(5) hue-rotate(180deg);
+            }
+        }
+        
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-10px, 5px); }
+            20% { transform: translate(10px, -5px); }
+            30% { transform: translate(-8px, -3px); }
+            40% { transform: translate(8px, 3px); }
+            50% { transform: translate(-5px, 2px); }
+            60% { transform: translate(5px, -2px); }
+            70% { transform: translate(-3px, 1px); }
+            80% { transform: translate(3px, -1px); }
+            90% { transform: translate(-1px, 0px); }
+        }
+        
+        @keyframes deckShuffle {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.1) translateX(-10px); }
+            50% { transform: rotate(5deg) scale(1.1) translateX(10px); }
+            75% { transform: rotate(-3deg) scale(1.05) translateX(-5px); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+        
+        .deck-pile.shuffling {
+            animation: deckShuffle 0.8s ease-in-out;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+            
+            .screen {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+            
+            h2 {
+                font-size: 1.3em;
+                margin-bottom: 15px;
+            }
+            
+            .room-code .code {
+                font-size: 1.5em;
+                letter-spacing: 2px;
+            }
+            
+            .game-board {
+                grid-template-rows: auto auto 1fr auto;
+                gap: 15px;
+                min-height: auto;
+            }
+            
+            .game-info {
+                padding: 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .info-item {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .deck-area {
+                padding: 15px;
+            }
+            
+            .deck-pile {
+                width: 80px;
+                height: 110px;
+            }
+            
+            .deck-pile::after {
+                font-size: 12px;
+                padding: 2px 6px;
+            }
+            
+            .turn-indicator {
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            .players-area {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .player-card {
+                padding: 12px;
+            }
+            
+            .player-card h3 {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+            
+            .card-count {
+                font-size: 1.5em;
+            }
+            
+            .my-hand {
+                padding: 15px;
+            }
+            
+            .my-hand h2 {
+                font-size: 1.1em;
+            }
+            
+            .cards-container {
+                gap: 8px;
+                padding: 10px 0;
+                min-height: 130px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .card {
+                min-width: 85px;
+                width: 85px;
+                height: 120px;
+                padding: 8px;
+                font-size: 10px;
+            }
+            
+            .card-icon {
+                font-size: 32px;
+                margin-bottom: 4px;
+            }
+            
+            .card-count-badge {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+                top: 3px;
+                right: 3px;
+            }
+            
+            .card:hover {
+                transform: translateY(-5px);
+            }
+            
+            .card.selected {
+                transform: translateY(-10px);
+            }
+            
+            .action-buttons {
+                gap: 8px;
+                margin-top: 12px;
+            }
+            
+            .action-buttons button {
+                flex: 1 1 100%;
+                min-width: auto;
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+            
+            button {
+                padding: 12px 24px;
+                font-size: 16px;
+                min-height: 44px; /* Touch-friendly */
+            }
+            
+            input {
+                padding: 12px;
+                font-size: 16px;
+                min-height: 44px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+                max-height: 85vh;
+            }
+            
+            .modal-content h2 {
+                font-size: 1.3em;
+                margin-bottom: 15px;
+            }
+            
+            .target-selector {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin: 15px 0;
+            }
+            
+            .target-option {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .player-list {
+                padding: 15px;
+            }
+            
+            .player-item {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            #future-cards,
+            #favor-cards {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding: 10px 0;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            #future-cards .card,
+            #favor-cards .card {
+                flex-shrink: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .screen {
+                padding: 15px;
+            }
+            
+            .room-code .code {
+                font-size: 1.3em;
+            }
+            
+            .players-area {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .card {
+                min-width: 75px;
+                width: 75px;
+                height: 105px;
+                font-size: 9px;
+            }
+            
+            .card-icon {
+                font-size: 28px;
+            }
+            
+            .action-buttons button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+            
+            .video-chat-container {
+                top: 10px;
+                right: 10px;
+                max-width: 200px;
+                gap: 6px;
+            }
+            
+            .video-chat-container.players-1 .video-box {
+                width: 120px;
+                height: 90px;
+            }
+            
+            .video-chat-container.players-2 .video-box,
+            .video-chat-container.players-3 .video-box,
+            .video-chat-container.players-4 .video-box {
+                width: 90px;
+                height: 68px;
+            }
+            
+            .video-chat-container.players-5 .video-box,
+            .video-chat-container.players-6 .video-box,
+            .video-chat-container.players-7 .video-box,
+            .video-chat-container.players-8 .video-box {
+                width: 75px;
+                height: 56px;
+            }
+            
+            .video-box .player-name-tag {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+            
+            .video-box .audio-indicator {
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Menu -->
+        <div class="screen active" id="menu-screen">
+            <h1>🐱 Explo-Cats 💣</h1>
+            <div class="menu-buttons">
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20">
+                <button onclick="showHostScreen()">Host Game</button>
+                <button onclick="showJoinScreen()">Join Game</button>
+            </div>
+        </div>
+        
+        <!-- Host Screen -->
+        <div class="screen" id="host-screen">
+            <h1>Host Game</h1>
+            <div class="room-code">
+                <h3>Share this code with players:</h3>
+                <div class="code" id="host-room-code">------</div>
+            </div>
+            <div class="player-list">
+                <h2>Players in Lobby</h2>
+                <div id="host-player-list"></div>
+            </div>
+            <div class="menu-buttons">
+                <button onclick="startGame()" id="start-game-btn">Start Game</button>
+                <button onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Join Screen -->
+        <div class="screen" id="join-screen">
+            <h1>Join Game</h1>
+            <div class="error" id="join-error"></div>
+            <div class="menu-buttons">
+                <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="6" style="text-transform: uppercase;">
+                <button onclick="joinGame()">Join Game</button>
+                <button onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Waiting Screen -->
+        <div class="screen" id="waiting-screen">
+            <h1>Waiting for Host...</h1>
+            <div class="room-code">
+                <h3>Room Code:</h3>
+                <div class="code" id="waiting-room-code">------</div>
+            </div>
+            <div class="player-list">
+                <h2>Players in Lobby</h2>
+                <div id="waiting-player-list"></div>
+            </div>
+            <div class="menu-buttons">
+                <button onclick="backToMenu()">Leave Game</button>
+            </div>
+        </div>
+        
+        <!-- Spectator Screen -->
+        <div class="screen" id="spectator-screen">
+            <h1>👻 Spectator Mode</h1>
+            <!-- Video Chat Container -->
+            <div class="video-chat-container" id="spectator-video-chat-container"></div>
+            
+            <div class="game-board">
+                <div class="game-info">
+                    <div class="info-item deck-area">
+                        <div>Draw Pile</div>
+                        <div class="deck-pile" id="spectator-deck-count">0</div>
+                    </div>
+                    <div class="info-item" id="spectator-turn-info">
+                        <div class="turn-indicator">Spectating...</div>
+                    </div>
+                </div>
+                
+                <div class="players-area" id="spectator-players-area"></div>
+                
+                <div class="my-hand">
+                    <h2>You are eliminated - Spectating</h2>
+                    <div class="menu-buttons">
+                        <button onclick="backToMenu()">Exit to Main Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div class="screen" id="game-screen">
+            <!-- Video Chat Container -->
+            <div class="video-chat-container" id="video-chat-container"></div>
+            
+            <div class="game-board">
+                <div class="game-info">
+                    <div class="info-item deck-area">
+                        <div>Draw Pile</div>
+                        <div class="deck-pile" id="deck-count">0</div>
+                    </div>
+                    <div class="info-item" id="turn-info">
+                        <div class="turn-indicator">Waiting...</div>
+                    </div>
+                </div>
+                
+                <div class="players-area" id="players-area"></div>
+                
+                <div class="my-hand">
+                    <h2>Your Hand</h2>
+                    <div class="cards-container" id="my-cards"></div>
+                    <div class="action-buttons">
+                        <button onclick="drawCard()" id="draw-btn">Draw Card</button>
+                        <button onclick="playSelectedCards()" id="play-btn" disabled>Play Card(s)</button>
+                        <button onclick="endTurn()" id="end-turn-btn" style="display: none;">End Turn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modals -->
+        <div class="modal" id="server-waking-modal">
+            <div class="modal-content">
+                <h2>⏳ Server Waking Up...</h2>
+                <p>The server is starting up. Please wait...</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <div id="countdown-display" style="font-size: 48px; font-weight: bold; color: #667eea;">30</div>
+                    <div style="margin-top: 10px; color: #666;">seconds remaining</div>
+                </div>
+                <div style="text-align: center; color: #999; font-size: 14px;">
+                    This only happens after periods of inactivity.<br>
+                    Future connections will be instant!
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="target-modal">
+            <div class="modal-content">
+                <h2>Select Target Player</h2>
+                <div class="target-selector" id="target-selector"></div>
+                <div class="menu-buttons">
+                    <button onclick="closeTargetModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="exploded-modal">
+            <div class="modal-content">
+                <h2>💥 You Exploded! 💥</h2>
+                <p>You drew an exploding kitten and had no defuse!</p>
+                <p>You have been eliminated from the game.</p>
+                <div class="menu-buttons">
+                    <button onclick="enterSpectatorMode()">Spectate Game</button>
+                    <button onclick="backToMenu()">Exit to Main Menu</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="winner-modal">
+            <div class="modal-content">
+                <h2>🎉 Game Over! 🎉</h2>
+                <p id="winner-text"></p>
+                <div class="menu-buttons">
+                    <button onclick="backToMenu()">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="defuse-modal">
+            <div class="modal-content">
+                <h2>💣 You drew an Exploding Kitten!</h2>
+                <p>You used a Defuse! The kitten will be randomly placed back in the deck...</p>
+                <div class="menu-buttons">
+                    <button onclick="placeKittenRandomly()">Continue</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="see-future-modal">
+            <div class="modal-content">
+                <h2>🔮 Top 3 Cards</h2>
+                <div id="future-cards"></div>
+                <div class="menu-buttons">
+                    <button onclick="closeSeeFutureModal()">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal" id="favor-modal">
+            <div class="modal-content">
+                <h2>🤝 Favor Request</h2>
+                <p id="favor-text"></p>
+                <p>Choose a card to give:</p>
+                <div id="favor-cards"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check if we're accessing the page correctly
+        // Commented out to allow direct file access with Render server
+        // if (window.location.protocol === 'file:') {
+        //     document.body.innerHTML = `...`;
+        //     throw new Error('Must access through server');
+        // }
+        
+        // Initialize variables first
+        let playerName = '';
+        let roomCode = '';
+        let mySocketId = '';
+        let gameState = null;
+        let selectedCards = [];
+        let socket;
+        
+        // WebRTC variables
+        let localStream = null;
+        let peerConnections = {};
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+        
+        // Server wake tracking
+        let isServerWaking = false;
+        let countdownInterval = null;
+        let serverWakeTimeout = null;
+        
+        // Server URL - Update this with your Render app URL
+        const SERVER_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://explode-kits.onrender.com';
+        
+        // Initialize socket connection
+        if (typeof io === 'undefined') {
+            alert('Socket.IO not loaded. Please ensure you are accessing the page correctly');
+        } else {
+            socket = io(SERVER_URL, {
+                timeout: 30000,
+                reconnectionAttempts: 10,
+                reconnectionDelay: 2000
+            });
+            
+            socket.on('connect', () => {
+                console.log('Connected to server!');
+                if (isServerWaking) {
+                    hideServerWakingModal();
+                }
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+                if (!isServerWaking) {
+                    console.log('Server may be waking up...');
+                }
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+        }
+        
+        // Card icons and names
+        const cardIcons = {
+            exploding_kitten: '💣',
+            defuse: '🛡️',
+            nope: '🚫',
+            skip: '⏭️',
+            attack: '⚔️',
+            shuffle: '🔀',
+            see_future: '🔮',
+            favor: '🤝',
+            beard_cat: '🧔',
+            hringg: '📯',
+            tacocat: '🌮'
+        };
+        
+        // Card image paths - mapping card types to their individual card images
+        const cardImages = {
+            exploding_kitten: 'assets/cards/card-exploding-kitten.jpg',
+            defuse: 'assets/cards/card-defuce.jpg',
+            nope: 'assets/cards/card-nope.jpg',
+            skip: 'assets/cards/card-skip.jpg',
+            attack: 'assets/cards/card-attack.jpg',
+            shuffle: 'assets/cards/card-shuffle.jpg',
+            see_future: 'assets/cards/card-see-the-future.jpg',
+            favor: 'assets/cards/card-favor.jpg',
+            beard_cat: 'assets/cards/card-beard-cat.jpg',
+            hringg: 'assets/cards/card-rainbow-ralphing-cat.jpg',
+            tacocat: 'assets/cards/card-tacocat.jpg'
+        };
+        
+        const cardNames = {
+            exploding_kitten: 'Exploding Kitten',
+            defuse: 'Defuse',
+            nope: 'Nope',
+            skip: 'Skip',
+            attack: 'Attack (2X)',
+            shuffle: 'Shuffle',
+            see_future: 'See Future (3X)',
+            favor: 'Favor',
+            beard_cat: 'Beard Cat',
+            hringg: 'Hringg',
+            tacocat: 'Tacocat'
+        };
+        
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function showHostScreen() {
+            playerName = document.getElementById('player-name-input').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            // Check if socket is connected
+            if (!socket.connected) {
+                showServerWakingModal();
+                // Wait for connection then emit
+                const connectHandler = () => {
+                    socket.emit('host-game', playerName);
+                    socket.off('connect', connectHandler);
+                };
+                socket.on('connect', connectHandler);
+            } else {
+                socket.emit('host-game', playerName);
+            }
+        }
+        
+        function showJoinScreen() {
+            playerName = document.getElementById('player-name-input').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            showScreen('join-screen');
+        }
+        
+        function joinGame() {
+            roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if (!roomCode) {
+                showError('join-error', 'Please enter a room code');
+                return;
+            }
+            
+            // Check if socket is connected
+            if (!socket.connected) {
+                showServerWakingModal();
+                // Wait for connection then emit
+                const connectHandler = () => {
+                    socket.emit('join-game', { roomCode, playerName });
+                    socket.off('connect', connectHandler);
+                };
+                socket.on('connect', connectHandler);
+            } else {
+                socket.emit('join-game', { roomCode, playerName });
+            }
+        }
+        
+        function startGame() {
+            socket.emit('start-game', roomCode);
+        }
+        
+        function backToMenu() {
+            location.reload();
+        }
+        
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+            setTimeout(() => errorEl.classList.remove('active'), 3000);
+        }
+        
+        // Socket event handlers
+        socket.on('room-created', (data) => {
+            roomCode = data.roomCode;
+            document.getElementById('host-room-code').textContent = roomCode;
+            showScreen('host-screen');
+        });
+        
+        socket.on('join-success', (data) => {
+            roomCode = data.roomCode;
+            document.getElementById('waiting-room-code').textContent = roomCode;
+            showScreen('waiting-screen');
+        });
+        
+        socket.on('join-error', (message) => {
+            showError('join-error', message);
+        });
+        
+        socket.on('player-list-update', (playerList) => {
+            updatePlayerList('host-player-list', playerList);
+            updatePlayerList('waiting-player-list', playerList);
+            
+            // Enable start button if at least 2 players
+            const startBtn = document.getElementById('start-game-btn');
+            if (startBtn) {
+                startBtn.disabled = playerList.length < 2;
+            }
+            
+            // Update video chat if game is active
+            if (localStream && gameState) {
+                updateVideoConnections(playerList);
+            }
+        });
+        
+        socket.on('game-started', async () => {
+            showScreen('game-screen');
+            await initializeVideoChat();
+        });
+        
+        socket.on('game-state-update', (state) => {
+            gameState = state;
+            updateGameUI();
+            updateSpectatorUI();
+        });
+        
+        socket.on('turn-changed', (data) => {
+            const isMyTurn = data.currentPlayerId === socket.id;
+            document.getElementById('turn-info').innerHTML = `
+                <div class="turn-indicator">
+                    ${isMyTurn ? "🎯 Your Turn!" : `⏳ ${data.currentPlayerName}'s Turn`}
+                </div>
+            `;
+            
+            document.getElementById('draw-btn').disabled = !isMyTurn;
+        });
+        
+        socket.on('card-drawn', (card) => {
+            console.log('Drew card:', card);
+            // Trigger draw animation on the newly added card
+            setTimeout(() => {
+                const cards = document.querySelectorAll('#my-cards .card');
+                const lastCard = cards[cards.length - 1];
+                if (lastCard) {
+                    lastCard.classList.add('drawn');
+                    setTimeout(() => lastCard.classList.remove('drawn'), 600);
+                }
+            }, 100);
+        });
+        
+        socket.on('drew-exploding-kitten', (data) => {
+            if (data.hasDefuse) {
+                document.getElementById('defuse-modal').classList.add('active');
+            } else {
+                // Player exploded without defuse - show explosion then modal
+                const gameScreen = document.getElementById('game-screen');
+                gameScreen.classList.add('exploding');
+                setTimeout(() => gameScreen.classList.remove('exploding'), 500);
+                
+                setTimeout(() => {
+                    document.getElementById('exploded-modal').classList.add('active');
+                }, 500);
+            }
+        });
+        
+        socket.on('player-exploded', (data) => {
+            // Just update game state, modal is shown by drew-exploding-kitten event
+            console.log('Player exploded:', data);
+        });
+        
+        socket.on('kitten-placed', () => {
+            // Trigger deck shuffle animation
+            const deckPile = document.getElementById('deck-count');
+            const spectatorDeck = document.getElementById('spectator-deck-count');
+            
+            if (deckPile) {
+                deckPile.classList.add('shuffling');
+                setTimeout(() => deckPile.classList.remove('shuffling'), 800);
+            }
+            if (spectatorDeck) {
+                spectatorDeck.classList.add('shuffling');
+                setTimeout(() => spectatorDeck.classList.remove('shuffling'), 800);
+            }
+            
+            closeDefuseModal();
+        });
+        
+        socket.on('see-future', (cards) => {
+            const futureCardsEl = document.getElementById('future-cards');
+            futureCardsEl.innerHTML = cards.map((card, i) => `
+                <div class="card ${card.type}" style="position: relative;">
+                    <img src="${cardImages[card.type] || 'assets/cards-set-1.jpg'}" alt="${cardNames[card.type]}" />
+                    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 10px; background: rgba(0,0,0,0.7); color: white; padding: 2px 5px; border-radius: 3px;">Position ${i + 1}</div>
+                </div>
+            `).join('');
+            document.getElementById('see-future-modal').classList.add('active');
+        });
+        
+        socket.on('game-over', (data) => {
+            document.getElementById('winner-text').textContent = 
+                data.winnerId === socket.id ? 
+                'You won! 🎉' : 
+                `${data.winner} won!`;
+            document.getElementById('winner-modal').classList.add('active');
+        });
+        
+        socket.on('error', (message) => {
+            alert(message);
+        });
+        
+        socket.on('favor-requested', (data) => {
+            document.getElementById('favor-text').textContent = 
+                `${data.byPlayer} played a Favor card. You must give them a card.`;
+            
+            const favorCardsEl = document.getElementById('favor-cards');
+            favorCardsEl.innerHTML = gameState.myHand.map(card => `
+                <div class="card ${card.type}" onclick="giveCardForFavor('${card.id}')">
+                    <img src="${cardImages[card.type] || 'assets/cards-set-1.jpg'}" alt="${cardNames[card.type]}" />
+                </div>
+            `).join('');
+            
+            document.getElementById('favor-modal').classList.add('active');
+        });
+        
+        socket.on('card-given', (data) => {
+            alert(`You gave a card to ${data.toPlayer}`);
+        });
+        
+        socket.on('card-received', (card) => {
+            console.log('Received card:', card);
+        });
+        
+        // WebRTC signaling handlers
+        socket.on('webrtc-offer', async (data) => {
+            await handleWebRTCOffer(data);
+        });
+        
+        socket.on('webrtc-answer', async (data) => {
+            await handleWebRTCAnswer(data);
+        });
+        
+        socket.on('webrtc-ice-candidate', async (data) => {
+            await handleICECandidate(data);
+        });
+        
+        socket.on('peer-disconnected', (peerId) => {
+            closePeerConnection(peerId);
+        });
+        
+        // UI update functions
+        function updatePlayerList(elementId, players) {
+            const listEl = document.getElementById(elementId);
+            listEl.innerHTML = players.map(p => `
+                <div class="player-item ${p.isHost ? 'host' : ''}">
+                    <span>${p.name}</span>
+                    ${p.isHost ? '<span class="badge">Host</span>' : ''}
+                </div>
+            `).join('');
+        }
+        
+        function updateGameUI() {
+            if (!gameState) return;
+            
+            // Update deck count with data attribute for the ::after pseudo-element
+            const deckElement = document.getElementById('deck-count');
+            deckElement.setAttribute('data-count', gameState.deckCount);
+            deckElement.textContent = ''; // Clear text content since we're using ::after
+            
+            // Update players area
+            const playersArea = document.getElementById('players-area');
+            playersArea.innerHTML = gameState.players.map(p => {
+                const isCurrentTurn = p.id === gameState.currentPlayerId;
+                return `
+                    <div class="player-card ${isCurrentTurn ? 'current-turn' : ''} ${!p.alive ? 'dead' : ''}">
+                        <h3>${p.name} ${p.id === socket.id ? '(You)' : ''}</h3>
+                        <div class="card-count">${p.cardCount} 🃏</div>
+                        <div>${p.alive ? '✅ Alive' : '💀 Dead'}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update my hand - group cards by type
+            const myCardsEl = document.getElementById('my-cards');
+            
+            // Group cards by type
+            const cardGroups = {};
+            gameState.myHand.forEach(card => {
+                if (!cardGroups[card.type]) {
+                    cardGroups[card.type] = [];
+                }
+                cardGroups[card.type].push(card);
+            });
+            
+            // Render grouped cards
+            myCardsEl.innerHTML = Object.entries(cardGroups).map(([type, cards]) => {
+                const count = cards.length;
+                const firstCard = cards[0];
+                const isSelected = selectedCards.some(id => cards.find(c => c.id === id));
+                const selectedCount = cards.filter(c => selectedCards.includes(c.id)).length;
+                
+                return `
+                    <div class="card ${type} ${count > 1 ? 'card-stack' : ''} ${isSelected ? 'selected' : ''}" 
+                         onclick="toggleCardSelection('${firstCard.id}', '${type}')" 
+                         data-card-type="${type}">
+                        <img src="${cardImages[type] || 'assets/cards/card-back.jpg'}" alt="${cardNames[type]}" />
+                        ${count > 1 ? `<div class="card-count-badge">${selectedCount > 0 ? selectedCount + '/' : ''}${count}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            updateActionButtons();
+        }
+        
+        function toggleCardSelection(cardId, cardType) {
+            // Get all cards of this type
+            const cardsOfType = gameState.myHand.filter(c => c.type === cardType);
+            
+            // Check how many of this type are currently selected
+            const selectedOfType = cardsOfType.filter(c => selectedCards.includes(c.id));
+            
+            if (selectedOfType.length === 0) {
+                // None selected, select the first one
+                selectedCards.push(cardsOfType[0].id);
+            } else if (selectedOfType.length < cardsOfType.length) {
+                // Some selected, select one more
+                const nextCard = cardsOfType.find(c => !selectedCards.includes(c.id));
+                if (nextCard) {
+                    selectedCards.push(nextCard.id);
+                }
+            } else {
+                // All selected, deselect all
+                selectedOfType.forEach(card => {
+                    const index = selectedCards.indexOf(card.id);
+                    if (index > -1) {
+                        selectedCards.splice(index, 1);
+                    }
+                });
+            }
+            
+            updateGameUI();
+        }
+        
+        function updateActionButtons() {
+            const playBtn = document.getElementById('play-btn');
+            playBtn.disabled = selectedCards.length === 0;
+        }
+        
+        // Game actions
+        function drawCard() {
+            socket.emit('draw-card', roomCode);
+        }
+        
+        function playSelectedCards() {
+            if (selectedCards.length === 0) return;
+            
+            const cards = selectedCards.map(id => 
+                gameState.myHand.find(c => c.id === id)
+            );
+            
+            const cardType = cards[0].type;
+            
+            // Trigger play animation on selected cards
+            selectedCards.forEach(cardId => {
+                const cardElement = document.querySelector(`.card[onclick*="${cardId}"]`);
+                if (cardElement) {
+                    cardElement.classList.add('played');
+                }
+            });
+            
+            // Wait for animation before emitting
+            setTimeout(() => {
+            
+            // Single card actions
+            if (selectedCards.length === 1) {
+                if (['skip', 'attack', 'shuffle', 'see_future'].includes(cardType)) {
+                    socket.emit('play-card', { roomCode, cardId: selectedCards[0] });
+                    selectedCards = [];
+                } else if (cardType === 'favor') {
+                    // Show target selector for Favor
+                    showTargetSelectorForFavor();
+                } else {
+                    alert('This card cannot be played alone');
+                }
+            }
+            // Combo cards (2 or 3 matching)
+            else if (selectedCards.length === 2 || selectedCards.length === 3) {
+                // Check if all cards match
+                if (!cards.every(c => c.type === cardType)) {
+                    alert('All selected cards must be the same type');
+                    return;
+                }
+                
+                if (['beard_cat', 'hringg', 'tacocat'].includes(cardType)) {
+                    showTargetSelector(selectedCards.length);
+                } else {
+                    alert('These cards cannot be combined');
+                }
+            } else {
+                alert('Select 1, 2, or 3 cards');
+            }
+            
+            }, 300); // Wait for animation
+            
+            updateGameUI();
+        }
+        
+        function showTargetSelector(comboSize) {
+            const targetSelector = document.getElementById('target-selector');
+            const alivePlayers = gameState.players.filter(p => 
+                p.alive && p.id !== socket.id && p.cardCount > 0
+            );
+            
+            targetSelector.innerHTML = alivePlayers.map(p => `
+                <div class="target-option" onclick="selectTarget('${p.id}', ${comboSize})">
+                    ${p.name}<br>
+                    ${p.cardCount} cards
+                </div>
+            `).join('');
+            
+            document.getElementById('target-modal').classList.add('active');
+        }
+        
+        function selectTarget(targetId, comboSize) {
+            if (comboSize === 2) {
+                // Steal random card
+                socket.emit('play-combo', { 
+                    roomCode, 
+                    cardIds: selectedCards, 
+                    targetPlayerId: targetId 
+                });
+            } else if (comboSize === 3) {
+                // Ask for specific card
+                const cardType = prompt('What card type do you want? (e.g., defuse, skip, beard_cat)');
+                if (cardType) {
+                    socket.emit('play-combo', { 
+                        roomCode, 
+                        cardIds: selectedCards, 
+                        targetPlayerId: targetId,
+                        requestedCard: cardType
+                    });
+                }
+            }
+            
+            selectedCards = [];
+            closeTargetModal();
+        }
+        
+        function closeTargetModal() {
+            document.getElementById('target-modal').classList.remove('active');
+        }
+        
+        function placeKittenRandomly() {
+            // Generate random position (0 to deck size)
+            const randomPosition = Math.floor(Math.random() * (gameState.deckCount + 1));
+            socket.emit('place-exploding-kitten', { roomCode, position: randomPosition });
+        }
+        
+        function closeDefuseModal() {
+            document.getElementById('defuse-modal').classList.remove('active');
+        }
+        
+        function closeExplodedModal() {
+            document.getElementById('exploded-modal').classList.remove('active');
+        }
+        
+        function enterSpectatorMode() {
+            closeExplodedModal();
+            showScreen('spectator-screen');
+            updateSpectatorUI();
+        }
+        
+        function updateSpectatorUI() {
+            if (!gameState) return;
+            
+            const currentScreen = document.querySelector('.screen.active');
+            if (currentScreen && currentScreen.id !== 'spectator-screen') return;
+            
+            // Update spectator deck count
+            const spectatorDeck = document.getElementById('spectator-deck-count');
+            if (spectatorDeck) {
+                spectatorDeck.setAttribute('data-count', gameState.deckCount);
+            }
+            
+            // Update spectator turn info
+            const spectatorTurnInfo = document.getElementById('spectator-turn-info');
+            if (spectatorTurnInfo) {
+                const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayerId);
+                spectatorTurnInfo.innerHTML = `
+                    <div class="turn-indicator">
+                        👻 Spectating - ${currentPlayer ? currentPlayer.name + "'s Turn" : 'Game in Progress'}
+                    </div>
+                `;
+            }
+            
+            // Update spectator players area with visible cards
+            const spectatorPlayersArea = document.getElementById('spectator-players-area');
+            if (spectatorPlayersArea) {
+                spectatorPlayersArea.innerHTML = gameState.players.map(p => {
+                    const isCurrentTurn = p.id === gameState.currentPlayerId;
+                    
+                    // Show cards for all players in spectator mode
+                    let cardsHTML = '';
+                    if (p.cards && p.cards.length > 0) {
+                        const cardGroups = {};
+                        p.cards.forEach(card => {
+                            if (!cardGroups[card.type]) {
+                                cardGroups[card.type] = [];
+                            }
+                            cardGroups[card.type].push(card);
+                        });
+                        
+                        cardsHTML = '<div class="spectator-cards">' + 
+                            Object.entries(cardGroups).map(([type, cards]) => {
+                                const count = cards.length;
+                                return `
+                                    <div class="card ${type}" title="${cardNames[type]}">
+                                        <img src="${cardImages[type] || 'assets/cards/card-back.jpg'}" alt="${cardNames[type]}" />
+                                        ${count > 1 ? `<div class="card-count-badge">${count}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('') + '</div>';
+                    }
+                    
+                    return `
+                        <div class="player-card ${isCurrentTurn ? 'current-turn' : ''} ${!p.alive ? 'dead' : ''}">
+                            <h3>${p.name}</h3>
+                            <div class="card-count">${p.cardCount} 🃏</div>
+                            <div>${p.alive ? '✅ Alive' : '💀 Dead'}</div>
+                            ${cardsHTML}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        function closeSeeFutureModal() {
+            document.getElementById('see-future-modal').classList.remove('active');
+        }
+        
+        function showTargetSelectorForFavor() {
+            const targetSelector = document.getElementById('target-selector');
+            const alivePlayers = gameState.players.filter(p => 
+                p.alive && p.id !== socket.id && p.cardCount > 0
+            );
+            
+            targetSelector.innerHTML = alivePlayers.map(p => `
+                <div class="target-option" onclick="playFavorOnTarget('${p.id}')">
+                    ${p.name}<br>
+                    ${p.cardCount} cards
+                </div>
+            `).join('');
+            
+            document.getElementById('target-modal').classList.add('active');
+        }
+        
+        function playFavorOnTarget(targetId) {
+            socket.emit('play-card', { 
+                roomCode, 
+                cardId: selectedCards[0],
+                targetPlayerId: targetId
+            });
+            selectedCards = [];
+            closeTargetModal();
+        }
+        
+        function giveCardForFavor(cardId) {
+            socket.emit('give-card-for-favor', { roomCode, cardId });
+            document.getElementById('favor-modal').classList.remove('active');
+        }
+        
+        function endTurn() {
+            selectedCards = [];
+            updateGameUI();
+        }
+        
+        // ========== WebRTC Video Chat Functions ==========
+        
+        async function initializeVideoChat() {
+            try {
+                // Request camera and microphone access
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 320, height: 240 },
+                    audio: true
+                });
+                
+                console.log('Local stream initialized');
+                
+                // Create peer connections for all other players
+                if (gameState && gameState.players) {
+                    const otherPlayers = gameState.players.filter(p => p.id !== socket.id);
+                    for (const player of otherPlayers) {
+                        await createPeerConnection(player.id, player.name, true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                alert('Could not access camera/microphone. Video chat will be disabled.');
+            }
+        }
+        
+        async function createPeerConnection(peerId, peerName, createOffer) {
+            if (peerConnections[peerId]) return;
+            
+            const peerConnection = new RTCPeerConnection(configuration);
+            peerConnections[peerId] = { connection: peerConnection, name: peerName };
+            
+            // Add local stream tracks to peer connection
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            }
+            
+            // Handle incoming remote stream
+            peerConnection.ontrack = (event) => {
+                console.log('Received remote track from', peerName);
+                addRemoteVideo(peerId, peerName, event.streams[0]);
+            };
+            
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('webrtc-ice-candidate', {
+                        roomCode,
+                        targetId: peerId,
+                        candidate: event.candidate
+                    });
+                }
+            };
+            
+            // Handle connection state changes
+            peerConnection.onconnectionstatechange = () => {
+                console.log(`Connection state with ${peerName}:`, peerConnection.connectionState);
+                if (peerConnection.connectionState === 'disconnected' || 
+                    peerConnection.connectionState === 'failed') {
+                    closePeerConnection(peerId);
+                }
+            };
+            
+            // Create and send offer if initiator
+            if (createOffer) {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socket.emit('webrtc-offer', {
+                    roomCode,
+                    targetId: peerId,
+                    offer: offer
+                });
+            }
+        }
+        
+        async function handleWebRTCOffer(data) {
+            const { fromId, fromName, offer } = data;
+            
+            await createPeerConnection(fromId, fromName, false);
+            const peerConnection = peerConnections[fromId].connection;
+            
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            
+            socket.emit('webrtc-answer', {
+                roomCode,
+                targetId: fromId,
+                answer: answer
+            });
+        }
+        
+        async function handleWebRTCAnswer(data) {
+            const { fromId, answer } = data;
+            
+            if (peerConnections[fromId]) {
+                const peerConnection = peerConnections[fromId].connection;
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            }
+        }
+        
+        async function handleICECandidate(data) {
+            const { fromId, candidate } = data;
+            
+            if (peerConnections[fromId]) {
+                const peerConnection = peerConnections[fromId].connection;
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        }
+        
+        function addRemoteVideo(peerId, peerName, stream) {
+            // Remove existing video if any
+            removeRemoteVideo(peerId);
+            
+            // Determine which container to use
+            const activeScreen = document.querySelector('.screen.active');
+            let container;
+            if (activeScreen && activeScreen.id === 'spectator-screen') {
+                container = document.getElementById('spectator-video-chat-container');
+            } else {
+                container = document.getElementById('video-chat-container');
+            }
+            
+            if (!container) return;
+            
+            // Create video element
+            const videoBox = document.createElement('div');
+            videoBox.className = 'video-box';
+            videoBox.id = `video-${peerId}`;
+            
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsInline = true;
+            
+            const nameTag = document.createElement('div');
+            nameTag.className = 'player-name-tag';
+            nameTag.textContent = peerName;
+            
+            const audioIndicator = document.createElement('div');
+            audioIndicator.className = 'audio-indicator';
+            audioIndicator.textContent = '🎤';
+            
+            videoBox.appendChild(video);
+            videoBox.appendChild(nameTag);
+            videoBox.appendChild(audioIndicator);
+            container.appendChild(videoBox);
+            
+            // Update container class based on number of videos
+            updateVideoContainerSize(container);
+            
+            // Monitor audio levels
+            monitorAudioLevel(stream, audioIndicator);
+        }
+        
+        function removeRemoteVideo(peerId) {
+            const videoElement = document.getElementById(`video-${peerId}`);
+            if (videoElement) {
+                videoElement.remove();
+                updateVideoContainerSize();
+            }
+        }
+        
+        function updateVideoContainerSize(container) {
+            // Update both containers
+            const containers = [
+                document.getElementById('video-chat-container'),
+                document.getElementById('spectator-video-chat-container')
+            ];
+            
+            containers.forEach(cont => {
+                if (!cont) return;
+                const videoCount = cont.querySelectorAll('.video-box').length;
+                cont.className = 'video-chat-container players-' + Math.min(videoCount, 8);
+            });
+        }
+        
+        function monitorAudioLevel(stream, indicator) {
+            try {
+                const audioContext = new AudioContext();
+                const analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                
+                function checkLevel() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                    
+                    if (average > 20) {
+                        indicator.classList.add('speaking');
+                    } else {
+                        indicator.classList.remove('speaking');
+                    }
+                    
+                    requestAnimationFrame(checkLevel);
+                }
+                
+                checkLevel();
+            } catch (error) {
+                console.error('Error monitoring audio:', error);
+            }
+        }
+        
+        function closePeerConnection(peerId) {
+            if (peerConnections[peerId]) {
+                peerConnections[peerId].connection.close();
+                delete peerConnections[peerId];
+                removeRemoteVideo(peerId);
+            }
+        }
+        
+        function updateVideoConnections(playerList) {
+            // This is called when player list updates during game
+            const currentPeerIds = Object.keys(peerConnections);
+            const activePeerIds = playerList
+                .filter(p => p.id !== socket.id)
+                .map(p => p.id);
+            
+            // Remove disconnected peers
+            currentPeerIds.forEach(peerId => {
+                if (!activePeerIds.includes(peerId)) {
+                    closePeerConnection(peerId);
+                }
+            });
+            
+            // Add new peers
+            playerList.forEach(player => {
+                if (player.id !== socket.id && !peerConnections[player.id]) {
+                    createPeerConnection(player.id, player.name, true);
+                }
+            });
+        }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            Object.keys(peerConnections).forEach(peerId => {
+                closePeerConnection(peerId);
+            });
+        });
+        
+        // ========== Server Wake Functions ==========
+        
+        function showServerWakingModal() {
+            isServerWaking = true;
+            document.getElementById('server-waking-modal').classList.add('active');
+            
+            let countdown = 30;
+            const countdownDisplay = document.getElementById('countdown-display');
+            countdownDisplay.textContent = countdown;
+            
+            // Clear any existing intervals
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            if (serverWakeTimeout) {
+                clearTimeout(serverWakeTimeout);
+            }
+            
+            // Start countdown
+            countdownInterval = setInterval(() => {
+                countdown--;
+                countdownDisplay.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+            }, 1000);
+            
+            // Auto-hide after 35 seconds (safety timeout)
+            serverWakeTimeout = setTimeout(() => {
+                if (isServerWaking) {
+                    hideServerWakingModal();
+                    if (!socket.connected) {
+                        alert('Server is taking longer than expected. Please try again.');
+                    }
+                }
+            }, 35000);
+        }
+        
+        function hideServerWakingModal() {
+            isServerWaking = false;
+            document.getElementById('server-waking-modal').classList.remove('active');
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            if (serverWakeTimeout) {
+                clearTimeout(serverWakeTimeout);
+                serverWakeTimeout = null;
+            }
+        }
+    </script>
+</body>
+</html>
+
