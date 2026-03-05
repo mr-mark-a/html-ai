@@ -288,6 +288,13 @@
       animation: slideIn 0.3s ease-out;
     }
 
+    /* bot responses use a different style */
+    .bot-message {
+      background: linear-gradient(135deg, #e0e0e0, #c0c0c0);
+      color: #333;
+      margin-right: auto;
+    }
+
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -563,11 +570,231 @@
     </div>
   </div>
 
+  <details id="faq" style="max-width:800px;margin:20px auto;">
+    <summary style="cursor:pointer;font-size:1.2em;font-weight:600;">📚 Popular Questions & Answers (click to expand)</summary>
+    <ul id="faq-list" style="list-style:none;padding:0;margin-top:10px;"></ul>
+  </details>
+
+  <details id="math" style="max-width:800px;margin:20px auto;">
+    <summary style="cursor:pointer;font-size:1.2em;font-weight:600;">🔢 Math Problems & Answers (click to expand)</summary>
+    <ul id="math-list" style="list-style:none;padding:0;margin-top:10px;"></ul>
+  </details>
+
   <script>
     const chatBox = document.getElementById("chat-box");
     const messageInput = document.getElementById("message");
     const fileInput = document.getElementById("file-input");
     const sendButton = document.querySelector(".send-button");
+
+    // FAQ data: popular questions and answers
+    const faq = [
+      { question: "What is your name?", answers: ["I am an AI Chatbot.", "You can call me Chatbot."] },
+      { question: "How are you?", answers: ["I'm just code, but I'm functioning correctly!", "I'm here to help."] },
+      { question: "What is the time?", answers: ["I cannot access the current time.", "Please check your device clock."] },
+      { question: "How do I reset my password?", answers: ["Follow the 'Forgot Password' link.", "You can reset it from account settings."] },
+      { question: "What can you do?", answers: ["I can answer common questions.", "I simulate an AI chat experience."] },
+      { question: "What is AI?", answers: ["AI stands for Artificial Intelligence.", "It refers to machines simulating human intelligence."] },
+      { question: "How do I contact support?", answers: ["Use the support page on the website.", "Send an email to support@example.com."] },
+      { question: "What is your purpose?", answers: ["To demonstrate a chat interface.", "To answer FAQ-style questions."] },
+      { question: "Do you learn?", answers: ["Not in this demo version.", "I'm using a fixed question list."] },
+      { question: "What is the weather?", answers: ["I can't fetch live weather data.", "Check a weather site or app."] },
+      { question: "How do I update my profile?", answers: ["Go to profile settings.", "Click 'Edit Profile' and save changes."] },
+      { question: "Can you play music?", answers: ["No, I can only chat.", "Try a music app instead."] },
+      { question: "Where are you hosted?", answers: ["On a static HTML page.", "No server-side code in this demo."] },
+      { question: "Is this free?", answers: ["Yes, it's a free demo.", "Open source code, use as you like."] },
+      { question: "Can I integrate this?", answers: ["Yes, adapt the JS logic to your project.", "It's simple HTML/JS."] },
+      { question: "How accurate are answers?", answers: ["They are based on the predefined list.", "Not derived from AI model responses."] },
+      { question: "What languages do you support?", answers: ["Currently only English in this demo.", "You can add more manually."] },
+      { question: "How can I contribute?", answers: ["Edit the source files.", "Submit improvements to the repository."] },
+      { question: "What technologies are used?", answers: ["HTML, CSS and JavaScript.", "No backend required."] },
+      { question: "Can you remember past chats?", answers: ["Not in this version.", "History isn't stored."] },
+      { question: "How to clear chat?", answers: ["Refresh the page to clear chat.", "You can also click a clear button if added."] },
+      { question: "What is the meaning of life?", answers: ["42 is a common joke answer.", "Philosophers have various views."] },
+      { question: "Do you have a mobile app?", answers: ["No, it's a web demo.", "But you can access it on mobile browsers."] },
+      { question: "How fast are you?", answers: ["Responses appear instantly since they are local.", "No network latency here."] },
+      { question: "Can I ask anything?", answers: ["You can try; unclear questions get a default reply.", "Only exact matches have answers."] },
+      { question: "What is JavaScript?", answers: ["A programming language for the web.", "Used for interactive web pages."] },
+      { question: "What is HTML?", answers: ["Markup language for web pages.", "Defines page structure."] },
+      { question: "What is CSS?", answers: ["Style sheet language for web pages.", "Defines how HTML elements look."] },
+      { question: "How are you built?", answers: ["Manually coded by a developer.", "No AI model is actually running."] },
+      { question: "Can I save conversations?", answers: ["Not currently in this demo.", "You could extend it with localStorage."] },
+      { question: "What browsers are supported?", answers: ["Modern browsers like Chrome, Safari, Firefox.", "Responsive design allows mobile use."] },
+      { question: "How to change theme?", answers: ["Use the theme selector in settings.", "Pick from blue, pink, green or purple."] },
+      { question: "What is dark mode?", answers: ["A visual mode with dark background.", "Enables in settings toggle."] },
+      { question: "Can I send files?", answers: ["Yes, the demo supports images/audio/video/pdf.", "Use the file input at the bottom."] },
+      { question: "How do I use emojis?", answers: ["Type emoji characters directly.", "Use your device's emoji picker."] },
+      { question: "What is auto-scroll?", answers: ["Automatically scrolls chat to latest message.", "Toggle in chat settings."] },
+      { question: "How do I disable sounds?", answers: ["Turn off Sound Effects in settings.", "Use the toggle switch."] },
+      { question: "What are themes?", answers: ["Predefined color palettes for UI.", "Choose in appearance settings."] },
+      { question: "How do I enable notifications?", answers: ["Allow notifications when prompted.", "Toggle in audio & notifications."] },
+      { question: "Will my data be saved?", answers: ["Not by this demo; it's local only.", "Refresh clears everything."] },
+      { question: "Can I import/export settings?", answers: ["Yes, use the buttons in Advanced.", "Exports JSON that you can re-import."] },
+      { question: "How to reset settings?", answers: ["Click the reset button in Advanced.", "This clears localStorage and reloads."] },
+      { question: "What is developer mode?", answers: ["A toggle for additional options.", "You can enable via settings."] },
+      { question: "Do you have sound effects?", answers: ["Yes, if enabled in settings.", "You can disable them at any time."] },
+      { question: "What is push notification?", answers: ["Browser prompts to allow notifications.", "Only works if toggled on."] },
+      { question: "Can I change font size?", answers: ["Use the font size slider in settings.", "Range from 12px to 20px."] },
+      { question: "What privacy features exist?", answers: ["Encryption toggle and history options.", "Select auto-delete periods."] },
+      { question: "Is encryption real?", answers: ["Not really; just a UI toggle.", "No actual encryption implemented."] },
+      { question: "How to view privacy settings?", answers: ["Open settings panel and scroll to Privacy.", "Make changes as desired."] },
+      { question: "What file types are allowed?", answers: ["Images, video, audio, PDF, DOC, TXT.", "Max size configurable in settings."] },
+      { question: "How can I see message timestamps?", answers: ["Enable 'Show Timestamps' in Chat Settings.", "Then each message will show time."] },
+      { question: "What is auto-delete?", answers: ["Automatically remove messages after period.", "Options: never, 24h, 7d, 30d."] },
+      { question: "Can I export chat history?", answers: ["Not yet in this demo.", "Would require additional coding."] },
+      { question: "How do I change max file size?", answers: ["Enter number in settings input.", "Set value between 1 and 100 MB."] },
+      { question: "What happens if file too large?", answers: ["Currently nothing; no check implemented.", "You would need to add validation."] },
+      { question: "Can you search messages?", answers: ["Not implemented in this version.", "You could add a search feature easily."] },
+      { question: "What is the default theme?", answers: ["Blue is selected by default.", "You can change it any time."] },
+      { question: "How do I check for updates?", answers: ["This is static, so no updates.", "Reload page to see changes if any."] },
+      { question: "What is the purpose?", answers: ["Demo of styling and simple chat logic.", "Teaches basic frontend techniques."] },
+      { question: "Can I add custom questions?", answers: ["Yes, just modify the `faq` array.", "Add object with question and answers."] },
+      { question: "How do I edit answers?", answers: ["Change the text inside the answers array.", "You may provide multiple answers."] },
+      { question: "What if question unknown?", answers: ["A default reply is shown.", "You can also expand the FAQ."] },
+      { question: "How many questions are there?", answers: ["This demo includes 100 popular questions.", "You can expand or shrink the list."] },
+      { question: "What is example question 1?", answers: ["This is a placeholder FAQ item.", "Add real content as desired."] },
+      { question: "How to collapse FAQ?", answers: ["Click the summary at top of FAQ section.", "It toggles visibility."] },
+      { question: "Why multiple answers?", answers: ["To demonstrate more than one response.", "Users can see alternative replies."] },
+      { question: "What else can I do?", answers: ["You can customize UI and data.", "Make the chat more intelligent."] },
+      { question: "Do you connect to an API?", answers: ["Not currently; everything is local.", "You could integrate with a real service."] },
+      { question: "What is the file size limit?", answers: ["Default 10 MB as shown in settings.", "You can change it."] },
+      { question: "How to open settings?", answers: ["Click the gear icon in header.", "Panel slides in from right."] },
+      { question: "Is there a tutorial?", answers: ["Not included in this demo.", "Read the source code to learn."] },
+      { question: "Can I copy messages?", answers: ["Use normal text selection & copy.", "There is no dedicated copy button."] },
+      { question: "How to scroll chat?", answers: ["Chat auto-scrolls if enabled.", "Drag scrollbar manually otherwise."] },
+      { question: "What happens on refresh?", answers: ["Chat and settings reset.", "You'll start fresh."] },
+      { question: "Where are files stored?", answers: ["Only temporary in browser memory.", "No server upload in this demo."] },
+      { question: "How to simulate typing?", answers: ["This version doesn't show typing indicator.", "You could add artificial delay."] },
+      { question: "Can you integrate GIFs?", answers: ["Yes if you add support for gif images.", "Just upload as image."] },
+      { question: "What about emojis?", answers: ["They appear as text characters.", "No emoji picker is built in."] },
+      { question: "How to add new FAQ item?", answers: ["Add an object to the `faq` array.", "Refresh page to load changes."] },
+      { question: "Is mobile layout supported?", answers: ["Yes, there are responsive styles.", "Chat rearranges nicely on small screens."] },
+      { question: "Can I submit feedback?", answers: ["Not via this demo.", "You could build a feedback form."] },
+      { question: "How secure is this?", answers: ["It's purely a front-end demo.", "No real security measures apply."] },
+      { question: "Can I use it offline?", answers: ["Yes, once loaded, it works offline.", "All resources are static."] },
+      { question: "What happens with errors?", answers: ["Errors typically show alerts.", "Better error handling could be added."] },
+      { question: "How to change language?", answers: ["Not built in; would require more work.", "You can hardcode new text."] },
+      { question: "What is 2 + 3?", answers: ["It is 5"] },
+      { question: "What is 12 X 12?", answers: ["It is 144"] },
+      { question: "What is google + google?", answers: ["It is 2 googles"] },
+      { question: "What is 73495 X 4836756?", answers: ["It is 354,820,000"] }
+    ];
+
+    // math problems data
+    const mathProblems = [
+      { question: "What is 1+1?", answer: "2" },
+      { question: "What is 2+2?", answer: "4" },
+      { question: "What is 3+3?", answer: "6" },
+      { question: "What is 4+4?", answer: "8" },
+      { question: "What is 5+5?", answer: "10" },
+      { question: "What is 6+6?", answer: "12" },
+      { question: "What is 7+7?", answer: "14" },
+      { question: "What is 8+8?", answer: "16" },
+      { question: "What is 9+9?", answer: "18" },
+      { question: "What is 10+10?", answer: "20" },
+      { question: "What is 12*2?", answer: "24" },
+      { question: "What is 6*7?", answer: "42" },
+      { question: "What is 8*8?", answer: "64" },
+      { question: "What is 9*9?", answer: "81" },
+      { question: "What is 7*5?", answer: "35" },
+      { question: "What is 100-1?", answer: "99" },
+      { question: "What is 50/5?", answer: "10" },
+      { question: "What is 81/9?", answer: "9" },
+      { question: "What is 7^2?", answer: "49" },
+      { question: "What is the square root of 16?", answer: "4" },
+      { question: "What is the square root of 25?", answer: "5" },
+      { question: "What is 15 + 20?", answer: "35" },
+      { question: "What is 100 - 45?", answer: "55" },
+      { question: "What is 9*11?", answer: "99" },
+      { question: "What is 14*3?", answer: "42" },
+      { question: "What is 100/25?", answer: "4" },
+      { question: "What is 64/8?", answer: "8" },
+      { question: "What is 5^3?", answer: "125" },
+      { question: "What is 2^5?", answer: "32" },
+      { question: "What is 10^2?", answer: "100" },
+      { question: "What is 3^3?", answer: "27" },
+      { question: "What is 4^3?", answer: "64" },
+      { question: "What is 2+3*4?", answer: "14" },
+      { question: "What is (2+3)*4?", answer: "20" },
+      { question: "What is 20% of 50?", answer: "10" },
+      { question: "What is 75% of 200?", answer: "150" },
+      { question: "What is 1/2 of 10?", answer: "5" },
+      { question: "What is 3/4 of 8?", answer: "6" },
+      { question: "What is 5 squared?", answer: "25" },
+      { question: "What is 10 cubed?", answer: "1000" },
+      { question: "What is the factorial of 4?", answer: "24" },
+      { question: "What is the factorial of 5?", answer: "120" },
+      { question: "What is 2+2*2?", answer: "6" },
+      { question: "What is 1000-999?", answer: "1" },
+      { question: "What is 0* any number?", answer: "0" },
+      { question: "What is 1/0?", answer: "undefined" },
+      { question: "What is 7 mod 3?", answer: "1" },
+      { question: "What is the perimeter of a square with side 5?", answer: "20" },
+      { question: "What is the area of a square with side 5?", answer: "25" },
+      { question: "What is the circumference of a circle with radius 1 (use 2π)?", answer: "6.283185307179586" }
+    ];
+
+    function populateFAQ() {
+      const faqList = document.getElementById('faq-list');
+      faq.forEach(item => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '10px';
+        li.style.cursor = 'pointer';
+        li.innerHTML = `<strong>Q:</strong> ${item.question}`;
+        // click to auto-send question
+        li.onclick = () => {
+          messageInput.value = item.question;
+          sendMessage();
+        };
+        faqList.appendChild(li);
+      });
+    }
+
+    function populateMath() {
+      const mathList = document.getElementById('math-list');
+      mathProblems.forEach(item => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '10px';
+        li.style.cursor = 'pointer';
+        li.innerHTML = `<strong>Q:</strong> ${item.question}`;
+        // click to auto-send math question
+        li.onclick = () => {
+          messageInput.value = item.question;
+          sendMessage();
+        };
+        mathList.appendChild(li);
+      });
+    }
+
+    function addBotMessage(text) {
+      const botDiv = document.createElement('div');
+      botDiv.classList.add('message', 'bot-message');
+      botDiv.textContent = text;
+      chatBox.appendChild(botDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function generateResponse(messageText) {
+      if (!messageText) return;
+      // check math problems first
+      const mathMatch = mathProblems.find(item => item.question.toLowerCase() === messageText.toLowerCase());
+      if (mathMatch) {
+        setTimeout(() => addBotMessage(mathMatch.answer), 500);
+        return;
+      }
+      const matched = faq.find(item => item.question.toLowerCase() === messageText.toLowerCase());
+      if (matched) {
+        matched.answers.forEach((ans, index) => {
+          setTimeout(() => addBotMessage(ans), 500 * (index + 1));
+        });
+      } else {
+        setTimeout(() => addBotMessage("Sorry, I don't have an answer for that. Please check the FAQ or ask another question."), 500);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      populateFAQ();
+      populateMath();
+    });
 
     // Clear the initial indicator
     let isFirstMessage = true;
@@ -653,6 +880,9 @@
         sendButton.disabled = false;
         sendButton.textContent = "Send 📤";
       }, 1000);
+
+      // generate AI response
+      generateResponse(messageText);
     }
 
     // Allow Enter key to send message (Shift+Enter for new line)
