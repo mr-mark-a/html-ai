@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield Voyager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .stat {
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 8px;
+        }
+        .menu-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #0096ff;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+        .shop-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            margin: 20px 0;
+            padding-right: 10px;
+        }
+        /* Custom Scrollbar */
+        .shop-container::-webkit-scrollbar { width: 8px; }
+        .shop-container::-webkit-scrollbar-track { background: #111; }
+        .shop-container::-webkit-scrollbar-thumb { background: #0096ff; border-radius: 4px; }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .shop-item {
+            background: #111;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .shop-item h4 { margin: 0 0 5px 0; color: #00c3ff; font-size: 16px; }
+        .shop-item small { color: #aaa; margin-bottom: 10px; display: block; height: 32px; overflow: hidden; }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            background: #0096ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        button:hover:not(:disabled) { background: #00c3ff; transform: scale(1.05); }
+        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
+        .close-btn { margin-top: 10px; width: 100%; padding: 15px; font-size: 18px; }
+        .hidden { display: none; }
+        .coin-text { color: #ffd700; }
+        h1 { margin: 0; letter-spacing: 2px; font-size: 24px; }
+        .save-notif { position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: #00ffcc; opacity: 0.7; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="ui-overlay">
+    <div class="stat">Score: <span id="score">0</span></div>
+    <div class="stat" style="color: #ff4d4d;">Shields: <span id="health">100</span>%</div>
+    <div class="stat coin-text">Balance: <span id="coins-ui">0</span>¢</div>
+</div>
+
+<div id="main-menu" class="menu-overlay">
+    <h1>STARFIELD VOYAGER</h1>
+    <p>Tap/Click to blast drones. Earn 100,000¢ per kill!</p>
+    <button id="start-btn" style="padding: 15px 40px; font-size: 20px;">START MISSION</button>
+    <button id="open-shop-btn">OPEN MEGA SHOP (100+ ITEMS)</button>
+    <button id="reset-btn" style="background: #441111; margin-top: 20px; font-size: 12px; padding: 5px 10px;">RESET ALL PROGRESS</button>
+</div>
+
+<div id="shop-menu" class="menu-overlay hidden">
+    <h2>SHIP SHOP</h2>
+    <p class="coin-text">Balance: <span id="shop-coins">0</span>¢</p>
+    <div class="shop-container">
+        <div id="shop-grid" class="shop-grid">
+            <!-- Items injected by JS -->
+        </div>
+    </div>
+    <button id="close-shop-btn" class="close-btn">RETURN TO BRIDGE</button>
+</div>
+
+<div id="game-over" class="menu-overlay hidden">
+    <h1 style="color: #ff4d4d;">MISSION FAILED</h1>
+    <div class="stat">Flight Data: <span id="final-score">0</span></div>
+    <div class="stat coin-text">Earnings: <span id="final-coins">0</span></div>
+    <button id="retry-btn">RELAUNCH</button>
+    <button id="menu-btn">EXIT TO BRIDGE</button>
+</div>
+
+<div class="save-notif">Cloud Data Synced to Storage</div>
+
+<script>
+    const STORAGE_KEY = 'starfield_voyager_save';
+    const playerSvg = `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M25 5 L40 40 L25 32 L10 40 Z" fill="#0096ff" stroke="#fff" stroke-width="2"/><path d="M25 10 L33 35 L25 30 L17 35 Z" fill="#00c3ff"/><rect x="22" y="32" width="6" height="8" fill="#ff9900" opacity="0.8"><animate attributeName="height" values="8;12;8" dur="0.1s" repeatCount="indefinite" /></rect></svg>`;
+    const enemySvg = `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="15" fill="#333" stroke="#ff4d4d" stroke-width="2"/><circle cx="20" cy="20" r="6" fill="#ff4d4d"><animate attributeName="r" values="6;8;6" dur="0.5s" repeatCount="indefinite" /></circle><path d="M5 20 L12 20 M28 20 L35 20 M20 5 L20 12 M20 28 L20 35" stroke="#ff4d4d" stroke-width="2"/></svg>`;
+    const bulletSvg = `<svg width="10" height="20" viewBox="0 0 10 20"><rect x="3" y="0" width="4" height="20" fill="#00ffcc" rx="2"/></svg>`;
+    const explosionSvg = `<svg width="40" height="40" viewBox="0 0 40 40"><path d="M20 5 L23 15 L35 15 L25 22 L30 35 L20 28 L10 35 L15 22 L5 15 L17 15 Z" fill="#ff9900"/></svg>`;
+
+    let app, player, gameActive = false;
+    let score = 0, health = 100, totalCoins = 0;
+    let enemies = [], bullets = [], effects = [], stars = [];
+    let bgMusic;
+
+    // Default Upgrades State
+    let stats = {
+        maxHealth: 100,
+        fireRate: 1,
+        bulletSpeed: 15,
+        coinBonus: 1,
+        armor: 0,
+        spawnMod: 0
+    };
+
+    const elements = {
+        score: document.getElementById('score'),
+        health: document.getElementById('health'),
+        coins: document.getElementById('coins-ui'),
+        shopCoins: document.getElementById('shop-coins'),
+        mainMenu: document.getElementById('main-menu'),
+        shopMenu: document.getElementById('shop-menu'),
+        gameOver: document.getElementById('game-over'),
+        finalScore: document.getElementById('final-score'),
+        finalCoins: document.getElementById('final-coins'),
+        shopGrid: document.getElementById('shop-grid')
+    };
+
+    // --- Storage Logic ---
+    function saveData() {
+        const data = {
+            totalCoins,
+            stats
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
+            totalCoins = data.totalCoins || 0;
+            stats = data.stats || stats;
+            elements.coins.innerText = totalCoins.toLocaleString();
+        }
+    }
+
+    function resetData() {
+        if (confirm("Are you sure you want to delete all your money and upgrades?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
+    // --- Shop Items Definition ---
+    const shopItems = [];
+    const adjectives = ["Nano", "Quantum", "Bio", "Plasma", "Titanium", "Void", "Solar", "Carbon", "Cyber", "Mega"];
+    const types = ["Armor", "Shields", "Engine", "Coating", "Plating", "Thrusters", "Reactors", "Plastics", "Steel", "Lasers"];
+    
+    shopItems.push({ name: "Reinforced Hull", desc: "+20 Max Shields", cost: 500000, effect: () => stats.maxHealth += 20 });
+    shopItems.push({ name: "Plasma Engine", desc: "Reduces spawn lag", cost: 1000000, effect: () => stats.spawnMod += 50 });
+
+    for(let i=1; i<=100; i++) {
+        const adj = adjectives[i % adjectives.length];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const cost = 250000 + (i * 150000);
+        shopItems.push({
+            id: i,
+            name: `${adj} ${type} v${i}`,
+            desc: `Ship enhancement level ${i}. Improves durability.`,
+            cost: cost,
+            effect: () => {
+                stats.maxHealth += 5;
+                stats.armor += 1;
+            }
+        });
+    }
+
+    function buildShop() {
+        elements.shopGrid.innerHTML = '';
+        shopItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            div.innerHTML = `
+                <h4>${item.name}</h4>
+                <small>${item.desc}</small>
+                <button id="buy-item-${index}" onclick="purchase(${index})">${item.cost.toLocaleString()}¢</button>
+            `;
+            elements.shopGrid.appendChild(div);
+        });
+    }
+
+    function purchase(index) {
+        const item = shopItems[index];
+        if (totalCoins >= item.cost) {
+            totalCoins -= item.cost;
+            item.effect();
+            saveData(); // Save after purchase
+            updateShopUI();
+            elements.coins.innerText = totalCoins.toLocaleString();
+        }
+    }
+
+    function updateShopUI() {
+        elements.shopCoins.innerText = totalCoins.toLocaleString();
+        shopItems.forEach((item, index) => {
+            const btn = document.getElementById(`buy-item-${index}`);
+            if (btn) btn.disabled = totalCoins < item.cost;
+        });
+    }
+
+    // --- Game Logic ---
+    function init() {
+        app = new PIXI.Application({ resizeTo: window, backgroundColor: 0x000000, antialias: true });
+        document.body.appendChild(app.view);
+        
+        loadData(); // Load saved progress
+        
+        bgMusic = new Audio('background.mp3');
+        bgMusic.loop = true;
+
+        const playerTexture = PIXI.Texture.from(`data:image/svg+xml;base64,${btoa(playerSvg)}`);
+        for (let i = 0; i < 150; i++) {
+            const star = new PIXI.Graphics().beginFill(0xFFFFFF, Math.random()).drawCircle(0, 0, 1.2).endFill();
+            star.x = Math.random() * app.screen.width; star.y = Math.random() * app.screen.height;
+            star.speed = 0.5 + Math.random() * 3;
+            app.stage.addChild(star);
+            stars.push(star);
+        }
+
+        player = new PIXI.Sprite(playerTexture);
+        player.anchor.set(0.5);
+        player.visible = false;
+        app.stage.addChild(player);
+
+        app.stage.interactive = true;
+        app.stage.hitArea = app.screen;
+        app.stage.on('pointerdown', () => { if(gameActive) fireBullet(); });
+        app.stage.on('pointermove', (e) => {
+            if (!gameActive) return;
+            player.x = e.data.global.x;
+            player.y = e.data.global.y;
+        });
+
+        app.ticker.add(gameLoop);
+        buildShop();
+    }
+
+    function fireBullet() {
+        const b = new PIXI.Sprite(PIXI.Texture.from(`data:image/svg+xml;base64,${btoa(bulletSvg)}`));
+        b.anchor.set(0.5); b.x = player.x; b.y = player.y - 25;
+        app.stage.addChild(b);
+        bullets.push(b);
+    }
+
+    function spawnEnemy() {
+        if (!gameActive) return;
+        const e = new PIXI.Sprite(PIXI.Texture.from(`data:image/svg+xml;base64,${btoa(enemySvg)}`));
+        e.anchor.set(0.5); e.x = Math.random() * app.screen.width; e.y = -50;
+        e.speed = 3 + (score / 20000);
+        app.stage.addChild(e);
+        enemies.push(e);
+        setTimeout(spawnEnemy, Math.max(200, 1000 - (score / 400) - stats.spawnMod));
+    }
+
+    function gameLoop() {
+        stars.forEach(s => {
+            s.y += s.speed * (gameActive ? 1.5 : 0.3);
+            if (s.y > app.screen.height) s.y = -5;
+        });
+
+        for (let i = effects.length - 1; i >= 0; i--) {
+            effects[i].alpha -= 0.05;
+            if (effects[i].alpha <= 0) { app.stage.removeChild(effects[i]); effects.splice(i, 1); }
+        }
+
+        if (!gameActive) return;
+
+        bullets.forEach((b, i) => {
+            b.y -= stats.bulletSpeed;
+            if (b.y < -50) { app.stage.removeChild(b); bullets.splice(i, 1); }
+        });
+
+        enemies.forEach((e, i) => {
+            e.y += e.speed;
+            e.rotation += 0.02;
+
+            if (dist(e, player) < 35) {
+                health -= (10 - Math.min(stats.armor, 8));
+                elements.health.innerText = Math.max(0, Math.floor(health));
+                app.stage.removeChild(e);
+                enemies.splice(i, 1);
+                if (health <= 0) endGame();
+            }
+
+            bullets.forEach((b, bi) => {
+                if (dist(e, b) < 30) {
+                    totalCoins += 100000;
+                    elements.coins.innerText = totalCoins.toLocaleString();
+                    createExplosion(e.x, e.y);
+                    app.stage.removeChild(e); app.stage.removeChild(b);
+                    enemies.splice(i, 1); bullets.splice(bi, 1);
+                    score += 500;
+                }
+            });
+
+            if (e.y > app.screen.height + 50) { app.stage.removeChild(e); enemies.splice(i, 1); }
+        });
+
+        score += 1;
+        elements.score.innerText = Math.floor(score / 10);
+    }
+
+    function createExplosion(x, y) {
+        const exp = new PIXI.Sprite(PIXI.Texture.from(`data:image/svg+xml;base64,${btoa(explosionSvg)}`));
+        exp.anchor.set(0.5); exp.x = x; exp.y = y; exp.alpha = 1;
+        app.stage.addChild(exp); effects.push(exp);
+    }
+
+    const dist = (a, b) => Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2);
+
+    function startMission() {
+        score = 0; health = stats.maxHealth;
+        elements.health.innerText = health;
+        elements.mainMenu.classList.add('hidden');
+        elements.gameOver.classList.add('hidden');
+        gameActive = true; player.visible = true;
+        bgMusic.play().catch(() => {});
+        spawnEnemy();
+    }
+
+    function endGame() {
+        gameActive = false; player.visible = false;
+        saveData(); // Save balance at end of run
+        elements.gameOver.classList.remove('hidden');
+        elements.finalScore.innerText = Math.floor(score / 10);
+        elements.finalCoins.innerText = totalCoins.toLocaleString() + "¢";
+        bgMusic.pause();
+        enemies.forEach(e => app.stage.removeChild(e));
+        bullets.forEach(b => app.stage.removeChild(b));
+        enemies = []; bullets = [];
+    }
+
+    document.getElementById('start-btn').onclick = startMission;
+    document.getElementById('retry-btn').onclick = startMission;
+    document.getElementById('open-shop-btn').onclick = () => {
+        elements.mainMenu.classList.add('hidden');
+        elements.shopMenu.classList.remove('hidden');
+        updateShopUI();
+    };
+    document.getElementById('close-shop-btn').onclick = () => {
+        elements.shopMenu.classList.add('hidden');
+        elements.mainMenu.classList.remove('hidden');
+    };
+    document.getElementById('menu-btn').onclick = () => {
+        elements.gameOver.classList.add('hidden');
+        elements.mainMenu.classList.remove('hidden');
+    };
+    document.getElementById('reset-btn').onclick = resetData;
+
+    window.onload = init;
+</script>
+</body>
+</html>
+
