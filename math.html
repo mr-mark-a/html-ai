@@ -1,6 +1,550 @@
-<div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
-  <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Math Learning App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .score-box {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .score-item {
+            text-align: center;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin: 5px;
+        }
+        
+        .score-item strong {
+            color: #667eea;
+            font-size: 1.3em;
+        }
+        
+        .menu-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .topic-btn {
+            padding: 15px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .topic-btn:hover {
+            background: #764ba2;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .topic-btn.active {
+            background: #764ba2;
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.5);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .quiz-section {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .option.correct {
+            border-color: #4caf50;
+            background: #4caf50;
+            color: white;
+        }
+        
+        .option.incorrect {
+            border-color: #f44336;
+            background: #f44336;
+            color: white;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+        
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background: #ccc;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+        
+        .results-section {
+            text-align: center;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+        
+        .results-section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        
+        .results-section .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #764ba2;
+            margin: 20px 0;
+        }
+        
+        .home-btn {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        .home-btn:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Math Learning App</h1>
+            <div class="score-box">
+                <div class="score-item">
+                    <strong id="totalScore">0</strong><br>
+                    Total Score
+                </div>
+                <div class="score-item">
+                    <strong id="correctCount">0</strong><br>
+                    Correct Answers
+                </div>
+                <div class="score-item">
+                    <strong id="level">Beginner</strong><br>
+                    Level
+                </div>
+            </div>
+        </header>
+        
+        <div id="menuView">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Choose a Topic</h2>
+            <div class="menu-section">
+                <button class="topic-btn" onclick="startQuiz('addition')">➕ Addition</button>
+                <button class="topic-btn" onclick="startQuiz('subtraction')">➖ Subtraction</button>
+                <button class="topic-btn" onclick="startQuiz('multiplication')">✖️ Multiplication</button>
+                <button class="topic-btn" onclick="startQuiz('division')">➗ Division</button>
+                <button class="topic-btn" onclick="startQuiz('mixed')">🎲 Mixed</button>
+                <button class="topic-btn" onclick="startQuiz('fractions')">🔢 Fractions</button>
+            </div>
+            <button class="home-btn" onclick="window.location.href='marks-games.html'" style="width: 100%;">Back to Games</button>
+        </div>
+        
+        <div id="quizView" class="hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            
+            <div style="text-align: right; margin-bottom: 20px; color: #666;">
+                <strong>Question <span id="questionNumber">1</span> / <span id="totalQuestions">10</span></strong>
+            </div>
+            
+            <div class="quiz-section">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div id="feedback" class="hidden"></div>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">Submit Answer</button>
+                    <button class="btn btn-secondary" onclick="skipQuestion()">Skip</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsView" class="hidden">
+            <div class="results-section">
+                <h2>Quiz Completed! 🎉</h2>
+                <div class="score-display" id="finalScore">0%</div>
+                <p style="font-size: 1.2em; margin: 20px 0;">You got <strong id="finalCorrect">0</strong> out of <strong id="finalTotal">10</strong> questions correct!</p>
+                <button class="home-btn" onclick="returnToMenu()">Try Another Topic</button>
+                <button class="home-btn" onclick="window.location.href='marks-games.html'">Back to Games</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTopic = '';
+        let currentQuestion = 0;
+        let score = 0;
+        let totalScore = parseInt(localStorage.getItem('mathTotalScore') || '0');
+        let correctAnswers = parseInt(localStorage.getItem('mathCorrectAnswers') || '0');
+        let selectedAnswer = null;
+        let quizQuestions = [];
+        
+        const quizConfig = {
+            addition: { count: 10, min: 1, max: 50 },
+            subtraction: { count: 10, min: 1, max: 50 },
+            multiplication: { count: 10, min: 1, max: 12 },
+            division: { count: 10, min: 1, max: 12 },
+            mixed: { count: 15, min: 1, max: 50 },
+            fractions: { count: 10, min: 1, max: 10 }
+        };
+        
+        function generateQuestions(topic) {
+            const config = quizConfig[topic];
+            const questions = [];
+            
+            for (let i = 0; i < config.count; i++) {
+                let question = {};
+                const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+                const num2 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+                
+                switch(topic) {
+                    case 'addition':
+                        question.text = `${num1} + ${num2} = ?`;
+                        question.answer = num1 + num2;
+                        break;
+                    case 'subtraction':
+                        question.text = `${Math.max(num1, num2)} - ${Math.min(num1, num2)} = ?`;
+                        question.answer = Math.max(num1, num2) - Math.min(num1, num2);
+                        break;
+                    case 'multiplication':
+                        question.text = `${num1} × ${num2} = ?`;
+                        question.answer = num1 * num2;
+                        break;
+                    case 'division':
+                        const divisor = Math.floor(Math.random() * 12) + 1;
+                        const dividend = divisor * Math.floor(Math.random() * 12) + 1;
+                        question.text = `${dividend} ÷ ${divisor} = ?`;
+                        question.answer = dividend / divisor;
+                        break;
+                    case 'fractions':
+                        const frac1Num = Math.floor(Math.random() * 5) + 1;
+                        const frac1Den = Math.floor(Math.random() * 5) + 2;
+                        const frac2Num = Math.floor(Math.random() * 5) + 1;
+                        const frac2Den = Math.floor(Math.random() * 5) + 2;
+                        question.text = `${frac1Num}/${frac1Den} + ${frac2Num}/${frac2Den} = ?`;
+                        question.answer = (frac1Num * frac2Den + frac2Num * frac1Den) / (frac1Den * frac2Den);
+                        break;
+                    case 'mixed':
+                        const ops = ['add', 'sub', 'mul', 'div'];
+                        const randomOp = ops[Math.floor(Math.random() * ops.length)];
+                        if (randomOp === 'add') {
+                            question.text = `${num1} + ${num2} = ?`;
+                            question.answer = num1 + num2;
+                        } else if (randomOp === 'sub') {
+                            question.text = `${Math.max(num1, num2)} - ${Math.min(num1, num2)} = ?`;
+                            question.answer = Math.max(num1, num2) - Math.min(num1, num2);
+                        } else if (randomOp === 'mul') {
+                            question.text = `${num1} × ${num2} = ?`;
+                            question.answer = num1 * num2;
+                        } else {
+                            const d = Math.floor(Math.random() * 12) + 1;
+                            const dd = d * Math.floor(Math.random() * 12) + 1;
+                            question.text = `${dd} ÷ ${d} = ?`;
+                            question.answer = dd / d;
+                        }
+                }
+                
+                // Generate options
+                const correctAnswer = Math.round(question.answer * 100) / 100;
+                let options = [correctAnswer];
+                
+                while (options.length < 4) {
+                    const variation = correctAnswer + (Math.random() - 0.5) * correctAnswer * 0.5 * 2;
+                    const roundedVariation = Math.round(variation * 100) / 100;
+                    if (!options.includes(roundedVariation) && roundedVariation >= 0) {
+                        options.push(roundedVariation);
+                    }
+                }
+                
+                // Shuffle options
+                question.options = options.sort(() => Math.random() - 0.5);
+                questions.push(question);
+            }
+            
+            return questions;
+        }
+        
+        function startQuiz(topic) {
+            currentTopic = topic;
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            quizQuestions = generateQuestions(topic);
+            
+            document.getElementById('menuView').classList.add('hidden');
+            document.getElementById('quizView').classList.remove('hidden');
+            document.getElementById('resultsView').classList.add('hidden');
+            
+            document.getElementById('totalQuestions').textContent = quizQuestions.length;
+            loadQuestion();
+        }
+        
+        function loadQuestion() {
+            const question = quizQuestions[currentQuestion];
+            selectedAnswer = null;
+            
+            document.getElementById('questionNumber').textContent = currentQuestion + 1;
+            document.getElementById('question').textContent = question.text;
+            document.getElementById('feedback').classList.add('hidden');
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'option';
+                btn.textContent = option;
+                btn.onclick = () => selectAnswer(index, btn);
+                optionsDiv.appendChild(btn);
+            });
+            
+            const progress = ((currentQuestion) / quizQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function selectAnswer(index, element) {
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedAnswer = index;
+        }
+        
+        function submitAnswer() {
+            if (selectedAnswer === null) {
+                alert('Please select an answer!');
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestion];
+            const isCorrect = question.options[selectedAnswer] === question.answer;
+            
+            if (isCorrect) {
+                score++;
+                correctAnswers++;
+                document.querySelectorAll('.option')[selectedAnswer].classList.add('correct');
+                document.getElementById('feedback').textContent = '✅ Correct!';
+                document.getElementById('feedback').classList.remove('incorrect');
+                document.getElementById('feedback').classList.add('correct');
+            } else {
+                document.querySelectorAll('.option')[selectedAnswer].classList.add('incorrect');
+                document.getElementById('feedback').textContent = `❌ Incorrect! The answer is ${question.answer}`;
+                document.getElementById('feedback').classList.remove('correct');
+                document.getElementById('feedback').classList.add('incorrect');
+            }
+            
+            document.getElementById('feedback').classList.remove('hidden');
+            document.getElementById('submitBtn').textContent = 'Next Question';
+            document.getElementById('submitBtn').onclick = nextQuestion;
+        }
+        
+        function skipQuestion() {
+            nextQuestion();
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < quizQuestions.length) {
+                loadQuestion();
+                document.getElementById('submitBtn').textContent = 'Submit Answer';
+                document.getElementById('submitBtn').onclick = submitAnswer;
+            } else {
+                endQuiz();
+            }
+        }
+        
+        function endQuiz() {
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            totalScore += percentage;
+            localStorage.setItem('mathTotalScore', totalScore);
+            localStorage.setItem('mathCorrectAnswers', correctAnswers);
+            
+            document.getElementById('finalScore').textContent = percentage + '%';
+            document.getElementById('finalCorrect').textContent = score;
+            document.getElementById('finalTotal').textContent = quizQuestions.length;
+            
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('resultsView').classList.remove('hidden');
+            
+            updateScoreDisplay();
+        }
+        
+        function returnToMenu() {
+            document.getElementById('menuView').classList.remove('hidden');
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('resultsView').classList.add('hidden');
+        }
+        
+        function updateScoreDisplay() {
+            document.getElementById('totalScore').textContent = totalScore;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            
+            if (correctAnswers < 10) {
+                document.getElementById('level').textContent = 'Beginner';
+            } else if (correctAnswers < 25) {
+                document.getElementById('level').textContent = 'Intermediate';
+            } else if (correctAnswers < 50) {
+                document.getElementById('level').textContent = 'Advanced';
+            } else {
+                document.getElementById('level').textContent = 'Expert';
+            }
+        }
+        
+        // Initialize score display
+        updateScoreDisplay();
+    </script>
+</body>
+</html>
 <div style="width:100%;text-align:center;margin-bottom:18px;">
   <button onclick="window.location.href='index.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Home</button>
   <button onclick="window.location.href='marks-games.html'" style="background:#4caf50;color:#fff;font-weight:bold;margin:0 4px;">Games Menu</button>
