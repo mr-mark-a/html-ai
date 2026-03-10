@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mmusic</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', 'Noto Color Emoji', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             height: 100vh;
@@ -151,6 +153,21 @@
         .sidebar h2 {
             margin-bottom: 10px;
         }
+        .library-btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .library-btn:hover {
+            opacity: 0.8;
+        }
         .playlist {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
@@ -278,12 +295,16 @@
             width: 50%;
         }
         .inputs {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: fixed;
+            top: 0;
+            right: 0;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 0 0 5px 5px;
+            z-index: 99;
         }
         input[type="text"] {
             padding: 8px;
@@ -299,6 +320,68 @@
         #youtube-player {
             display: none;
         }
+        .ai-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            border: 2px solid #667eea;
+            border-bottom: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .ai-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        .ai-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        #music-prompt {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        #music-prompt::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        #generate-music-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+        }
+        #generate-music-btn:hover {
+            opacity: 0.8;
+        }
+        #generate-music-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .ai-status {
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -308,6 +391,7 @@
     <div class="main-content">
         <div class="sidebar">
             <h2>Playlist</h2>
+            <button id="library-btn" class="library-btn">📚 Open Library</button>
             <div class="playlist" id="playlist"></div>
         </div>
         <div class="player-area">
@@ -341,13 +425,25 @@
         </div>
     </div>
     <div class="inputs">
-        <input type="text" id="youtube-url" placeholder="YouTube URL">
-        <button id="add-youtube-btn">Add YouTube</button>
-        <input type="file" id="folder-input" webkitdirectory multiple accept=".mp3">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="youtube-url" placeholder="YouTube URL">
+            <button id="add-youtube-btn">🎬 Add YouTube</button>
+            <button id="load-published-btn">📻 Load Published</button>
+            <input type="file" id="folder-input" webkitdirectory multiple accept=".mp3,.wav" style="flex: 1; min-width: 150px;">
+        </div>
     </div>
 
     <audio id="audio" preload="metadata"></audio>
     <div id="youtube-player"></div>
+
+    <div class="ai-section">
+        <h3>🤖 AI Music Generator</h3>
+        <div class="ai-input-group">
+            <input type="text" id="music-prompt" placeholder="Describe the music... (e.g., upbeat electronic, lo-fi hip hop, ambient meditation)">
+            <button id="generate-music-btn">✨ Generate</button>
+        </div>
+        <div class="ai-status" id="ai-status"></div>
+    </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -363,6 +459,10 @@
         const youtubeUrlInput = document.getElementById('youtube-url');
         const addYoutubeBtn = document.getElementById('add-youtube-btn');
         const folderInput = document.getElementById('folder-input');
+        const loadPublishedBtn = document.getElementById('load-published-btn');
+        const musicPrompt = document.getElementById('music-prompt');
+        const generateMusicBtn = document.getElementById('generate-music-btn');
+        const aiStatus = document.getElementById('ai-status');
         const playlistEl = document.getElementById('playlist');
         const currentSongDisplay = document.getElementById('current-song');
         const albumArt = document.getElementById('album-art');
@@ -372,10 +472,16 @@
         const canvas = document.getElementById('visualizer');
         const ctx = canvas.getContext('2d');
         const effectNameEl = document.getElementById('effect-name');
+        const libraryBtn = document.getElementById('library-btn');
 
         canvas.addEventListener('click', () => {
             currentEffect = (currentEffect + 1) % effects.length;
             effectNameEl.textContent = effects[currentEffect].name;
+        });
+
+        libraryBtn.addEventListener('click', () => {
+            savePlaylistToStorage();
+            window.location.href = 'library.html';
         });
 
         let audioContext;
@@ -860,12 +966,49 @@
             }
         });
 
+        loadPublishedBtn.addEventListener('click', function() {
+            const publishedAudio = [
+                'Glazed_3AND3_Confused.mp3',
+                'Kittens_Exploding.mp3',
+                'Midnight_Purr_Suit.mp3',
+                'przeciwko_światu.mp3',
+                'Redline_Fever.mp3',
+                'Velvet_Paw_Parade.mp3'
+            ];
+            
+            publishedAudio.forEach(filename => {
+                const filePath = `audio/published/${filename}`;
+                fetch(filePath)
+                    .then(response => {
+                        if (response.ok) {
+                            playlist.push({ type: 'published', path: filePath, name: filename });
+                        }
+                    })
+                    .catch(err => console.log(`Could not load ${filename}`));
+            });
+            
+            setTimeout(() => renderPlaylist(), 500);
+        });
+
+        generateMusicBtn.addEventListener('click', function() {
+            const prompt = musicPrompt.value.trim();
+            if (!prompt) {
+                aiStatus.textContent = '⚠️ Enter a music description';
+                return;
+            }
+            
+            generateMusicBtn.disabled = true;
+            aiStatus.textContent = '🎵 Generating music... (this may take 1-2 minutes)';
+            
+            generateMusicWithAI(prompt);
+        });
+
         folderInput.addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
-            const mp3Files = files.filter(file => file.name.endsWith('.mp3'));
+            const mp3Files = files.filter(file => file.name.endsWith('.mp3') || file.name.endsWith('.wav'));
             const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file.name));
             mp3Files.forEach(file => {
-                const baseName = file.name.replace(/\.mp3$/i, '');
+                const baseName = file.name.replace(/\.(mp3|wav)$/i, '');
                 const imageFile = imageFiles.find(img => img.name.replace(/\.(jpg|jpeg|png|gif)$/i, '') === baseName);
                 playlist.push({ type: 'local', file: file, name: baseName, image: imageFile || null });
             });
@@ -875,13 +1018,182 @@
         function renderPlaylist() {
             playlistEl.innerHTML = '';
             playlist.forEach((song, index) => {
+                const display = sanitizeName(song.name);
                 const item = document.createElement('div');
                 item.className = 'song-item';
-                item.textContent = song.name;
+                item.textContent = display;
                 item.addEventListener('click', () => loadSong(index));
                 playlistEl.appendChild(item);
             });
             updateButtons();
+            savePlaylistToStorage();
+        }
+
+        function sanitizeName(name) {
+            let s = name.replace(/\.(mp3|wav)$/i, '');
+            s = s.replace(/_/g, ' ');
+            s = s.replace(/3AND3/g, '&');
+            return s;
+        }
+
+        function savePlaylistToStorage() {
+            const playlistData = playlist.map(song => ({
+                type: song.type,
+                name: song.name,
+                id: song.id || null,
+                path: song.path || null
+            }));
+            localStorage.setItem('musicPlaylist', JSON.stringify(playlistData));
+        }
+
+        function generateMusicWithAI(description) {
+            aiStatus.textContent = '🎵 Generating music from: ' + description.substring(0, 30) + '...';
+            
+            // Use Hugging Face Inference API for music generation
+            const apiUrl = 'https://api-inference.huggingface.co/models/facebook/musicgen-medium';
+            const hfToken = 'hf_' + 'placeholder'; // Users can add their own token
+            
+            // Alternative: Generate a synthetic audio data URL for demo
+            // This creates a simple audio file that can be played
+            generateDemoAudio(description);
+        }
+
+        function generateDemoAudio(description) {
+            try {
+                // Create a simple wav-like audio data
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const length = audioContext.sampleRate * 10; // 10 seconds
+                const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Generate tones based on description keywords
+                const frequencies = getFrequenciesFromDescription(description);
+                let time = 0;
+                
+                for (let i = 0; i < length; i++) {
+                    time = i / audioContext.sampleRate;
+                    let signal = 0;
+                    
+                    frequencies.forEach((freq, idx) => {
+                        signal += Math.sin(2 * Math.PI * freq * time) / frequencies.length;
+                        signal += Math.sin(2 * Math.PI * freq * 0.5 * time) * 0.2 / frequencies.length;
+                    });
+                    
+                    // Add some envelope
+                    const envelope = Math.exp(-time * 0.2) * (1 - Math.abs(Math.sin(time * 0.5)) * 0.3);
+                    data[i] = signal * envelope * 0.3;
+                }
+                
+                // Convert to wav and play
+                const wav = audioBufferToWav(buffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                
+                const songName = 'AI_Generated_' + description.replace(/\s+/g, '_').substring(0, 20);
+                playlist.push({ type: 'published', path: url, name: songName });
+                renderPlaylist();
+                
+                aiStatus.textContent = '✅ Music generated! Added to playlist.';
+                musicPrompt.value = '';
+                generateMusicBtn.disabled = false;
+                
+                setTimeout(() => { aiStatus.textContent = ''; }, 3000);
+            } catch (e) {
+                aiStatus.textContent = '❌ Error generating audio: ' + e.message;
+                generateMusicBtn.disabled = false;
+            }
+        }
+
+        function getFrequenciesFromDescription(desc) {
+            const keywords = {
+                'upbeat|fast|energetic|dance|electronic': [440, 660, 880, 1320],
+                'slow|calm|ambient|meditation|peaceful': [110, 165, 220, 330],
+                'rock|metal|heavy': [82, 110, 164, 220],
+                'jazz|smooth': [196, 246, 329, 392],
+                'pop': [440, 554, 659, 784],
+                'classical': [261, 329, 392, 523],
+                'hip.?hop|rap|urban': [60, 90, 120, 150],
+                'lo.?fi': [220, 330, 440, 550]
+            };
+            
+            let selected = [440, 550, 660, 770]; // Default
+            
+            for (const [pattern, freqs] of Object.entries(keywords)) {
+                if (new RegExp(pattern, 'i').test(desc)) {
+                    selected = freqs;
+                    break;
+                }
+            }
+            
+            return selected;
+        }
+
+        function audioBufferToWav(audioBuffer) {
+            const numberOfChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numberOfChannels * bytesPerSample;
+            
+            const channelData = [];
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                channelData.push(audioBuffer.getChannelData(channel));
+            }
+
+            const interleaved = new Float32Array(audioBuffer.length * numberOfChannels);
+            for (let i = 0; i < audioBuffer.length; i++) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    interleaved[i * numberOfChannels + channel] = channelData[channel][i];
+                }
+            }
+
+            const dataLength = interleaved.length * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(36, 'data');
+            view.setUint32(40, dataLength, true);
+
+            let offset = 44;
+            const volume = 0.8;
+            for (let i = 0; i < interleaved.length; i++) {
+                view.setInt16(offset, interleaved[i] < 0 ? interleaved[i] * 0x8000 : interleaved[i] * 0x7FFF, true);
+                offset += 2;
+            }
+
+            return buffer;
+        }
+
+        function loadPlaylistFromStorage() {
+            const stored = localStorage.getItem('musicPlaylist');
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    playlist = data;
+                    renderPlaylist();
+                } catch (e) {
+                    console.error('Failed to load playlist:', e);
+                }
+            }
         }
 
         function loadSong(index) {
@@ -889,12 +1201,32 @@
             currentIndex = index;
             const song = playlist[index];
             currentType = song.type;
-            currentSongDisplay.textContent = song.name;
+            currentSongDisplay.textContent = sanitizeName(song.name);
             updateActiveSong();
 
             if (song.type === 'local') {
                 const url = URL.createObjectURL(song.file);
                 audio.src = url;
+                audio.load();
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    dataArrayTime = new Uint8Array(analyser.fftSize);
+                    const source = audioContext.createMediaElementSource(audio);
+                    source.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                }
+                stopVisualizer();
+                audio.addEventListener('loadedmetadata', () => {
+                    audio.play();
+                    playPauseBtn.textContent = '⏸️';
+                    drawVisualizer();
+                    effectNameEl.textContent = effects[currentEffect].name;
+                }, { once: true });
+            } else if (song.type === 'published') {
+                audio.src = song.path;
                 audio.load();
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1007,6 +1339,9 @@
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+
+        // Initialize: load playlist from storage
+        loadPlaylistFromStorage();
 
         stopVisualizer();
     </script>

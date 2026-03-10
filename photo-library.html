@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Library</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #0f1419;
+            color: #e1e8ed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .header p {
+            color: #8898b5;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .sidebar h2 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #4a9eff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .album-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .album-item {
+            background: #252d3d;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-size: 13px;
+            color: #b8c5d6;
+        }
+        
+        .album-item:hover {
+            background: #2a3547;
+            transform: translateX(5px);
+        }
+        
+        .album-item.active {
+            background: #1e3a5f;
+            border-left-color: #4a9eff;
+            color: #4a9eff;
+        }
+        
+        .new-album-btn {
+            width: 100%;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .new-album-btn:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+        .main-content {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .album-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a3f5f;
+        }
+        
+        .album-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .album-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+        .btn-danger {
+            background: #d63031;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c22d2d;
+            box-shadow: 0 4px 12px rgba(214, 48, 49, 0.2);
+        }
+        
+        .btn-success {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+        .upload-section {
+            background: #252d3d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px dashed #4a9eff;
+            text-align: center;
+        }
+        
+        .upload-section h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a9eff;
+        }
+        
+        .upload-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4a9eff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .upload-btn:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .photo-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            aspect-ratio: 1;
+            background: #252d3d;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .photo-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .photo-item:hover .photo-overlay {
+            opacity: 1;
+        }
+        
+        .photo-overlay button {
+            background: #d63031;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .photo-overlay button:hover {
+            background: #c22d2d;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #8898b5;
+            font-size: 14px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #1a1f2e;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #2a3f5f;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #2a3f5f;
+            border-radius: 5px;
+            background: #252d3d;
+            color: #e1e8ed;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+        
+        .modal-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+        
+        .modal-input::placeholder {
+            color: #6b7a8f;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .modal-buttons .btn-success {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .modal-buttons .btn-success:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+        .modal-buttons .btn-cancel {
+            background: #2a3547;
+            color: #b8c5d6;
+        }
+        
+        .modal-buttons .btn-cancel:hover {
+            background: #313d50;
+        }
+        
+        .share-link {
+            background: #252d3d;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            word-break: break-all;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            color: #4a9eff;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .copy-btn {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .copy-btn:hover {
+            background: #3a8ee8;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+        
+
+        
+        .stats {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 10px;
+        }
+        
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 30px 20px;
+        }
+        
+        .lightbox.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .lightbox img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            color: #e1e8ed;
+            font-size: 36px;
+            cursor: pointer;
+            background: rgba(15, 20, 25, 0.8);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.3s;
+            z-index: 2001;
+            border: 1px solid #2a3f5f;
+        }
+        
+        .lightbox-close:hover {
+            background: rgba(15, 20, 25, 0.95);
+            color: #4a9eff;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Photo Library</h1>
+        <p>Secure photo storage and sharing</p>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <button class="new-album-btn" onclick="openNewAlbumModal()">+ New Album</button>
+            <h2>Albums</h2>
+            <div class="album-list" id="album-list"></div>
+        </div>
+        
+        <div class="main-content">
+            <div id="no-album" class="empty-message">
+                Create or select an album to get started
+            </div>
+            
+            <div id="album-view" style="display: none;">
+                <div class="album-header">
+                    <div>
+                        <h2 id="album-name"></h2>
+                        <div class="stats">
+                            <span id="photo-count">0 photos</span>
+                        </div>
+                    </div>
+                    <div class="album-actions">
+                        <button class="btn btn-success" onclick="openShareModal()">Share</button>
+                        <button class="btn btn-danger" onclick="deleteAlbum()">Delete</button>
+                    </div>
+                </div>
+                
+                <div class="upload-section">
+                    <h3>Upload Photos</h3>
+                    <label class="upload-btn">
+                        Choose Photos
+                        <input type="file" class="upload-input" id="photo-input" accept="image/*" multiple onchange="uploadPhotos(event)">
+                    </label>
+                    <p style="font-size: 12px; margin-top: 10px; color: #8898b5;">
+                        Drag and drop photos or click to select
+                    </p>
+                </div>
+                
+                <div class="photo-grid" id="photo-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Album Modal -->
+    <div class="modal" id="new-album-modal">
+        <div class="modal-content">
+            <h2>Create New Album</h2>
+            <input type="text" class="modal-input" id="album-name-input" placeholder="Album name..." onkeypress="handleEnter(event)">
+            <input type="text" class="modal-input" id="album-desc-input" placeholder="Description (optional)" onkeypress="handleEnter(event)">
+            <div class="modal-buttons">
+                <button class="btn-success" onclick="createAlbum()">Create</button>
+                <button class="btn-cancel" onclick="closeNewAlbumModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Share Modal -->
+    <div class="modal" id="share-modal">
+        <div class="modal-content">
+            <h2>Share Album</h2>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #8898b5;">Share this link to let others view your album:</p>
+            <div class="share-link" id="share-link"></div>
+            <button class="copy-btn" onclick="copyShareLink()">Copy Link</button>
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="btn-cancel" onclick="closeShareModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="if(event.target.id === 'lightbox') closeLightbox()">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img id="lightbox-img" src="">
+    </div>
+
+    <script>
+        let albums = [];
+        let currentAlbumId = null;
+
+        // Initialize
+        function init() {
+            loadAlbums();
+            renderAlbumList();
+        }
+
+        function loadAlbums() {
+            const stored = localStorage.getItem('photoAlbums');
+            if (stored) {
+                albums = JSON.parse(stored);
+            }
+        }
+
+        function saveAlbums() {
+            localStorage.setItem('photoAlbums', JSON.stringify(albums));
+        }
+
+        function renderAlbumList() {
+            const list = document.getElementById('album-list');
+            list.innerHTML = '';
+            
+            if (albums.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 12px;">No albums yet</p>';
+                return;
+            }
+            
+            albums.forEach(album => {
+                const div = document.createElement('div');
+                div.className = 'album-item' + (album.id === currentAlbumId ? ' active' : '');
+                div.textContent = album.name + ` (${album.photos.length})`;
+                div.onclick = () => selectAlbum(album.id);
+                list.appendChild(div);
+            });
+        }
+
+        function selectAlbum(id) {
+            currentAlbumId = id;
+            renderAlbumList();
+            renderAlbumView();
+        }
+
+        function renderAlbumView() {
+            const album = albums.find(a => a.id === currentAlbumId);
+            if (!album) return;
+            
+            document.getElementById('no-album').style.display = 'none';
+            document.getElementById('album-view').style.display = 'block';
+            document.getElementById('album-name').textContent = album.name;
+            document.getElementById('photo-count').textContent = album.photos.length + ' photo' + (album.photos.length !== 1 ? 's' : '');
+            
+            const grid = document.getElementById('photo-grid');
+            grid.innerHTML = '';
+            
+            if (album.photos.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255, 255, 255, 0.5);">No photos yet. Upload some!</div>';
+                return;
+            }
+            
+            album.photos.forEach((photo, idx) => {
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = `
+                    <img src="${photo.data}" alt="Photo ${idx + 1}" onclick="viewPhoto('${album.id}', ${idx})">
+                    <div class="photo-overlay">
+                        <button onclick="deletePhoto('${album.id}', ${idx})">Delete</button>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function openNewAlbumModal() {
+            document.getElementById('new-album-modal').classList.add('active');
+            document.getElementById('album-name-input').focus();
+        }
+
+        function closeNewAlbumModal() {
+            document.getElementById('new-album-modal').classList.remove('active');
+            document.getElementById('album-name-input').value = '';
+            document.getElementById('album-desc-input').value = '';
+        }
+
+        function createAlbum() {
+            const name = document.getElementById('album-name-input').value.trim();
+            if (!name) {
+                alert('Please enter an album name');
+                return;
+            }
+            
+            const desc = document.getElementById('album-desc-input').value.trim();
+            const album = {
+                id: Date.now().toString(),
+                name: name,
+                description: desc,
+                photos: [],
+                created: new Date().toLocaleString()
+            };
+            
+            albums.push(album);
+            saveAlbums();
+            renderAlbumList();
+            closeNewAlbumModal();
+            selectAlbum(album.id);
+        }
+
+        function deleteAlbum() {
+            if (confirm('Delete this album and all photos?')) {
+                albums = albums.filter(a => a.id !== currentAlbumId);
+                currentAlbumId = null;
+                saveAlbums();
+                renderAlbumList();
+                document.getElementById('album-view').style.display = 'none';
+                document.getElementById('no-album').style.display = 'block';
+            }
+        }
+
+        function uploadPhotos(event) {
+            const files = Array.from(event.target.files);
+            const album = albums.find(a => a.id === currentAlbumId);
+            if (!album) return;
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    album.photos.push({
+                        data: e.target.result,
+                        uploaded: new Date().toLocaleString()
+                    });
+                    saveAlbums();
+                    renderAlbumView();
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            event.target.value = '';
+        }
+
+        function deletePhoto(albumId, photoIdx) {
+            const album = albums.find(a => a.id === albumId);
+            if (album) {
+                album.photos.splice(photoIdx, 1);
+                saveAlbums();
+                renderAlbumView();
+            }
+        }
+
+        function viewPhoto(albumId, photoIdx) {
+            const album = albums.find(a => a.id === albumId);
+            if (album) {
+                document.getElementById('lightbox-img').src = album.photos[photoIdx].data;
+                document.getElementById('lightbox').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openShareModal() {
+            const album = albums.find(a => a.id === currentAlbumId);
+            if (!album) return;
+            
+            const shareUrl = window.location.origin + window.location.pathname + '?album=' + btoa(album.id);
+            document.getElementById('share-link').textContent = shareUrl;
+            document.getElementById('share-modal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.remove('active');
+        }
+
+        function copyShareLink() {
+            const link = document.getElementById('share-link').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                createAlbum();
+            }
+        }
+
+        // Check for shared album
+        function checkSharedAlbum() {
+            const params = new URLSearchParams(window.location.search);
+            const albumId = params.get('album');
+            if (albumId) {
+                try {
+                    const id = atob(albumId);
+                    const album = albums.find(a => a.id === id);
+                    if (album) {
+                        selectAlbum(id);
+                        document.querySelector('.sidebar').style.display = 'none';
+                        document.querySelector('.container').style.gridTemplateColumns = '1fr';
+                    }
+                } catch (e) {
+                    console.error('Invalid share link');
+                }
+            }
+        }
+
+        // Drag and drop
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            document.querySelector('.upload-section').style.borderColor = '#28a745';
+            document.querySelector('.upload-section').style.background = 'rgba(40, 167, 69, 0.1)';
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            if (e.target === document) {
+                document.querySelector('.upload-section').style.borderColor = '#667eea';
+                document.querySelector('.upload-section').style.background = 'rgba(255, 255, 255, 0.05)';
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.querySelector('.upload-section').style.borderColor = '#667eea';
+            document.querySelector('.upload-section').style.background = 'rgba(255, 255, 255, 0.05)';
+            
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (currentAlbumId && files.length > 0) {
+                const input = document.getElementById('photo-input');
+                const dt = new DataTransfer();
+                files.forEach(f => dt.items.add(f));
+                input.files = dt.files;
+                uploadPhotos({ target: input });
+            }
+        });
+
+        init();
+        checkSharedAlbum();
+    </script>
+</body>
+</html>
