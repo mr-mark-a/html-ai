@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Billing & Payments</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header h1 {
+    color: white;
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 12px;
+  }
+
+  .nav-btn:hover {
+    background: #5568d3;
+  }
+
+  .nav-btn.active {
+    background: #764ba2;
+    color: white;
+    border-bottom: 3px solid #06d6a0;
+  }
+
+  .back-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #b71c1c;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    padding: 30px;
+  }
+
+  .section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .section:last-child {
+    border-bottom: none;
+  }
+
+  .section h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .billing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .billing-item:last-child {
+    border-bottom: none;
+  }
+
+  .billing-item label {
+    color: #333;
+    font-weight: bold;
+  }
+
+  .billing-item .value {
+    color: #667eea;
+    font-weight: bold;
+  }
+
+  .subscription-card {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  .subscription-card h4 {
+    margin: 0 0 10px 0;
+  }
+
+  .subscription-card p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+
+  .btn-primary {
+    background: #667eea;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #5568d3;
+  }
+
+  .btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+  }
+
+  .btn-secondary:hover {
+    background: #d0d0d0;
+  }
+
+  .payment-method {
+    border: 2px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .payment-method:hover {
+    border-color: #667eea;
+    background: #f9f9f9;
+  }
+
+  .transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .transaction:last-child {
+    border-bottom: none;
+  }
+
+  .transaction-date {
+    color: #999;
+    font-size: 13px;
+  }
+
+  .transaction-amount {
+    font-weight: bold;
+    color: #4caf50;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>💳 Billing & Payments</h1>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goTo('pg1.html')">Stats</button>
+    <button class="nav-btn active" onclick="goTo('pg2.html')">Billing</button>
+    <button class="nav-btn" onclick="goTo('pg3.html')">Security</button>
+    <button class="nav-btn" onclick="goTo('pg4.html')">Notifications</button>
+    <button class="nav-btn" onclick="goTo('pg5.html')">Devices</button>
+    <button class="nav-btn" onclick="goTo('profile.html')">Preferences</button>
+  </div>
+  <button class="back-btn" onclick="goBack()">← Back</button>
+</div>
+
+<div class="container">
+  
+  <!-- Current Subscription -->
+  <div class="section">
+    <h3>📅 Current Plan</h3>
+    <div class="subscription-card">
+      <h4 id="planName">Free Plan</h4>
+      <p id="planDesc">20 tokens per day • No expiration • Limited access</p>
+    </div>
+    <div class="billing-item">
+      <label>Next Renewal</label>
+      <span class="value">N/A</span>
+    </div>
+    <div class="billing-item">
+      <label>Total Spent</label>
+      <span class="value">$0.00</span>
+    </div>
+  </div>
+
+  <!-- Payment Methods -->
+  <div class="section">
+    <h3>💰 Payment Methods</h3>
+    <div class="payment-method">
+      <strong>Visa •••• 4242</strong>
+      <p style="margin: 5px 0 0 0; color: #999; font-size: 13px;">Expires 12/25</p>
+    </div>
+    <div class="payment-method">
+      <strong>PayPal - user@example.com</strong>
+      <p style="margin: 5px 0 0 0; color: #999; font-size: 13px;">Default payment method</p>
+    </div>
+    <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;">+ Add Payment Method</button>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="section">
+    <h3>📊 Transaction History</h3>
+    
+    <div class="transaction">
+      <div>
+        <strong>Monthly Subscription</strong>
+        <div class="transaction-date">Mar 1, 2026</div>
+      </div>
+      <div class="transaction-amount">+$9.99</div>
+    </div>
+
+    <div class="transaction">
+      <div>
+        <strong>Initial Setup</strong>
+        <div class="transaction-date">Feb 28, 2026</div>
+      </div>
+      <div class="transaction-amount">+$0.00</div>
+    </div>
+  </div>
+
+  <!-- Upgrade Option -->
+  <div class="section">
+    <h3>⭐ Upgrade Your Plan</h3>
+    <p style="color: #666; margin-top: 0;">Get unlimited access and 8,000 tokens monthly!</p>
+    <div class="btn-group">
+      <button class="btn btn-primary">Upgrade Now</button>
+      <button class="btn btn-secondary">View Plans</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function goTo(page) {
+    window.location.href = page;
+}
+
+function goBack() {
+    window.location.href = '../marks-games.html';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sub = localStorage.getItem('subscription');
+    if (sub && sub !== 'free') {
+        document.getElementById('planName').textContent = sub.charAt(0).toUpperCase() + sub.slice(1) + ' Plan';
+        document.getElementById('planDesc').textContent = 'Premium access • 8,000 tokens/month • Priority support';
+    }
+});
+</script>
+
+</body>
+</html>

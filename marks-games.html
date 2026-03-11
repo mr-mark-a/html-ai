@@ -195,12 +195,65 @@
     .logout-fixed:hover {
       background: #b71c1c;
     }
+    .tokens-fixed {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 1002;
+      background: #ffeb3b;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+    .tokens-fixed img {
+      height: 20px;
+      vertical-align: middle;
+    }
+    .tokens-fixed:hover {
+      background: #fdd835;
+    }
+    .profile-fixed {
+      position: fixed;
+      top: 18px;
+      right: 160px;
+      z-index: 1001;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+      color: white;
+      font-weight: bold;
+    }
+    .profile-fixed:hover {
+      transform: scale(1.1);
+    }
   </style>
 </head>
 
 <body>
 <button class="logout-fixed" onclick="logoutGames()">Log Out</button>
-
+<button class="profile-fixed" id="profileBtn" onclick="window.location.href='profilemenu/profile.html'" title="Settings">👤</button>
+<button class="tokens-fixed" id="tokenDisplay" onclick="showTokenDetails()">
+  <img src="token.png" alt="token">
+  <span id="tokenCount">0</span>
+</button>
 
 <div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
   <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
@@ -277,6 +330,75 @@
 </div>
 
 <script>
+// Token management system
+function getStoredTokens() {
+    return parseInt(localStorage.getItem('tokens') || '0', 10);
+}
+
+function setStoredTokens(n) {
+    localStorage.setItem('tokens', n);
+}
+
+function getLastUpdate() {
+    return parseInt(localStorage.getItem('tokensLastUpdate') || '0', 10);
+}
+
+function setLastUpdate(ts) {
+    localStorage.setItem('tokensLastUpdate', ts);
+}
+
+function updateTokens() {
+    const now = Date.now();
+    const last = getLastUpdate();
+    if (!last) {
+        setLastUpdate(now);
+        setStoredTokens(getStoredTokens() + 20);
+    } else {
+        const days = Math.floor((now - last) / (1000*60*60*24));
+        if (days > 0) {
+            const added = days * 20;
+            setStoredTokens(getStoredTokens() + added);
+            setLastUpdate(now);
+        }
+    }
+    updateTokenDisplay();
+}
+
+function updateTokenDisplay() {
+    document.getElementById('tokenCount').textContent = getStoredTokens();
+}
+
+function useTokens(amount) {
+    let t = getStoredTokens();
+    if (t >= amount) {
+        t -= amount;
+        setStoredTokens(t);
+        updateTokenDisplay();
+        return true;
+    } else {
+        alert('Not enough tokens');
+        return false;
+    }
+}
+
+function showTokenDetails() {
+    const t = getStoredTokens();
+    const msg = `You have ${t} token${t === 1 ? '' : 's'}.\n` +
+                `You earn 20 tokens per day; tokens do NOT carry over between cycles.\n\n` +
+                `Click OK to purchase a subscription (money, not tokens) and receive 8,000 tokens a month.`;
+    if (confirm(msg)) {
+        window.location.href = 'subscription.html';
+    }
+}
+
+function paySimulation(cost) {
+    if (useTokens(cost)) {
+        console.log(`paid ${cost} tokens`);
+        return true;
+    }
+    return false;
+}
+
 // Search functionality
 document.getElementById('searchInput').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
@@ -314,6 +436,15 @@ function logoutGames() {
   localStorage.removeItem('currentUser');
   window.location.href = 'select.html';
 }
+
+// Initialize tokens on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateTokens();
+    // Set member since date if not exists
+    if (!localStorage.getItem('memberSince')) {
+        localStorage.setItem('memberSince', new Date().toLocaleDateString());
+    }
+});
 </script>
 
 </body>

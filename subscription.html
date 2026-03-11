@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Premium Subscription</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 900px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    padding: 40px;
+    text-align: center;
+  }
+
+  h1 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 36px;
+  }
+
+  .subtitle {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+
+  .plan-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    background: #f9f9f9;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .plan-card:hover {
+    transform: translateY(-5px);
+    border-color: #667eea;
+    box-shadow: 0 4px 16px rgba(102,126,234,0.2);
+  }
+
+  .plan-card.featured {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    transform: scale(1.05);
+  }
+
+  .badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: #ffeb3b;
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .plan-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .plan-price {
+    font-size: 32px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 5px;
+  }
+
+  .plan-period {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 25px;
+  }
+
+  .plan-tokens {
+    background: #fffde7;
+    color: #f57f17;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .plan-features {
+    text-align: left;
+    margin-bottom: 25px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .plan-features li {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .plan-features li:last-child {
+    border-bottom: none;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-primary {
+    background: #667eea;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #5568d3;
+    transform: scale(1.02);
+  }
+
+  .btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+  }
+
+  .btn-secondary:hover {
+    background: #d0d0d0;
+  }
+
+  .back-btn {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 1002;
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #b71c1c;
+  }
+
+  .tokens-fixed {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 1002;
+    background: #ffeb3b;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s;
+  }
+
+  .tokens-fixed img {
+    height: 20px;
+    vertical-align: middle;
+  }
+
+  .tokens-fixed:hover {
+    background: #fdd835;
+  }
+
+  .faq {
+    margin-top: 50px;
+    padding-top: 40px;
+    border-top: 2px solid #e0e0e0;
+    text-align: left;
+  }
+
+  .faq h2 {
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+
+  .faq-item {
+    margin-bottom: 20px;
+  }
+
+  .faq-question {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .faq-question:hover {
+    background: #e8e8e8;
+  }
+
+  .faq-answer {
+    display: none;
+    padding: 15px;
+    background: #fafafa;
+    color: #666;
+    border-left: 3px solid #667eea;
+    margin-top: 8px;
+  }
+
+  .faq-answer.show {
+    display: block;
+  }
+
+  .profile-fixed {
+    position: fixed;
+    top: 18px;
+    right: 160px;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid white;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+    color: white;
+    font-weight: bold;
+  }
+
+  .profile-fixed:hover {
+    transform: scale(1.1);
+  }
+
+  .settings-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .settings-modal.show {
+    display: flex;
+  }
+
+  .settings-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 15px;
+  }
+
+  .settings-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+  }
+
+  .close-settings {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+  }
+
+  .close-settings:hover {
+    color: #333;
+  }
+
+  .settings-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .settings-section h3 {
+    color: #667eea;
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .settings-item {
+    padding: 10px 0;
+    color: #666;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .settings-toggle {
+    width: 50px;
+    height: 24px;
+    background: #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .settings-toggle.on {
+    background: #667eea;
+  }
+
+  .settings-toggle-dot {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.3s;
+  }
+
+  .settings-toggle.on .settings-toggle-dot {
+    left: 28px;
+  }
+
+  .cancel-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 10px;
+    transition: background 0.3s;
+  }
+
+  .cancel-btn:hover {
+    background: #b71c1c;
+  }
+
+  .danger-zone {
+    background: #fff5f5;
+    border: 2px dashed #e53935;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 20px;
+  }
+
+  .danger-zone-title {
+    color: #e53935;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">← Back</button>
+
+<button class="profile-fixed" id="profileBtn" onclick="window.location.href='profilemenu/profile.html'" title="Settings">👤</button>
+
+<button class="tokens-fixed" id="tokenDisplay" onclick="showTokenDetails()">
+  <img src="token.png" alt="token">
+  <span id="tokenCount">0</span>
+</button>
+
+<!-- Settings Modal -->
+<div class="settings-modal" id="settingsModal" onclick="closeSettingsIfOutside(event)">
+  <div class="settings-content" onclick="event.stopPropagation()">
+    <div class="settings-header">
+      <h2>⚙️ Settings</h2>
+      <button class="close-settings" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Account Info</h3>
+      <div class="settings-item">
+        <span>Current Subscription</span>
+        <strong id="subInfo">Premium</strong>
+      </div>
+      <div class="settings-item">
+        <span>Subscription Status</span>
+        <strong id="subStatus">Active</strong>
+      </div>
+      <div class="settings-item">
+        <span>Billing Cycle</span>
+        <strong id="billingCycle">Monthly</strong>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Preferences</h3>
+      <div class="settings-item">
+        <span>Notifications</span>
+        <div class="settings-toggle on" onclick="toggleNotifications(this)">
+          <div class="settings-toggle-dot"></div>
+        </div>
+      </div>
+      <div class="settings-item">
+        <span>Dark Mode</span>
+        <div class="settings-toggle" onclick="toggleDarkMode(this)">
+          <div class="settings-toggle-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone with hidden cancel -->
+    <div class="danger-zone">
+      <div class="danger-zone-title">⚠️ Danger Zone</div>
+      <p style="margin: 0 0 10px 0; font-size: 12px; color: #999;">
+        Be careful here. Changes cannot be undone.
+      </p>
+      <button class="cancel-btn" onclick="confirmCancel()">
+        Cancel Subscription
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h1>🚀 Premium Subscription</h1>
+  <p class="subtitle">Unlock unlimited tokens and exclusive features!</p>
+
+  <div class="plans-grid">
+    <!-- Monthly Plan -->
+    <div class="plan-card featured">
+      <div class="badge">POPULAR</div>
+      <div class="plan-name">Monthly</div>
+      <div class="plan-price">$9.99</div>
+      <div class="plan-period">per month</div>
+      <div class="plan-tokens">8,000 Tokens/Month</div>
+      <ul class="plan-features">
+        <li>✓ 8,000 tokens monthly</li>
+        <li>✓ Unlimited game access</li>
+        <li>✓ Ad-free experience</li>
+        <li>✓ Priority support</li>
+        <li>✓ Cancel anytime</li>
+      </ul>
+      <button class="btn btn-primary" onclick="subscribe('monthly', 9.99)">
+        Subscribe Now
+      </button>
+    </div>
+
+    <!-- Quarterly Plan -->
+    <div class="plan-card">
+      <div class="plan-name">Quarterly</div>
+      <div class="plan-price">$24.99</div>
+      <div class="plan-period">every 3 months</div>
+      <div class="plan-tokens">24,000 Tokens</div>
+      <ul class="plan-features">
+        <li>✓ 24,000 tokens (3 months)</li>
+        <li>✓ All Monthly benefits</li>
+        <li>✓ Save $5 vs monthly</li>
+        <li>✓ Flexible billing</li>
+        <li>✓ Instant activation</li>
+      </ul>
+      <button class="btn btn-primary" onclick="subscribe('quarterly', 24.99)">
+        Subscribe Now
+      </button>
+    </div>
+
+    <!-- Annual Plan -->
+    <div class="plan-card">
+      <div class="plan-name">Annual</div>
+      <div class="plan-price">$89.99</div>
+      <div class="plan-period">per year</div>
+      <div class="plan-tokens">96,000 Tokens</div>
+      <ul class="plan-features">
+        <li>✓ 96,000 tokens (12 months)</li>
+        <li>✓ Premium member status</li>
+        <li>✓ Exclusive perks</li>
+        <li>✓ Best value - Save $30</li>
+        <li>✓ 30-day money back</li>
+      </ul>
+      <button class="btn btn-primary" onclick="subscribe('annual', 89.99)">
+        Subscribe Now
+      </button>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="faq">
+    <h2>Frequently Asked Questions</h2>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        How do I manage my subscription?
+      </div>
+      <div class="faq-answer">
+        You can manage your subscription directly from your account settings. You'll receive a confirmation email with all your details and a link to manage or cancel anytime.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Can I change plans?
+      </div>
+      <div class="faq-answer">
+        Yes! You can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle. If upgrading, you'll receive a prorated credit.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        What payment methods do you accept?
+      </div>
+      <div class="faq-answer">
+        We accept all major credit/debit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay for maximum convenience and security.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Do unused tokens carry over?
+      </div>
+      <div class="faq-answer">
+        No, tokens do not carry over between billing cycles. Each month you receive a fresh allotment. Use them wisely! Free users earn 20 tokens per day without expiration.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(this)">
+        Is there a free trial?
+      </div>
+      <div class="faq-answer">
+        We offer a 7-day free trial for new subscribers. Just verify your payment method—you won't be charged until the trial ends.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Token management (same as marks-games.html)
+function getStoredTokens() {
+    return parseInt(localStorage.getItem('tokens') || '0', 10);
+}
+
+function setStoredTokens(n) {
+    localStorage.setItem('tokens', n);
+}
+
+function getLastUpdate() {
+    return parseInt(localStorage.getItem('tokensLastUpdate') || '0', 10);
+}
+
+function setLastUpdate(ts) {
+    localStorage.setItem('tokensLastUpdate', ts);
+}
+
+function updateTokens() {
+    const now = Date.now();
+    const last = getLastUpdate();
+    if (!last) {
+        setLastUpdate(now);
+        setStoredTokens(getStoredTokens() + 20);
+    } else {
+        const days = Math.floor((now - last) / (1000*60*60*24));
+        if (days > 0) {
+            const added = days * 20;
+            setStoredTokens(getStoredTokens() + added);
+            setLastUpdate(now);
+        }
+    }
+    updateTokenDisplay();
+}
+
+function updateTokenDisplay() {
+    document.getElementById('tokenCount').textContent = getStoredTokens();
+}
+
+function showTokenDetails() {
+    const t = getStoredTokens();
+    alert(`You have ${t} token${t === 1 ? '' : 's'}.\n\nYou earn 20 tokens per day—subscribe for 8,000/month!`);
+}
+
+function subscribe(plan, price) {
+    const planNames = {
+        'monthly': 'Monthly ($9.99)',
+        'quarterly': 'Quarterly ($24.99)',
+        'annual': 'Annual ($89.99)'
+    };
+    
+    const tokenAmounts = {
+        'monthly': 8000,
+        'quarterly': 24000,
+        'annual': 96000
+    };
+
+    if (confirm(`Subscribe to ${planNames[plan]}?\n\nYou'll receive ${tokenAmounts[plan]} tokens immediately and start your subscription.`)) {
+        // Simulate payment processing
+        alert('Processing payment...\n\nIn a real app, this would redirect to Stripe/PayPal.');
+        
+        // Add tokens (in real app, only after payment confirmation)
+        setStoredTokens(getStoredTokens() + tokenAmounts[plan]);
+        updateTokenDisplay();
+        
+        // Store subscription info
+        localStorage.setItem('subscription', plan);
+        localStorage.setItem('subscriptionStart', new Date().toISOString());
+        
+        alert(`✓ Subscription active!\n\n${tokenAmounts[plan]} tokens added to your account.`);
+    }
+}
+
+function goBack() {
+    window.location.href = 'marks-games.html';
+}
+
+function toggleFAQ(element) {
+    const answer = element.nextElementSibling;
+    answer.classList.toggle('show');
+}
+
+// Settings Modal Functions
+function openSettings() {
+    document.getElementById('settingsModal').classList.add('show');
+}
+
+function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('show');
+}
+
+function closeSettingsIfOutside(event) {
+    if (event.target === document.getElementById('settingsModal')) {
+        closeSettings();
+    }
+}
+
+function toggleNotifications(element) {
+    element.classList.toggle('on');
+}
+
+function toggleDarkMode(element) {
+    element.classList.toggle('on');
+}
+
+function confirmCancel() {
+    if (confirm('Are you sure? This will cancel your subscription at the end of this billing cycle.\n\nYou will still have your current tokens until expiration.')) {
+        if (confirm('This is your last chance! Click OK to permanently cancel.')) {
+            localStorage.removeItem('subscription');
+            localStorage.removeItem('subscriptionStart');
+            alert('✓ Subscription cancelled.\n\nYou will revert to free tier (20 tokens/day) after this cycle ends.');
+            closeSettings();
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateTokens();
+    // Check if user has active subscription
+    const sub = localStorage.getItem('subscription');
+    if (!sub) {
+        document.getElementById('subStatus').textContent = 'Inactive';
+        document.getElementById('subInfo').textContent = 'Free Tier';
+    }
+});
+</script>
+
+</body>
+</html>

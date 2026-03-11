@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Account & Devices</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header h1 {
+    color: white;
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 12px;
+  }
+
+  .nav-btn:hover {
+    background: #5568d3;
+  }
+
+  .nav-btn.active {
+    background: #764ba2;
+    color: white;
+    border-bottom: 3px solid #06d6a0;
+  }
+
+  .back-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #b71c1c;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    padding: 30px;
+  }
+
+  .section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .section:last-child {
+    border-bottom: none;
+  }
+
+  .section h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .info-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .info-item:last-child {
+    border-bottom: none;
+  }
+
+  .info-item label {
+    color: #333;
+    font-weight: bold;
+    width: 120px;
+  }
+
+  .info-item .value {
+    color: #667eea;
+    font-weight: 500;
+  }
+
+  .device-card {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border: 2px solid #667eea;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  .device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .device-header h4 {
+    margin: 0;
+    color: #333;
+  }
+
+  .device-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .device-status.active {
+    background: #c8e6c9;
+    color: #2e7d32;
+  }
+
+  .device-status.inactive {
+    background: #ffccbc;
+    color: #d84315;
+  }
+
+  .device-info {
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .device-info p {
+    margin: 3px 0;
+  }
+
+  .device-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    font-size: 12px;
+  }
+
+  .btn-primary {
+    background: #667eea;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #5568d3;
+  }
+
+  .btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+  }
+
+  .btn-secondary:hover {
+    background: #d0d0d0;
+  }
+
+  .btn-danger {
+    background: #e53935;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b71c1c;
+  }
+
+  .btn-full {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .quota-bar {
+    width: 100%;
+    height: 32px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+
+  .quota-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    width: 65%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>📱 Account & Devices</h1>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goTo('pg1.html')">Stats</button>
+    <button class="nav-btn" onclick="goTo('pg2.html')">Billing</button>
+    <button class="nav-btn" onclick="goTo('pg3.html')">Security</button>
+    <button class="nav-btn" onclick="goTo('pg4.html')">Notifications</button>
+    <button class="nav-btn active" onclick="goTo('pg5.html')">Devices</button>
+    <button class="nav-btn" onclick="goTo('profile.html')">Preferences</button>
+  </div>
+  <button class="back-btn" onclick="goBack()">← Back</button>
+</div>
+
+<div class="container">
+  
+  <!-- Account Info -->
+  <div class="section">
+    <h3>👤 Account Information</h3>
+    
+    <div class="info-item">
+      <label>Email</label>
+      <span class="value" id="accountEmail">user@example.com</span>
+    </div>
+    <div class="info-item">
+      <label>Username</label>
+      <span class="value" id="accountName">Mark</span>
+    </div>
+    <div class="info-item">
+      <label>Member Since</label>
+      <span class="value" id="memberDate">Jan 15, 2026</span>
+    </div>
+    <div class="info-item">
+      <label>Account Status</label>
+      <span class="value" style="color: #4caf50;">✓ Active</span>
+    </div>
+  </div>
+
+  <!-- Storage Quota -->
+  <div class="section">
+    <h3>💾 Storage</h3>
+    
+    <div class="info-item">
+      <label>Storage Used</label>
+      <span class="value">650 MB / 1 GB</span>
+    </div>
+    <div class="quota-bar">
+      <div class="quota-fill">65%</div>
+    </div>
+    <button class="btn btn-secondary btn-full">Upgrade Storage</button>
+  </div>
+
+  <!-- Linked Devices -->
+  <div class="section">
+    <h3>🖥️ Linked Devices</h3>
+    
+    <div class="device-card">
+      <div class="device-header">
+        <h4>💻 Desktop - Chrome on Windows</h4>
+        <span class="device-status active">ACTIVE</span>
+      </div>
+      <div class="device-info">
+        <p>IP Address: 192.168.1.100</p>
+        <p>Last Active: 5 minutes ago</p>
+        <p>Browser: Google Chrome 120.0</p>
+      </div>
+    </div>
+
+    <div class="device-card">
+      <div class="device-header">
+        <h4>📱 Mobile - Safari on iPhone 15</h4>
+        <span class="device-status inactive">INACTIVE</span>
+      </div>
+      <div class="device-info">
+        <p>IP Address: 192.168.1.50</p>
+        <p>Last Active: 2 hours ago</p>
+        <p>Browser: Safari 17.2</p>
+      </div>
+      <div class="device-actions">
+        <button class="btn btn-secondary" onclick="alert('Device sign out')">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="device-card">
+      <div class="device-header">
+        <h4>⌚ Tablet - Chrome on iPad</h4>
+        <span class="device-status inactive">INACTIVE</span>
+      </div>
+      <div class="device-info">
+        <p>IP Address: 192.168.1.75</p>
+        <p>Last Active: 5 days ago</p>
+        <p>Browser: Google Chrome 120.0</p>
+      </div>
+      <div class="device-actions">
+        <button class="btn btn-secondary" onclick="alert('Device sign out')">Sign Out</button>
+      </div>
+    </div>
+
+    <button class="btn btn-danger btn-full" onclick="alert('Signing out all devices...')">Sign Out All Devices</button>
+  </div>
+
+  <!-- Connected Services -->
+  <div class="section">
+    <h3>🔗 Connected Services</h3>
+    
+    <div class="device-card">
+      <div class="device-header">
+        <h4>Google Account</h4>
+        <span class="device-status active">CONNECTED</span>
+      </div>
+      <div class="device-info">
+        <p>Connected on: Mar 1, 2026</p>
+        <p>Email: user@gmail.com</p>
+      </div>
+      <button class="btn btn-secondary btn-full">Disconnect</button>
+    </div>
+
+    <div class="device-card">
+      <div class="device-header">
+        <h4>Discord Account</h4>
+        <span class="device-status inactive">NOT CONNECTED</span>
+      </div>
+      <div class="device-info">
+        <p>Link your Discord account for quick login</p>
+      </div>
+      <button class="btn btn-primary btn-full">Connect Discord</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function goTo(page) {
+    window.location.href = page;
+}
+
+function goBack() {
+    window.location.href = '../marks-games.html';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const name = localStorage.getItem('userName') || 'User';
+    const email = localStorage.getItem('userEmail') || 'user@example.com';
+    const memberDate = localStorage.getItem('memberSince') || 'Jan 15, 2026';
+    
+    document.getElementById('accountName').textContent = name;
+    document.getElementById('accountEmail').textContent = email;
+    document.getElementById('memberDate').textContent = memberDate;
+});
+</script>
+
+</body>
+</html>

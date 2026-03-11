@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Security & Privacy</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header h1 {
+    color: white;
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 12px;
+  }
+
+  .nav-btn:hover {
+    background: #5568d3;
+  }
+
+  .nav-btn.active {
+    background: #764ba2;
+    color: white;
+    border-bottom: 3px solid #06d6a0;
+  }
+
+  .back-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #b71c1c;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    padding: 30px;
+  }
+
+  .section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .section:last-child {
+    border-bottom: none;
+  }
+
+  .section h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .security-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .security-item-info h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+  }
+
+  .security-item-info p {
+    margin: 0;
+    color: #999;
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    font-size: 13px;
+  }
+
+  .btn-primary {
+    background: #667eea;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #5568d3;
+  }
+
+  .btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+  }
+
+  .btn-secondary:hover {
+    background: #d0d0d0;
+  }
+
+  .btn-danger {
+    background: #e53935;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #b71c1c;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .status-active {
+    background: #c8e6c9;
+    color: #2e7d32;
+  }
+
+  .status-inactive {
+    background: #ffccbc;
+    color: #d84315;
+  }
+
+  .toggle-switch {
+    width: 50px;
+    height: 24px;
+    background: #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .toggle-switch.on {
+    background: #4caf50;
+  }
+
+  .toggle-dot {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.3s;
+  }
+
+  .toggle-switch.on .toggle-dot {
+    left: 28px;
+  }
+
+  .device-item {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .device-info h4 {
+    margin: 0 0 5px 0;
+  }
+
+  .device-info p {
+    margin: 0;
+    color: #999;
+    font-size: 13px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>🔒 Security & Privacy</h1>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goTo('pg1.html')">Stats</button>
+    <button class="nav-btn" onclick="goTo('pg2.html')">Billing</button>
+    <button class="nav-btn active" onclick="goTo('pg3.html')">Security</button>
+    <button class="nav-btn" onclick="goTo('pg4.html')">Notifications</button>
+    <button class="nav-btn" onclick="goTo('pg5.html')">Devices</button>
+    <button class="nav-btn" onclick="goTo('profile.html')">Preferences</button>
+  </div>
+  <button class="back-btn" onclick="goBack()">← Back</button>
+</div>
+
+<div class="container">
+  
+  <!-- Password Security -->
+  <div class="section">
+    <h3>🔑 Password & Auth</h3>
+    
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Password</h4>
+        <p>Last changed: 45 days ago</p>
+      </div>
+      <button class="btn btn-secondary">Change</button>
+    </div>
+
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Two-Factor Authentication (2FA)</h4>
+        <p>Protect your account with 2FA</p>
+      </div>
+      <div class="toggle-switch" onclick="toggle2FA(this)">
+        <div class="toggle-dot"></div>
+      </div>
+    </div>
+
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Recovery Codes</h4>
+        <p>Generate backup codes for account recovery</p>
+      </div>
+      <button class="btn btn-secondary">Generate</button>
+    </div>
+  </div>
+
+  <!-- Privacy Settings -->
+  <div class="section">
+    <h3>👁️ Privacy</h3>
+    
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Profile Visibility</h4>
+        <p>Let others see your profile</p>
+      </div>
+      <div class="toggle-switch on" onclick="togglePrivacy(this)">
+        <div class="toggle-dot"></div>
+      </div>
+    </div>
+
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Activity Status</h4>
+        <p>Show when you're online</p>
+      </div>
+      <div class="toggle-switch on" onclick="toggleActivity(this)">
+        <div class="toggle-dot"></div>
+      </div>
+    </div>
+
+    <div class="security-item">
+      <div class="security-item-info">
+        <h4>Data Collection</h4>
+        <p>Allow us to collect usage analytics</p>
+      </div>
+      <div class="toggle-switch on" onclick="toggleAnalytics(this)">
+        <div class="toggle-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Sessions -->
+  <div class="section">
+    <h3>📱 Active Devices</h3>
+    
+    <div class="device-item">
+      <div class="device-info">
+        <h4>🖥️ Chrome - Windows</h4>
+        <p>Last active: 2 minutes ago • IP: 192.168.1.100</p>
+      </div>
+      <span class="status-badge status-active">ACTIVE</span>
+    </div>
+
+    <div class="device-item">
+      <div class="device-info">
+        <h4>📱 Safari - iPhone</h4>
+        <p>Last active: 3 hours ago • IP: 192.168.1.50</p>
+      </div>
+      <button class="btn btn-secondary">Sign Out</button>
+    </div>
+
+    <button class="btn btn-danger" style="width: 100%; margin-top: 10px;">Sign Out All Other Devices</button>
+  </div>
+
+</div>
+
+<script>
+function toggle2FA(element) {
+    element.classList.toggle('on');
+}
+
+function togglePrivacy(element) {
+    element.classList.toggle('on');
+}
+
+function toggleActivity(element) {
+    element.classList.toggle('on');
+}
+
+function toggleAnalytics(element) {
+    element.classList.toggle('on');
+}
+
+function goTo(page) {
+    window.location.href = page;
+}
+
+function goBack() {
+    window.location.href = '../marks-games.html';
+}
+</script>
+
+</body>
+</html>

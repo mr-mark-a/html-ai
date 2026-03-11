@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile Settings</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header h1 {
+    color: white;
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .back-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #b71c1c;
+  }
+
+  .nav-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 12px;
+  }
+
+  .nav-btn:hover {
+    background: #5568d3;
+  }
+
+  .nav-btn.active {
+    background: #764ba2;
+    color: white;
+    border-bottom: 3px solid #06d6a0;
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    padding: 30px;
+  }
+
+  .settings-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .settings-section:last-child {
+    border-bottom: none;
+  }
+
+  .settings-section h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .settings-item {
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .settings-item label {
+    color: #333;
+    font-weight: bold;
+    min-width: 100px;
+  }
+
+  .settings-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .settings-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 4px rgba(102,126,234,0.3);
+  }
+
+  .settings-value {
+    flex: 1;
+    text-align: right;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .settings-toggle {
+    width: 50px;
+    height: 24px;
+    background: #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .settings-toggle.on {
+    background: #667eea;
+  }
+
+  .settings-toggle-dot {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.3s;
+  }
+
+  .settings-toggle.on .settings-toggle-dot {
+    left: 28px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+  }
+
+  .save-btn {
+    flex: 1;
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+
+  .save-btn:hover {
+    background: #45a049;
+  }
+
+  .reset-btn {
+    flex: 1;
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+
+  .reset-btn:hover {
+    background: #f57c00;
+  }
+
+  .danger-zone {
+    background: #fff5f5;
+    border: 2px dashed #e53935;
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 30px;
+  }
+
+  .danger-zone-title {
+    color: #e53935;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 16px;
+  }
+
+  .cancel-btn {
+    width: 100%;
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+
+  .cancel-btn:hover {
+    background: #b71c1c;
+  }
+
+  .tokens-badge {
+    background: #ffeb3b;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tokens-badge img {
+    height: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>⚙️ Profile Settings</h1>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="goTo('pg1.html')">Stats</button>
+    <button class="nav-btn" onclick="goTo('pg2.html')">Billing</button>
+    <button class="nav-btn" onclick="goTo('pg3.html')">Security</button>
+    <button class="nav-btn" onclick="goTo('pg4.html')">Notifications</button>
+    <button class="nav-btn" onclick="goTo('pg5.html')">Devices</button>
+    <button class="nav-btn active" onclick="goTo('profile.html')">Preferences</button>
+  </div>
+  <button class="back-btn" onclick="goBack()">← Back</button>
+</div>
+
+<div class="container">
+  
+  <!-- Profile Section -->
+  <div class="settings-section">
+    <h3>👤 Profile</h3>
+    <div class="settings-item">
+      <label>Name</label>
+      <input type="text" id="userName" class="settings-input" placeholder="Your name">
+    </div>
+    <div class="settings-item">
+      <label>Email</label>
+      <input type="email" id="userEmail" class="settings-input" placeholder="your@email.com">
+    </div>
+  </div>
+
+  <!-- Account Info Section -->
+  <div class="settings-section">
+    <h3>📊 Account Info</h3>
+    <div class="settings-item">
+      <label>Current Tokens</label>
+      <div class="tokens-badge">
+        <img src="token.png" alt="token">
+        <span id="tokensDisplay">0</span>
+      </div>
+    </div>
+    <div class="settings-item">
+      <label>Subscription</label>
+      <span class="settings-value" id="subStatus">Free</span>
+    </div>
+    <div class="settings-item">
+      <label>Member Since</label>
+      <span class="settings-value" id="memberSince">Today</span>
+    </div>
+  </div>
+
+  <!-- Preferences Section -->
+  <div class="settings-section">
+    <h3>🎛️ Preferences</h3>
+    <div class="settings-item">
+      <label>Email Notifications</label>
+      <div class="settings-toggle on" onclick="toggleNotifications(this)">
+        <div class="settings-toggle-dot"></div>
+      </div>
+    </div>
+    <div class="settings-item">
+      <label>Dark Mode</label>
+      <div class="settings-toggle" onclick="toggleDarkMode(this)">
+        <div class="settings-toggle-dot"></div>
+      </div>
+    </div>
+    <div class="settings-item">
+      <label>Sound Effects</label>
+      <div class="settings-toggle on" onclick="toggleSound(this)">
+        <div class="settings-toggle-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="button-group">
+    <button class="save-btn" onclick="saveSettings()">💾 Save</button>
+    <button class="reset-btn" onclick="resetSettings()">↻ Reset</button>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div class="danger-zone-title">⚠️ Danger Zone</div>
+    <p style="margin: 0 0 15px 0; font-size: 13px; color: #999;">
+      Be careful here. These actions cannot be undone.
+    </p>
+    <button class="cancel-btn" onclick="confirmCancel()">
+      Cancel Subscription
+    </button>
+  </div>
+
+</div>
+
+<script>
+// Token management functions
+function getStoredTokens() {
+    return parseInt(localStorage.getItem('tokens') || '0', 10);
+}
+
+function setStoredTokens(n) {
+    localStorage.setItem('tokens', n);
+}
+
+function loadSettings() {
+    document.getElementById('userName').value = localStorage.getItem('userName') || '';
+    document.getElementById('userEmail').value = localStorage.getItem('userEmail') || '';
+    document.getElementById('tokensDisplay').textContent = getStoredTokens();
+    
+    const sub = localStorage.getItem('subscription');
+    document.getElementById('subStatus').textContent = sub ? sub.charAt(0).toUpperCase() + sub.slice(1) : 'Free';
+    
+    const memberDate = localStorage.getItem('memberSince') || new Date().toLocaleDateString();
+    document.getElementById('memberSince').textContent = memberDate;
+    
+    // Load toggle states
+    const notif = localStorage.getItem('notificationsOn') !== 'false';
+    const dark = localStorage.getItem('darkMode') === 'true';
+    const sound = localStorage.getItem('soundOn') !== 'false';
+    
+    updateToggleUI('notifications', notif);
+    updateToggleUI('dark', dark);
+    updateToggleUI('sound', sound);
+}
+
+function updateToggleUI(type, isOn) {
+    const toggles = document.querySelectorAll('.settings-toggle');
+    const index = type === 'notifications' ? 0 : type === 'dark' ? 1 : 2;
+    if (toggles[index]) {
+        if (isOn) {
+            toggles[index].classList.add('on');
+        } else {
+            toggles[index].classList.remove('on');
+        }
+    }
+}
+
+function toggleNotifications(element) {
+    element.classList.toggle('on');
+}
+
+function toggleDarkMode(element) {
+    element.classList.toggle('on');
+}
+
+function toggleSound(element) {
+    element.classList.toggle('on');
+}
+
+function saveSettings() {
+    const name = document.getElementById('userName').value;
+    const email = document.getElementById('userEmail').value;
+    
+    if (!name.trim()) {
+        alert('Please enter a name.');
+        return;
+    }
+    
+    localStorage.setItem('userName', name);
+    localStorage.setItem('userEmail', email);
+    
+    const toggles = document.querySelectorAll('.settings-toggle');
+    localStorage.setItem('notificationsOn', toggles[0].classList.contains('on'));
+    localStorage.setItem('darkMode', toggles[1].classList.contains('on'));
+    localStorage.setItem('soundOn', toggles[2].classList.contains('on'));
+    
+    alert('✓ Settings saved successfully!');
+}
+
+function resetSettings() {
+    if (confirm('Reset all settings to defaults?')) {
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('notificationsOn');
+        localStorage.removeItem('darkMode');
+        localStorage.removeItem('soundOn');
+        loadSettings();
+        alert('✓ Settings reset to defaults.');
+    }
+}
+
+function confirmCancel() {
+    if (confirm('Are you sure? This will cancel your subscription at the end of this billing cycle.\n\nYou will still have your current tokens until expiration.')) {
+        if (confirm('This is your last chance! Click OK to permanently cancel.')) {
+            localStorage.removeItem('subscription');
+            localStorage.removeItem('subscriptionStart');
+            alert('✓ Subscription cancelled.\n\nYou will revert to free tier (20 tokens/day) after this cycle ends.');
+            loadSettings();
+        }
+    }
+}
+
+function goBack() {
+    window.location.href = '../marks-games.html';
+}
+function goTo(page) {
+    window.location.href = page;
+}
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+});
+</script>
+
+</body>
+</html>
