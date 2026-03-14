@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeHub - View Project</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+    
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn.danger {
+      background: #f44336;
+      color: white;
+    }
+    
+    .btn.danger:hover {
+      background: #da190b;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .viewer {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      display: block;
+    }
+    
+    .error {
+      padding: 20px;
+      color: #d32f2f;
+      background: #ffebee;
+      border-left: 4px solid #d32f2f;
+      border-radius: 4px;
+      margin: 20px;
+    }
+    
+    .success {
+      padding: 20px;
+      color: #388e3c;
+      background: #e8f5e9;
+      border-left: 4px solid #388e3c;
+      border-radius: 4px;
+      margin: 20px;
+    }
+    
+    .info {
+      padding: 20px;
+      color: #1976d2;
+      background: #e3f2fd;
+      border-left: 4px solid #1976d2;
+      border-radius: 4px;
+      margin: 20px;
+    }
+    
+    .footer {
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚒️ ForgeHub - Project Viewer</h1>
+    <div class="header-buttons">
+      <button class="btn" onclick="downloadProject()">📥 Download</button>
+      <button class="btn" onclick="goBack()">← Back to Editor</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="content">
+      <div class="info">
+        <strong>ℹ️ Loading project...</strong> Please wait while we retrieve your saved project.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>💡 Tip: Right-click on the webpage to save it, or use the Download button to get the files.</p>
+  </div>
+
+  <script>
+    let projectData = null;
+    let projectId = null;
+
+    function getProjectIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id') || params.get('view');
+    }
+
+    function loadProject() {
+      projectId = getProjectIdFromUrl();
+      
+      if (!projectId) {
+        showError('❌ No project ID provided. Please use a valid project link.');
+        return;
+      }
+
+      try {
+        const projects = JSON.parse(localStorage.getItem('ForgeHubProjects') || '{}');
+        projectData = projects[projectId];
+
+        if (!projectData) {
+          showError('❌ Project not found. Make sure you\'re using the correct link and cookies are enabled on this device.');
+          return;
+        }
+
+        displayProject();
+      } catch (error) {
+        console.error('Error loading project:', error);
+        showError('❌ Error loading project: ' + error.message);
+      }
+    }
+
+    function displayProject() {
+      try {
+        const content = document.getElementById('content');
+        const html = projectData.code || '';
+        
+        if (!html) {
+          showError('❌ Project has no content.');
+          return;
+        }
+
+        // Create iframe to display the project
+        const viewer = document.createElement('iframe');
+        viewer.className = 'viewer';
+        viewer.srcdoc = html;
+        
+        content.innerHTML = '';
+        content.appendChild(viewer);
+
+        // Add project info
+        const info = document.createElement('div');
+        info.className = 'success';
+        info.innerHTML = `💾 <strong>Project: ${projectData.name}</strong> | Created: ${projectData.created}`;
+        content.insertBefore(info, viewer);
+      } catch (error) {
+        console.error('Error displaying project:', error);
+        showError('❌ Error displaying project: ' + error.message);
+      }
+    }
+
+    function showError(message) {
+      const content = document.getElementById('content');
+      content.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    function downloadProject() {
+      if (!projectData) {
+        alert('No project loaded');
+        return;
+      }
+
+      try {
+        const code = projectData.code;
+        const name = projectData.name || 'project';
+        
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(code));
+        element.setAttribute('download', `${name}.html`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        
+        alert('✅ Project downloaded as ' + name + '.html');
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('Error downloading project: ' + error.message);
+      }
+    }
+
+    function goBack() {
+      if (confirm('Go back to the editor? Make sure to save any changes you made here first.')) {
+        window.location.href = 'git-bot.html';
+      }
+    }
+
+    // Load project when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadProject);
+    } else {
+      loadProject();
+    }
+  </script>
+</body>
+</html>

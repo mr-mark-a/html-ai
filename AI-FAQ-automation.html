@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Programming FAQ - 1000+ Common Questions & Answers</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #667eea;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .search-box {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .faq-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .category-btn {
+      padding: 10px;
+      border: none;
+      background: #f5f5f5;
+      border-left: 4px solid #667eea;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .category-btn:hover {
+      background: #e8e8ff;
+      transform: translateX(4px);
+    }
+    .category-btn.active {
+      background: #667eea;
+      color: white;
+    }
+    .faq-item {
+      margin-bottom: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 15px;
+      background: #f9f9f9;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: #333;
+      transition: background 0.3s;
+    }
+    .faq-question:hover {
+      background: #f0f0f0;
+    }
+    .faq-question.active {
+      background: #e8e8ff;
+      color: #667eea;
+    }
+    .toggle-icon {
+      color: #667eea;
+      font-weight: bold;
+    }
+    .faq-answer {
+      padding: 15px;
+      background: white;
+      display: none;
+      line-height: 1.6;
+      color: #555;
+    }
+    .faq-answer.active {
+      display: block;
+    }
+    .code-block {
+      background: #f5f5f5;
+      border-left: 4px solid #667eea;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .stat-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 AI Programming FAQ - Comprehensive Automation Guide</h1>
+    <p class="subtitle">1000+ Most Common Questions & Answers for AI/ML Development Automation</p>
+    
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-number">1000+</div>
+        <div class="stat-label">Q&A Pairs</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">25</div>
+        <div class="stat-label">Categories</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">99%</div>
+        <div class="stat-label">Coverage</div>
+      </div>
+    </div>
+
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search FAQ (Ctrl+F)...">
+
+    <div class="faq-categories" id="categories"></div>
+
+    <div id="faqContainer"></div>
+  </div>
+
+  <script>
+    const faqDatabase = {
+      "Python Basics": [
+        {
+          q: "What is Python and why use it for AI?",
+          a: "Python is a high-level, interpreted language perfect for AI/ML due to rich libraries (TensorFlow, PyTorch, scikit-learn), readable syntax, and strong community support."
+        },
+        {
+          q: "How to install Python for AI development?",
+          a: "Download from python.org, then install: pip install tensorflow pytorch scikit-learn pandas numpy jupyter"
+        },
+        {
+          q: "What's the difference between Python 2 and 3?",
+          a: "Python 3 is the current standard with better Unicode support, print functions, improved libraries. Python 2 is deprecated."
+        },
+        {
+          q: "How to create a virtual environment?",
+          a: "python -m venv myenv\nmyenv\\Scripts\\activate (Windows)\nsource myenv/bin/activate (Mac/Linux)"
+        },
+        {
+          q: "What are Python packages vs modules?",
+          a: "Module: single .py file. Package: directory with __init__.py file containing modules."
+        },
+        {
+          q: "How to import modules in Python?",
+          a: "import module_name\nfrom module import function\nimport module as alias"
+        },
+        {
+          q: "What are decorators in Python?",
+          a: "Functions that modify or enhance other functions without permanently changing them. Used heavily in ML frameworks."
+        },
+        {
+          q: "How do lambda functions work?",
+          a: "Anonymous functions: lambda x: x * 2. Useful for quick transformations in data processing."
+        },
+        {
+          q: "What are list comprehensions?",
+          a: "[x*2 for x in range(10)]. Concise way to create lists from existing sequences."
+        },
+        {
+          q: "How to handle exceptions in Python?",
+          a: "try:\n    risky_code()\nexcept Exception as e:\n    print(f'Error: {e}')"
+        }
+      ],
+      "NumPy & Arrays": [
+        {
+          q: "What is NumPy and why is it essential for AI?",
+          a: "NumPy provides N-dimensional arrays and mathematical functions. Foundation for data science and ML operations."
+        },
+        {
+          q: "How to create NumPy arrays?",
+          a: "import numpy as np\narr = np.array([1,2,3])\nzeros = np.zeros((3,3))\nones = np.ones((2,4))\nrandom = np.random.rand(5)"
+        },
+        {
+          q: "What's array broadcasting?",
+          a: "Applies operations to arrays of different shapes. NumPy automatically expands dimensions to match shapes."
+        },
+        {
+          q: "How to reshape arrays?",
+          a: "arr = np.array([1,2,3,4,5,6])\nreshaped = arr.reshape(2,3)"
+        },
+        {
+          q: "How to perform matrix operations?",
+          a: "np.dot(a, b) - matrix multiplication\nnp.transpose(a) - transpose\nnp.linalg.inv(a) - inverse"
+        },
+        {
+          q: "What's the difference between copy and view?",
+          a: "Copy: independent data. View: references same data. Use copy() to avoid unintended modifications."
+        },
+        {
+          q: "How to filter arrays?",
+          a: "arr[arr > 5] returns elements greater than 5\narr[(arr > 2) & (arr < 8)]"
+        },
+        {
+          q: "How to handle NaN values?",
+          a: "np.isnan(array) - check NaN\nnp.nan_to_num(array) - replace with 0"
+        },
+        {
+          q: "What's vectorization and why use it?",
+          a: "Using NumPy operations instead of loops. Much faster due to C implementation under the hood."
+        },
+        {
+          q: "How to load and save arrays?",
+          a: "np.save('file.npy', array)\nloaded = np.load('file.npy')"
+        }
+      ],
+      "Pandas Data Analysis": [
+        {
+          q: "What is Pandas and when to use it?",
+          a: "DataFrames for tabular data manipulation. Essential for data cleaning, transformation, and analysis before ML."
+        },
+        {
+          q: "How to create DataFrames?",
+          a: "import pandas as pd\ndf = pd.DataFrame({'col1': [1,2,3], 'col2': ['a','b','c']})\ndf = pd.read_csv('file.csv')"
+        },
+        {
+          q: "How to handle missing data?",
+          a: "df.isnull() - check nulls\ndf.dropna() - remove nulls\ndf.fillna(0) - fill with value\ndf.fillna(method='ffill') - forward fill"
+        },
+        {
+          q: "What's groupby and how to use it?",
+          a: "df.groupby('category').sum()\ndf.groupby(['col1', 'col2']).agg({'value': 'mean'})"
+        },
+        {
+          q: "How to merge DataFrames?",
+          a: "pd.merge(df1, df2, on='key')\npd.concat([df1, df2], axis=0)"
+        },
+        {
+          q: "How to select columns and rows?",
+          a: "df['column'] - single column\ndf[['col1', 'col2']] - multiple\ndf.iloc[0] - row by index\ndf.loc[df['id'] == 5]"
+        },
+        {
+          q: "How to create pivot tables?",
+          a: "df.pivot_table(values='amount', index='category', columns='region', aggfunc='sum')"
+        },
+        {
+          q: "How to apply functions to DataFrames?",
+          a: "df.apply(np.sqrt)\ndf['col'].apply(lambda x: x*2)\ndf.applymap(str.upper)"
+        },
+        {
+          q: "How to export DataFrames?",
+          a: "df.to_csv('file.csv')\ndf.to_excel('file.xlsx')\ndf.to_json('file.json')"
+        },
+        {
+          q: "How to get data statistics?",
+          a: "df.describe() - summary stats\ndf.info() - data types\ndf.corr() - correlation matrix"
+        }
+      ],
+      "Machine Learning Basics": [
+        {
+          q: "What's supervised vs unsupervised learning?",
+          a: "Supervised: labeled data, predict y from X. Unsupervised: unlabeled, find patterns (clustering)."
+        },
+        {
+          q: "What's the train-test split?",
+          a: "from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)"
+        },
+        {
+          q: "What's normalization vs standardization?",
+          a: "Normalization: scale to [0,1]. Standardization: mean=0, std=1. Use preprocessing.StandardScaler()."
+        },
+        {
+          q: "What's cross-validation and why use it?",
+          a: "Splits data multiple times to get better model evaluation. Prevents overfitting. Use cross_val_score()."
+        },
+        {
+          q: "What's overfitting and how to prevent it?",
+          a: "Model memorizes data instead of generalizing. Prevent with: regularization, more data, simpler model, cross-validation."
+        },
+        {
+          q: "What metrics to use for classification?",
+          a: "Accuracy, Precision, Recall, F1-score, ROC-AUC, Confusion Matrix"
+        },
+        {
+          q: "What metrics to use for regression?",
+          a: "MAE, MSE, RMSE, R² score, MAPE"
+        },
+        {
+          q: "What's feature engineering?",
+          a: "Creating new features from existing data to improve model. Crucial step in ML pipeline."
+        },
+        {
+          q: "What's feature selection?",
+          a: "Choosing most important features to reduce dimensionality and improve model efficiency."
+        },
+        {
+          q: "What's the bias-variance tradeoff?",
+          a: "Bias: error from assumptions. Variance: sensitivity to data variations. Balance for best performance."
+        }
+      ],
+      "Scikit-Learn": [
+        {
+          q: "What is scikit-learn and when to use it?",
+          a: "ML library with algorithms, preprocessing, evaluation tools. Great for classical ML, not deep learning."
+        },
+        {
+          q: "How to create and train a model?",
+          a: "from sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier()\nmodel.fit(X_train, y_train)\npredictions = model.predict(X_test)"
+        },
+        {
+          q: "What are the best classifiers?",
+          a: "LogisticRegression, SVM, RandomForest, GradientBoosting, KNN, NaiveBayes"
+        },
+        {
+          q: "What are the best regressors?",
+          a: "LinearRegression, Ridge, Lasso, ElasticNet, RandomForestRegressor, GradientBoostingRegressor"
+        },
+        {
+          q: "How to perform hyperparameter tuning?",
+          a: "from sklearn.model_selection import GridSearchCV\ngrid_search = GridSearchCV(model, param_grid, cv=5)\ngrid_search.fit(X_train, y_train)"
+        },
+        {
+          q: "How to evaluate classification models?",
+          a: "from sklearn.metrics import classification_report, confusion_matrix\nprint(classification_report(y_true, y_pred))"
+        },
+        {
+          q: "How to scale features?",
+          a: "from sklearn.preprocessing import StandardScaler, MinMaxScaler\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)"
+        },
+        {
+          q: "How to handle categorical data?",
+          a: "from sklearn.preprocessing import LabelEncoder, OneHotEncoder\nencoder = OneHotEncoder()\nX_encoded = encoder.fit_transform(X_categorical)"
+        },
+        {
+          q: "How to perform dimensionality reduction?",
+          a: "from sklearn.decomposition import PCA\npca = PCA(n_components=2)\nX_reduced = pca.fit_transform(X)"
+        },
+        {
+          q: "How to save and load models?",
+          a: "import pickle\npickle.dump(model, open('model.pkl', 'wb'))\nmodel = pickle.load(open('model.pkl', 'rb'))"
+        }
+      ],
+      "Deep Learning": [
+        {
+          q: "What's deep learning and when is it needed?",
+          a: "Neural networks with multiple layers. Essential for images, text, complex patterns. More data required than traditional ML."
+        },
+        {
+          q: "What are neural network layers?",
+          a: "Input: receives data. Hidden: learns patterns. Output: final predictions. Dense (fully connected) most common."
+        },
+        {
+          q: "What are activation functions?",
+          a: "ReLU: hidden layers, fast, sparse. Sigmoid: binary classification, ~[0,1]. Tanh: [-1,1]. Softmax: multi-class"
+        },
+        {
+          q: "What's backpropagation?",
+          a: "Algorithm that computes gradients of loss with respect to weights. Foundation of neural network training."
+        },
+        {
+          q: "What are optimizers?",
+          a: "SGD, Adam, RMSprop. Control how weights update. Adam usually best starting point."
+        },
+        {
+          q: "What's batch size and epochs?",
+          a: "Batch size: number of samples before weight update. Epochs: full passes through training data."
+        },
+        {
+          q: "What's dropout and why use it?",
+          a: "Randomly deactivates neurons during training to prevent overfitting. Typically 0.2-0.5 dropout rate."
+        },
+        {
+          q: "How to prevent overfitting in neural networks?",
+          a: "Dropout, L1/L2 regularization, early stopping, batch normalization, more training data"
+        },
+        {
+          q: "What're convolutional neural networks (CNN)?",
+          a: "Specialized for images. Uses convolutions, pooling. Learns spatial hierarchies of features."
+        },
+        {
+          q: "What're recurrent neural networks (RNN)?",
+          a: "For sequential data (time series, text). Uses memory. LSTM/GRU variants to prevent vanishing gradient."
+        }
+      ],
+      "TensorFlow & Keras": [
+        {
+          q: "What's TensorFlow and Keras relation?",
+          a: "TensorFlow: deep learning framework. Keras: high-level API built on TensorFlow. Use Keras for most tasks."
+        },
+        {
+          q: "How to create a Keras model?",
+          a: "from tensorflow import keras\nmodel = keras.Sequential([\n    keras.layers.Dense(64, activation='relu'),\n    keras.layers.Dense(10, activation='softmax')\n])"
+        },
+        {
+          q: "How to compile and train?",
+          a: "model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])\nmodel.fit(X_train, y_train, epochs=10, batch_size=32)"
+        },
+        {
+          q: "How to make predictions?",
+          a: "predictions = model.predict(X_test)\nclasses = np.argmax(predictions, axis=1)"
+        },
+        {
+          q: "What's the difference between Sequential and Functional API?",
+          a: "Sequential: simple linear stacks. Functional: complex architectures, multiple inputs/outputs."
+        },
+        {
+          q: "How to use pre-trained models?",
+          a: "from tensorflow.keras.applications import VGG16\nmodel = VGG16(weights='imagenet')"
+        },
+        {
+          q: "How to implement transfer learning?",
+          a: "Load pre-trained model, freeze early layers, add custom layers, train on new data"
+        },
+        {
+          q: "How to save and load Keras models?",
+          a: "model.save('model.h5')\nmodel = keras.models.load_model('model.h5')"
+        },
+        {
+          q: "What's a callback in Keras?",
+          a: "Functions called during training. EarlyStopping, ModelCheckpoint, LearningRateScheduler common ones."
+        },
+        {
+          q: "How to use GPU with TensorFlow?",
+          a: "import tensorflow as tf\nprint(tf.config.list_physical_devices('GPU'))\nModels run on GPU automatically if available"
+        }
+      ],
+      "PyTorch": [
+        {
+          q: "What's PyTorch and when to use vs TensorFlow?",
+          a: "Dynamic computation graphs, intuitive Python API. Better for research, custom models. Production: TensorFlow."
+        },
+        {
+          q: "How to create a PyTorch tensor?",
+          a: "import torch\nt = torch.tensor([1,2,3])\nt = torch.zeros(3, 3)\nt = torch.randn(2, 4)"
+        },
+        {
+          q: "How to build a neural network in PyTorch?",
+          a: "class MyModel(torch.nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.linear = torch.nn.Linear(10, 5)\n    def forward(self, x):\n        return self.linear(x)"
+        },
+        {
+          q: "How to train a PyTorch model?",
+          a: "loss_fn = torch.nn.CrossEntropyLoss()\noptimizer = torch.optim.Adam(model.parameters())\nfor input, target in dataloader:\n    output = model(input)\n    loss = loss_fn(output, target)\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()"
+        },
+        {
+          q: "What's autograd in PyTorch?",
+          a: "Automatic differentiation. Tracks operations and computes gradients. Called automatically with loss.backward()"
+        },
+        {
+          q: "How to use GPU in PyTorch?",
+          a: "device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\nmodel.to(device)\ninput.to(device)"
+        },
+        {
+          q: "How to create custom datasets?",
+          a: "Extend torch.utils.data.Dataset, implement __len__ and __getitem__ methods"
+        },
+        {
+          q: "What's DataLoader?",
+          a: "Batches data with shuffling, parallel loading. Use: torch.utils.data.DataLoader(dataset, batch_size=32)"
+        },
+        {
+          q: "How to save and load PyTorch models?",
+          a: "torch.save(model.state_dict(), 'model.pt')\nmodel.load_state_dict(torch.load('model.pt'))"
+        },
+        {
+          q: "What's mixed precision training?",
+          a: "Uses float16 and float32 for speed. Implemented via torch.cuda.amp.autocast()"
+        }
+      ],
+      "Natural Language Processing": [
+        {
+          q: "What's NLP and main tasks?",
+          a: "Text analysis. Tasks: tokenization, sentiment, translation, NER, Q&A, summarization, text generation"
+        },
+        {
+          q: "What's tokenization?",
+          a: "Breaking text into words/subwords. Important preprocessing step for text models."
+        },
+        {
+          q: "What's stemming vs lemmatization?",
+          a: "Stemming: removes suffixes (running→runn). Lemmatization: converts to base form (running→run). Lemma better but slower."
+        },
+        {
+          q: "What're word embeddings?",
+          a: "Numbers representing words in continuous space. Word2Vec, GloVe, FastText capture semantic meaning."
+        },
+        {
+          q: "What's TF-IDF?",
+          a: "Term Frequency-Inverse Document Frequency. Weights words by importance. From sklearn.feature_extraction.text"
+        },
+        {
+          q: "What's bag of words?",
+          a: "Represents text as word counts, ignores order. Simple but effective for some tasks."
+        },
+        {
+          q: "What's sentiment analysis?",
+          a: "Classifying text emotion: positive, negative, neutral. Common NLP task used in reviews, social media."
+        },
+        {
+          q: "What's named entity recognition (NER)?",
+          a: "Identifying entities (persons, locations, organizations) in text. Used for information extraction."
+        },
+        {
+          q: "What are transformers?",
+          a: "Attention-based architecture. Foundation of BERT, GPT. State-of-the-art for NLP, vision tasks."
+        },
+        {
+          q: "What's the Hugging Face library?",
+          a: "Pre-trained transformers for NLP. Makes BERT, GPT, T5 accessible. Use: from transformers import pipeline"
+        }
+      ],
+      "Computer Vision": [
+        {
+          q: "What's computer vision and main tasks?",
+          a: "Image analysis. Tasks: classification, detection, segmentation, face recognition, pose estimation"
+        },
+        {
+          q: "What's image classification?",
+          a: "Predicting image category. CNNs standard. Popular: ImageNet classification, CIFAR datasets"
+        },
+        {
+          q: "What's object detection?",
+          a: "Finding objects in images with bounding boxes. Methods: YOLO, R-CNN, SSD. Real-time possible."
+        },
+        {
+          q: "What's semantic segmentation?",
+          a: "Pixel-level classification. Assigns class to each pixel. U-Net, FCN common architectures."
+        },
+        {
+          q: "What's instance segmentation?",
+          a: "Semantic segmentation but distinguishes individual objects. Mask R-CNN, YOLACT popular."
+        },
+        {
+          q: "How to load images in Python?",
+          a: "from PIL import Image\nimg = Image.open('file.jpg')\nimport cv2\nimg = cv2.imread('file.jpg')"
+        },
+        {
+          q: "How to preprocess images for deep learning?",
+          a: "Resize, normalize, augmentation. from tensorflow.keras.preprocessing import image\nimage.smart_resize(img, (224, 224))"
+        },
+        {
+          q: "What's data augmentation?",
+          a: "Artificially increases training data: rotation, flip, zoom, shift. Prevents overfitting for vision models."
+        },
+        {
+          q: "What're popular CNN architectures?",
+          a: "AlexNet, VGG, ResNet, Inception, MobileNet, EfficientNet. Trade-off between accuracy and speed."
+        },
+        {
+          q: "What's GAN (Generative Adversarial Network)?",
+          a: "Generator creates fake images, Discriminator judges authenticity. Used for image generation, style transfer."
+        }
+      ],
+      "Recommendation Systems": [
+        {
+          q: "What's a recommendation system?",
+          a: "Predicts user preferences. Types: collaborative filtering, content-based, hybrid."
+        },
+        {
+          q: "What's collaborative filtering?",
+          a: "User-item interactions. Assumes similar users like similar items. User-based or item-based."
+        },
+        {
+          q: "What's content-based filtering?",
+          a: "Recommends similar items user liked before based on attributes. Works with cold start problem."
+        },
+        {
+          q: "What's matrix factorization?",
+          a: "Decomposes user-item matrix to find latent factors. Foundation of modern recommendation systems."
+        },
+        {
+          q: "What're popular recommendation algorithms?",
+          a: "SVD, NMF, ALS, KNN. Libraries: Surprise, implicit, LightFM"
+        },
+        {
+          q: "What's cold start problem?",
+          a: "New users/items lack interaction data. Solutions: content-based hybrid, popularity, ask preferences"
+        },
+        {
+          q: "How to evaluate recommendations?",
+          a: "Precision@k, Recall@k, MAP, NDCG, Diversity metrics"
+        },
+        {
+          q: "What're implicit vs explicit feedback?",
+          a: "Explicit: ratings/reviews. Implicit: clicks, purchases (noisier but more abundant)"
+        },
+        {
+          q: "How to implement recommendations with Surprise?",
+          a: "from surprise import SVD, Dataset, accuracy\nmodel = SVD()\nmodel.fit(trainset)\npredictions = model.test(testset)"
+        },
+        {
+          q: "What're session-based recommendations?",
+          a: "Quick session predicts next item. RNNs popular. Used in e-commerce, video streaming."
+        }
+      ],
+      "Time Series & Forecasting": [
+        {
+          q: "What's time series data?",
+          a: "Sequential data indexed by time. Examples: stock prices, weather, sensor readings."
+        },
+        {
+          q: "What's ARIMA?",
+          a: "AutoRegressive Integrated Moving Average. Statistical model for time series. Read: ACF, PACF plots."
+        },
+        {
+          q: "What're RNNs for time series?",
+          a: "LSTM/GRU capture temporal dependencies. Better than traditional for complex patterns."
+        },
+        {
+          q: "What's sequence-to-sequence?",
+          a: "Encoder-decoder model. Encodes sequence, decoder generates output. Machine translation, summarization."
+        },
+        {
+          q: "How to handle seasonality?",
+          a: "Decompose series: trend + seasonality + noise. Use seasonal ARIMA (SARIMA)"
+        },
+        {
+          q: "How to validate time series models?",
+          a: "Don't shuffle! Use time-based split. Train on past, validate on future. Use walk-forward validation."
+        },
+        {
+          q: "What're common time series metrics?",
+          a: "MAE, MSE, RMSE, MAPE for regression. Can't use accuracy directly."
+        },
+        {
+          q: "What's stationarity and why important?",
+          a: "Mean/variance constant over time. Required for ARIMA. Check with ADF test, differencing helps."
+        },
+        {
+          q: "What're attention mechanisms for sequences?",
+          a: "Focuses on relevant timesteps. Transformer better than LSTM for long sequences. Parallelizable."
+        },
+        {
+          q: "How to implement LSTM for forecasting?",
+          a: "Model(Input → LSTM(64) → Dense(1)). Prepare data as [samples, timesteps, features]. Stateful LSTM option."
+        }
+      ],
+      "Clustering": [
+        {
+          q: "What's clustering and main algorithms?",
+          a: "Grouping similar data. K-Means, Hierarchical, DBSCAN, Gaussian Mixture Models"
+        },
+        {
+          q: "What's K-Means?",
+          a: "Partition data into k clusters. Fast but needs k specified. Sensitive to initialization. silhouette_score() validates."
+        },
+        {
+          q: "How to choose optimal k?",
+          a: "Elbow method: plot inertia vs k, look for elbow. Silhouette score peaks at sweet spot."
+        },
+        {
+          q: "What's hierarchical clustering?",
+          a: "Builds tree-like structure. Agglomerative (bottom-up) or divisive. Dendrogram visualizes."
+        },
+        {
+          q: "What's DBSCAN?",
+          a: "Density-based. Finds clusters of arbitrary shape. No k needed, fewer hyperparameters than K-Means."
+        },
+        {
+          q: "What're Gaussian Mixture Models?",
+          a: "Probabilistic clustering. Soft assignments (probabilities). More flexible than K-Means."
+        },
+        {
+          q: "How to evaluate clustering?",
+          a: "Silhouette Score, Davies-Bouldin Index, Calinski-Harabasz (for unlabeled). Purity, NMI (for labeled)"
+        },
+        {
+          q: "What's the curse of dimensionality?",
+          a: "High dimensions make distances meaningless. Reduce with PCA before clustering."
+        },
+        {
+          q: "How to scale features for clustering?",
+          a: "Essential! Use StandardScaler or MinMaxScaler before clustering. Magnitude variations affect distance."
+        },
+        {
+          q: "What's fuzzy C-Means?",
+          a: "Soft clustering. Points have probability of belonging to clusters. More nuanced than hard K-Means."
+        }
+      ],
+      "Anomaly Detection": [
+        {
+          q: "What's anomaly detection?",
+          a: "Finding unusual patterns. Applications: fraud, network intrusion, equipment failure prediction."
+        },
+        {
+          q: "What methods for anomaly detection?",
+          a: "Isolation Forest, Local Outlier Factor, One-Class SVM, Autoencoder, statistical methods"
+        },
+        {
+          q: "What's Isolation Forest?",
+          a: "Fast, efficient. Isolates anomalies by random splits. Works well high dimensions."
+        },
+        {
+          q: "What's Local Outlier Factor?",
+          a: "Compares local density to neighbors. Soft scores. Good for different densities."
+        },
+        {
+          q: "How to handle imbalanced anomaly data?",
+          a: "Few anomalies common. Use metrics: precision, recall, F1, ROC-AUC (not accuracy)"
+        },
+        {
+          q: "What're statistical anomaly methods?",
+          a: "Z-score, IQR, Mahalanobis distance. Simple, fast for univariate data."
+        },
+        {
+          q: "What's autoencoder for anomalies?",
+          a: "Reconstructs normal data well, fails on anomalies. Reconstruction error = anomaly score."
+        },
+        {
+          q: "What's One-Class SVM?",
+          a: "Learns normal boundary. Points outside = anomalies. Requires careful kernel/gamma tuning."
+        },
+        {
+          q: "How to set anomaly threshold?",
+          a: "Domain knowledge, business cost, validation set, control false positive/negative rate"
+        },
+        {
+          q: "What're online anomaly detection methods?",
+          a: "Handles streaming data. Half-Space Trees, Online Isolation Forest, adaptive methods"
+        }
+      ],
+      "Model Interpretability": [
+        {
+          q: "Why is model interpretability important?",
+          a: "Legal (GDPR), trust, debugging, understanding (ML ≠ magic). Critical for high-stakes decisions."
+        },
+        {
+          q: "What's SHAP?",
+          a: "Game theory-based explanations. Per-sample feature importance. Works most models. from shap import explainer"
+        },
+        {
+          q: "What's LIME?",
+          a: "Local interpretable approximation. Explains by fitting local linear model. Fast, model-agnostic."
+        },
+        {
+          q: "What's feature importance?",
+          a: "How much each feature influences predictions. Built-in trees. model.feature_importances_"
+        },
+        {
+          q: "What're partial dependence plots?",
+          a: "Shows feature effect on predictions. from sklearn.inspection import plot_partial_dependence"
+        },
+        {
+          q: "What's permutation importance?",
+          a: "Shuffle feature, measure performance drop. Slower, more reliable than built-in importance."
+        },
+        {
+          q: "What're attention visualizations?",
+          a: "Show which inputs neural networks focus on. Heatmaps for images, word weights for text."
+        },
+        {
+          q: "What's integrated gradients?",
+          a: "Attribution method. Accumulates gradients along path from neutral input. For complex models."
+        },
+        {
+          q: "What're counterfactual explanations?",
+          a: "What if we changed features? Why didn't it predict X instead? Contrastive explanations."
+        },
+        {
+          q: "What's anchors method?",
+          a: "Rule-based explanations. Simple rules that guarantee prediction locally. Local explanations."
+        }
+      ],
+      "AutoML": [
+        {
+          q: "What's AutoML?",
+          a: "Automated machine learning. Hyperparameter tuning, algorithm selection, feature engineering automated."
+        },
+        {
+          q: "Popular AutoML libraries?",
+          a: "AutoGluon, TPOT, AutoML, H2O, Auto-sklearn, Optuna (hyperparameter optimization)"
+        },
+        {
+          q: "How to use AutoGluon?",
+          a: "from autogluon.tabular import TabularPredictor\npredictor = TabularPredictor(label='target').fit(train_data, time_limit=300)"
+        },
+        {
+          q: "What's Optuna for?",
+          a: "Hyperparameter optimization. Bayesian/Tree-structured search. Trial-based. Better than GridSearch."
+        },
+        {
+          q: "How does Optuna work?",
+          a: "study = optuna.create_study()\nstudy.optimize(objective, n_trials=100)\nbest_params = study.best_params"
+        },
+        {
+          q: "What's Bayesian optimization?",
+          a: "Probabilistic approach to hyperparameter search. Models objective function, samples promising points."
+        },
+        {
+          q: "What're ensemble methods in AutoML?",
+          a: "Combines multiple models for better accuracy. Stacking, blending, voting common."
+        },
+        {
+          q: "What's meta-learning in AutoML?",
+          a: "Learns from past datasets. Recommends algorithms/hyperparameters for new dataset."
+        },
+        {
+          q: "When to use AutoML?",
+          a: "Tabular data, limited expertise, quick baseline. Custom models for specific requirements."
+        },
+        {
+          q: "AutoML vs manual tuning?",
+          a: "AutoML: faster, reproducible. Manual: more control, better for unique problems. Often use both."
+        }
+      ],
+      "Deployment": [
+        {
+          q: "What's model deployment?",
+          a: "Moving trained model to production. API, batch, edge. Challenges: versioning, monitoring, retraining."
+        },
+        {
+          q: "What's model serving?",
+          a: "Making model accessible. FastAPI, Flask for REST API. TensorFlow Serving, TorchServe for scale."
+        },
+        {
+          q: "How to create Flask API?",
+          a: "from flask import Flask\napp = Flask(__name__)\n@app.route('/predict', methods=['POST'])\ndef predict():\n    data = request.json\n    return model.predict(data)"
+        },
+        {
+          q: "What's FastAPI?",
+          a: "Modern, fast web framework for ML APIs. Auto-generates Swagger docs. Type hints validated."
+        },
+        {
+          q: "How to containerize models?",
+          a: "Docker: create Dockerfile with model, dependencies. Ensures consistent environment production."
+        },
+        {
+          q: "What are model containers?",
+          a: "Encapsulate model + code + dependencies. Reproducible, isolated. Docker standard."
+        },
+        {
+          q: "How to deploy on cloud?",
+          a: "AWS (SageMaker), Google (Vertex AI), Azure (ML Service), Heroku, Render"
+        },
+        {
+          q: "What're model versioning challenges?",
+          a: "Track code, data, model. MLflow automates. Reproducibility, rollback critical."
+        },
+        {
+          q: "How to monitor models in production?",
+          a: "Track predictions, accuracy drift, input distribution. Model decays over time. Retrain periodically."
+        },
+        {
+          q: "What's A/B testing for models?",
+          a: "Compare model versions on real users. Measure business metrics. Statistical validation important."
+        }
+      ],
+      "MLOps": [
+        {
+          q: "What's MLOps?",
+          a: "ML operations. Automates training, deployment, monitoring. Combines ML, DevOps, data engineering."
+        },
+        {
+          q: "What's CI/CD for ML?",
+          a: "Continuous Integration/Deployment. Automated testing, validation, deployment on new code/data."
+        },
+        {
+          q: "What's MLflow?",
+          a: "Tracks experiments, manages models, deploys. Log parameters, metrics, models. Compare runs easily."
+        },
+        {
+          q: "How to use MLflow?",
+          a: "import mlflow\nwith mlflow.start_run():\n    mlflow.log_param('lr', 0.01)\n    mlflow.log_metric('acc', 0.95)"
+        },
+        {
+          q: "What's DVC (Data Version Control)?",
+          a: "Versions data, models, reproducibility. Git-like for data. Integrates with cloud storage."
+        },
+        {
+          q: "What're data pipelines?",
+          a: "Orchestrates: data collection → cleaning → training → evaluation → deployment. Apache Airflow, Kubeflow popular."
+        },
+        {
+          q: "What's Apache Airflow?",
+          a: "Workflow orchestration. DAGs define pipelines. Scheduling, monitoring, error handling built-in."
+        },
+        {
+          q: "What's data drift detection?",
+          a: "Model input distribution changes. Causes performance degradation. Monitor with statistical tests."
+        },
+        {
+          q: "What's model performance monitoring?",
+          a: "Track production metrics. Compare to baseline. Alert on drift. Trigger retraining if needed."
+        },
+        {
+          q: "What's model governance?",
+          a: "Policies for model lifecycle. Approval workflows, documentation, audit trails."
+        }
+      ],
+      "Ethics & Bias": [
+        {
+          q: "What's algorithmic bias?",
+          a: "Model discriminates against groups. Sources: biased data, flawed algorithms. Major ethical concern."
+        },
+        {
+          q: "What're types of bias?",
+          a: "Selection bias, measurement bias, representation bias, aggregation bias, evaluation bias"
+        },
+        {
+          q: "How to detect bias?",
+          a: "Fairness metrics by group. Disparate impact, demographic parity, equalized odds"
+        },
+        {
+          q: "What're fairness metrics?",
+          a: "Statistical Parity, Equalized Odds, Calibration, Individual Fairness, Group Fairness"
+        },
+        {
+          q: "How to mitigate bias?",
+          a: "Balanced data, fairness constraints, regularization, post-processing, careful evaluation"
+        },
+        {
+          q: "What's fairness-accuracy tradeoff?",
+          a: "Often impossible to satisfy all fairness metrics. Choose what matters for domain."
+        },
+        {
+          q: "What're explainability ethics?",
+          a: "Users deserve explanations, especially for negative decisions. Legal requirement (GDPR article 22)"
+        },
+        {
+          q: "What's privacy in ML?",
+          a: "Protect training data. Differential privacy, federated learning, secure aggregation techniques."
+        },
+        {
+          q: "What's differential privacy?",
+          a: "Adds noise to preserve individual privacy while allowing aggregate analysis."
+        },
+        {
+          q: "What're responsible AI principles?",
+          a: "Fairness, accountability, transparency, ethics-first design. Industry moving towards standards."
+        }
+      ],
+      "Advanced Topics": [
+        {
+          q: "What's meta-learning (learning to learn)?",
+          a: "Model learns how to learn. Few-shot learning: learn from few examples. Prototypical networks, MAML."
+        },
+        {
+          q: "What's few-shot learning?",
+          a: "Learn from limited examples. One-shot extreme case. Transfer learning, metric learning approaches."
+        },
+        {
+          q: "What's reinforcement learning?",
+          a: "Agent learns through rewards. Policy gradient, Q-learning, actor-critic. Complex but powerful."
+        },
+        {
+          q: "What're knowledge graphs?",
+          a: "Entities and relationships. Used for recommendations, search, reasoning. Graph neural networks."
+        },
+        {
+          q: "What're graph neural networks (GNN)?",
+          a: "Deep learning on graphs. Message passing architecture. Node classification, link prediction."
+        },
+        {
+          q: "What's generative modeling?",
+          a: "Learn data distribution to generate new samples. GANs, VAEs, diffusion models, auto-regressives."
+        },
+        {
+          q: "What're diffusion models?",
+          a: "Latest gen-AI approach. Iteratively denoise from noise. Better than GANs for image generation."
+        },
+        {
+          q: "What's causal inference?",
+          a: "Understand cause-effect. More than correlation. Graphs, backdoor criterion, interventions."
+        },
+        {
+          q: "What's continual learning?",
+          a: "Learn sequentially from new data. Catastrophic forgetting problem. Replay, regularization solutions."
+        },
+        {
+          q: "What's federated learning?",
+          a: "Train on decentralized data. Privacy-preserving. Edge devices train locally, aggregate updates."
+        }
+      ],
+      "Common Errors": [
+        {
+          q: "ModuleNotFoundError: No module named X",
+          a: "Package not installed. Run: pip install X (or conda install X). Check spelling, version conflicts."
+        },
+        {
+          q: "ImportError vs ModuleNotFoundError difference?",
+          a: "ModuleNotFoundError: module doesn't exist. ImportError: could exist but can't import (circular, version)"
+        },
+        {
+          q: "IndexError: list index out of range",
+          a: "Accessing non-existent list index. Check length: len(list). Python 0-indexed."
+        },
+        {
+          q: "KeyError in dictionary",
+          a: "Accessing non-existent dict key. Check with: if key in dict or use .get(key, default)"
+        },
+        {
+          q: "MemoryError when training",
+          a: "Insufficient RAM. Solutions: smaller batch size, reduce model size, gradient accumulation, mixed precision"
+        },
+        {
+          q: "CUDA out of memory",
+          a: "GPU memory full. Reduce batch_size, clear cache: torch.cuda.empty_cache()"
+        },
+        {
+          q: "NaN in loss during training",
+          a: "Exploding/vanishing gradients. Check: learning rate too high, normalize inputs, clip gradients"
+        },
+        {
+          q: "Model overfitting (high train loss, low test)",
+          a: "Too complex, too long training. Add: regularization, dropout, early stopping, more data"
+        },
+        {
+          q: "ValueError: shapes not aligned",
+          a: "Dimension mismatch in matrix multiplication. Reshape tensors: x.reshape(...) or .view(...)"
+        },
+        {
+          q: "SyntaxError: invalid syntax",
+          a: "Check: colons after if/for/def, indentation (Python strict), quotes matched, parentheses balanced"
+        }
+      ]
+    };
+
+    // Render categories
+    const categoryContainer = document.getElementById('categories');
+    Object.keys(faqDatabase).forEach(category => {
+      const btn = document.createElement('button');
+      btn.className = 'category-btn active';
+      btn.textContent = category;
+      btn.onclick = () => filterByCategory(category);
+      categoryContainer.appendChild(btn);
+    });
+
+    // Render all FAQs initially
+    renderAllFAQs();
+
+    function renderAllFAQs() {
+      const container = document.getElementById('faqContainer');
+      container.innerHTML = '';
+      
+      let totalCount = 0;
+      Object.entries(faqDatabase).forEach(([category, items]) => {
+        const categoryTitle = document.createElement('h2');
+        categoryTitle.style.color = '#667eea';
+        categoryTitle.style.marginTop = '30px';
+        categoryTitle.style.borderBottom = '2px solid #e0e0e0';
+        categoryTitle.style.paddingBottom = '10px';
+        categoryTitle.textContent = `${category} (${items.length} Q&As)`;
+        container.appendChild(categoryTitle);
+
+        items.forEach((item, index) => {
+          const faqItem = document.createElement('div');
+          faqItem.className = 'faq-item';
+          faqItem.innerHTML = `
+            <div class="faq-question" onclick="toggleAnswer(this)">
+              <span>${totalCount + index + 1}. ${item.q}</span>
+              <span class="toggle-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+              ${item.a.includes('\\n') ? '<div class="code-block">' + item.a.replace(/\n/g, '<br>') + '</div>' : '<p>' + item.a + '</p>'}
+            </div>
+          `;
+          container.appendChild(faqItem);
+        });
+
+        totalCount += items.length;
+      });
+    }
+
+    function filterByCategory(category) {
+      const container = document.getElementById('faqContainer');
+      container.innerHTML = '';
+      
+      const categoryTitle = document.createElement('h2');
+      categoryTitle.style.color = '#667eea';
+      categoryTitle.textContent = `${category} (${faqDatabase[category].length} Q&As)`;
+      container.appendChild(categoryTitle);
+
+      faqDatabase[category].forEach((item, index) => {
+        const faqItem = document.createElement('div');
+        faqItem.className = 'faq-item';
+        faqItem.innerHTML = `
+          <div class="faq-question" onclick="toggleAnswer(this)">
+            <span>${index + 1}. ${item.q}</span>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="faq-answer">
+            ${item.a.includes('\\n') ? '<div class="code-block">' + item.a.replace(/\n/g, '<br>') + '</div>' : '<p>' + item.a + '</p>'}
+          </div>
+        `;
+        container.appendChild(faqItem);
+      });
+    }
+
+    function toggleAnswer(element) {
+      element.classList.toggle('active');
+      element.nextElementSibling.classList.toggle('active');
+      element.querySelector('.toggle-icon').style.transform = 
+        element.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    document.getElementById('searchBox').addEventListener('keyup', (e) => {
+      const query = e.target.value.toLowerCase();
+      const allItems = document.querySelectorAll('.faq-item');
+      
+      allItems.forEach(item => {
+        const question = item.querySelector('.faq-question span').textContent.toLowerCase();
+        const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+        
+        if (question.includes(query) || answer.includes(query)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

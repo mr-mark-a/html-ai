@@ -17,6 +17,71 @@ const PORT = process.env.PORT || 3000;
 // Serve static files
 app.use(express.static(path.join(__dirname, '..')));
 
+// User tokens storage (in-memory for demo, use database in production)
+const userTokens = {};
+
+// Token event handlers
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // Get user tokens
+    socket.on('get_tokens', (callback) => {
+        const tokens = userTokens[socket.id] || 100;
+        if (callback) callback(tokens);
+    });
+
+    // Update user tokens
+    socket.on('update_tokens', (data) => {
+        userTokens[socket.id] = data.tokens;
+        socket.emit('tokens_updated', { tokens: data.tokens });
+        console.log(`User ${socket.id} tokens updated to: ${data.tokens}`);
+    });
+
+    // Deduct tokens for AI question (5 tokens per question)
+    socket.on('use_ai', (data, callback) => {
+        const currentTokens = userTokens[socket.id] || 100;
+        const tokenCost = 5;
+        
+        if (currentTokens < tokenCost) {
+            if (callback) callback({ success: false, message: 'Insufficient tokens' });
+            return;
+        }
+        
+        userTokens[socket.id] = currentTokens - tokenCost;
+        socket.emit('tokens_updated', { tokens: userTokens[socket.id] });
+        if (callback) callback({ success: true, tokensRemaining: userTokens[socket.id] });
+    });
+
+    // Purchase upgrade
+    socket.on('purchase_upgrade', (data, callback) => {
+        const currentTokens = userTokens[socket.id] || 100;
+        const cost = data.cost;
+        
+        if (currentTokens < cost) {
+            if (callback) callback({ success: false, message: 'Insufficient tokens' });
+            return;
+        }
+        
+        userTokens[socket.id] = currentTokens - cost;
+        socket.emit('tokens_updated', { tokens: userTokens[socket.id] });
+        if (callback) callback({ success: true, upgrade: data.upgrade, tokensRemaining: userTokens[socket.id] });
+    });
+
+    // Add bonus tokens (for promotions)
+    socket.on('add_bonus_tokens', (data, callback) => {
+        const bonusAmount = data.amount || 50;
+        const currentTokens = userTokens[socket.id] || 100;
+        userTokens[socket.id] = currentTokens + bonusAmount;
+        socket.emit('tokens_updated', { tokens: userTokens[socket.id] });
+        if (callback) callback({ success: true, tokensRemaining: userTokens[socket.id] });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        delete userTokens[socket.id];
+    });
+});
+
 // Game rooms storage
 const rooms = new Map();
 
