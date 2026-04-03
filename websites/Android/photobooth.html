@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Photo Booth Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        @keyframes pulse-grow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+        .animate-pulse-custom {
+            animation: pulse-grow 1s infinite ease-in-out;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            touch-action: none;
+        }
+        .emoji-btn.selected, .filter-btn.selected {
+            border-color: #3b82f6;
+            background-color: #1e293b;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-zinc-900 text-white font-sans min-h-screen flex flex-col items-center p-4">
+
+    <div class="w-full max-w-md space-y-6">
+        <header class="text-center">
+            <h1 class="text-3xl font-bold tracking-tight text-blue-500">Emoji Booth</h1>
+            <p class="text-zinc-400 text-sm">Snap, Filter, and Decorate</p>
+        </header>
+
+        <div id="controls" class="bg-zinc-800 p-4 rounded-2xl shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <label for="timer-select" class="text-sm font-medium">Timer Duration:</label>
+                <select id="timer-select" class="bg-zinc-700 text-white rounded-lg px-3 py-2 outline-none border border-zinc-600 focus:border-blue-500 transition-colors">
+                    <option value="1">1 Second</option>
+                    <option value="10">10 Seconds</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                    <option value="100">100 Seconds</option>
+                    <option value="200">200 Seconds</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="camera-section" class="relative overflow-hidden rounded-3xl bg-black shadow-2xl border-4 border-zinc-800 cursor-pointer group">
+            <video id="video" autoplay playsinline class="w-full h-auto"></video>
+            
+            <div id="countdown-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-none">
+                <span id="countdown-text" class="text-8xl font-black text-white drop-shadow-2xl animate-pulse-custom">3</span>
+            </div>
+            
+            <div id="tap-instruction" class="absolute bottom-4 left-0 right-0 text-center opacity-70 group-hover:opacity-100 transition-opacity">
+                <span class="bg-black/50 px-4 py-1 rounded-full text-xs uppercase tracking-widest">Tap Camera to Start</span>
+            </div>
+        </div>
+
+        <div id="editor-section" class="hidden space-y-4">
+            <div class="relative bg-black rounded-3xl overflow-hidden border-4 border-blue-500 cursor-crosshair">
+                <canvas id="canvas" class="w-full h-auto"></canvas>
+                <div class="absolute top-2 left-2 bg-black/60 px-2 py-1 rounded text-[10px] uppercase tracking-tighter text-blue-400 font-bold">Tap to place emoji</div>
+            </div>
+            
+            <div class="bg-zinc-800 p-4 rounded-2xl space-y-5">
+
+                <div>
+                    <p class="text-center text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-2">1. Choose Filter</p>
+                    <div id="filter-picker" class="flex justify-between gap-1">
+                        <button onclick="applyFilter(this, 'none')" class="filter-btn flex-1 text-xs py-2 bg-zinc-700 rounded-lg border-2 border-transparent selected">Normal</button>
+                        <button onclick="applyFilter(this, 'grayscale(100%)')" class="filter-btn flex-1 text-xs py-2 bg-zinc-700 rounded-lg border-2 border-transparent">B&W</button>
+                        <button onclick="applyFilter(this, 'sepia(100%)')" class="filter-btn flex-1 text-xs py-2 bg-zinc-700 rounded-lg border-2 border-transparent">Sepia</button>
