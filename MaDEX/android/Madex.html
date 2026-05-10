@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaDEX - Android Simulator</title>
+    <link rel="stylesheet" href="../css/form.css">
+    <link rel="stylesheet" href="../css/graphics.css">
+    <link rel="stylesheet" href="../css/loading-animation.css">
+    <link rel="stylesheet" href="../css/texture.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Android Device Frame */
+        .device-container {
+            width: 400px;
+            height: 800px;
+            background: #000;
+            border-radius: 40px;
+            border: 12px solid #111;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Notch */
+        .device-notch {
+            width: 150px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: linear-gradient(to bottom, #2c3e50, #1a252f);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.75em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 28px;
+            border-bottom: 1px solid #000;
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* Screen Content */
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Lock Screen */
+        .lock-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+            z-index: 200;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .lock-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .lock-time {
+            color: white;
+            font-size: 3.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .lock-date {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .unlock-hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85em;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Profile Setup Form */
+        .profile-form {
+            background: white;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            overflow-y: auto;
+        }
+
+        .profile-form h2 {
+            color: #333;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .form-field {
+            width: 100%;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .form-field.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .form-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-continue, .btn-skip {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-continue {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-continue:hover {
+            background: #5568d3;
+        }
+
+        .btn-skip {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-skip:hover {
+            background: #e0e0e0;
+        }
+
+        /* Home Screen */
+        .home-screen {
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+        }
+
+        .home-screen.active {
+            display: flex;
+        }
+
+        .home-header {
+            color: white;
+            margin-bottom: 20px;
+            padding-top: 10px;
+        }
+
+        .home-header h1 {
+            font-size: 1.5em;
+            margin-bottom: 4px;
+        }
+
+        .home-header p {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .app-icon:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .app-icon-image {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .app-icon-label {
+            font-size: 0.75em;
+            color: white;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Phone App View */
+        .phone-app {
+            background: white;
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .phone-app.active {
+            display: flex;
+        }
+
+        .app-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .phone-display-area {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 16px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dial-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .dial-btn {
+            padding: 12px;
+            background: #e8e8e8;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dial-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .call-btn {
+            background: #27ae60;
+        }
+
+        .call-btn:hover {
+            background: #229954;
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+
+        .end-btn {
+            background: #95a5a6;
+        }
+
+        .end-btn:hover {
+            background: #7f8c8d;
+        }
+
+        /* App Store */
+        .app-store {
+            background: white;
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .app-store.active {
+            display: flex;
+        }
+
+        .store-category {
+            margin-bottom: 20px;
+        }
+
+        .store-category-title {
+            font-size: 1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .store-apps {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .store-app-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .store-app-card:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .store-app-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .store-app-name {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .store-app-link {
+            font-size: 0.7em;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .store-app-link:hover {
+            background: #5568d3;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            background: linear-gradient(to bottom, #2c3e50, #1a252f);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0 12px 0;
+            border-top: 1px solid #000;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 6px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            color: #667eea;
+        }
+
+        .nav-btn:hover {
+            color: white;
+        }
+
+        /* Back Button */
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+
+        .back-btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-container">
+        <!-- Notch -->
+        <div class="device-notch"></div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span>9:41</span>
+            </div>
+            <div class="status-right">
+                <span>📶</span>
+                <span>📡</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <!-- Lock Screen -->
+        <div class="lock-screen" id="lockScreen">
+            <div class="lock-time" id="lockTime">9:41</div>
+            <div class="lock-date" id="lockDate"></div>
+            <div class="unlock-hint">Tap to unlock →</div>
+        </div>
+
+        <!-- Screen Content -->
+        <div class="screen-content" id="screenContent">
+            <!-- Profile Setup Form -->
+            <div class="profile-form" id="profileForm">
+                <h2>Welcome to MaDEX</h2>
+                <form id="setupForm">
+                    <div class="form-field active" id="nameField">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" placeholder="Enter first name" autocomplete="off">
+                    </div>
+
+                    <div class="form-field" id="lastNameField">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" placeholder="Enter last name" autocomplete="off">
+                    </div>
+
+                    <div class="form-field" id="emailField">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter email" autocomplete="off">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn-continue" id="setupNextBtn">Continue</button>
+                        <button type="button" class="btn-skip" id="setupSkipBtn">Skip</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Home Screen -->
+            <div class="home-screen" id="homeScreen">
+                <div class="home-header">
+                    <h1>🏠 Home</h1>
+                    <p id="homeGreeting">Welcome</p>
+                </div>
+                <div class="app-grid">
+                    <div class="app-icon" data-app="phone">
+                        <div class="app-icon-image">☎️</div>
+                        <div class="app-icon-label">Phone</div>
+                    </div>
+                    <div class="app-icon" data-app="store">
+                        <div class="app-icon-image">🏪</div>
+                        <div class="app-icon-label">Play Store</div>
+                    </div>
+                    <div class="app-icon" data-app="settings">
+                        <div class="app-icon-image">⚙️</div>
+                        <div class="app-icon-label">Settings</div>
+                    </div>
+                    <div class="app-icon" data-app="camera">
+                        <div class="app-icon-image">📷</div>
+                        <div class="app-icon-label">Camera</div>
+                    </div>
+                    <div class="app-icon" data-app="gallery">
+                        <div class="app-icon-image">🖼️</div>
+                        <div class="app-icon-label">Gallery</div>
+                    </div>
+                    <div class="app-icon" data-app="music">
+                        <div class="app-icon-image">🎵</div>
+                        <div class="app-icon-label">Music</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phone App -->
+            <div class="phone-app" id="phoneApp">
+                <button class="back-btn" data-back>← Back</button>
+                <div class="app-title">☎️ Phone</div>
+                <div class="phone-display-area" id="phoneDisplay">☎️</div>
+                <div class="dial-pad">
+                    <button class="dial-btn" data-digit="1">1</button>
+                    <button class="dial-btn" data-digit="2">2</button>
+                    <button class="dial-btn" data-digit="3">3</button>
+                    <button class="dial-btn" data-digit="4">4</button>
+                    <button class="dial-btn" data-digit="5">5</button>
+                    <button class="dial-btn" data-digit="6">6</button>
+                    <button class="dial-btn" data-digit="7">7</button>
+                    <button class="dial-btn" data-digit="8">8</button>
+                    <button class="dial-btn" data-digit="9">9</button>
+                    <button class="dial-btn" data-digit="*">*</button>
+                    <button class="dial-btn" data-digit="0">0</button>
+                    <button class="dial-btn" data-digit="#">#</button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn call-btn" id="callActionBtn">📞 Call</button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn clear-btn" id="clearActionBtn">Clear</button>
+                    <button class="action-btn end-btn" id="endActionBtn">End</button>
+                </div>
+            </div>
+
+            <!-- Play Store App -->
+            <div class="app-store" id="storeApp">
+                <button class="back-btn" data-back>← Back</button>
+                <div class="app-title">🏪 Play Store</div>
+
+                <div class="store-category">
+                    <div class="store-category-title">Games</div>
+                    <div class="store-apps">
+                        <div class="store-app-card">
+                            <div class="store-app-icon">🎮</div>
+                            <div class="store-app-name">PUBG Mobile</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.tencent.ig', '_blank')">Get</button>
+                        </div>
+                        <div class="store-app-card">
+                            <div class="store-app-icon">🍬</div>
+                            <div class="store-app-name">Candy Crush</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.king.candycrushsaga', '_blank')">Get</button>
+                        </div>
+                        <div class="store-app-card">
+                            <div class="store-app-icon">⚔️</div>
+                            <div class="store-app-name">Clash Royale</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.supercell.clashroyale', '_blank')">Get</button>
+                        </div>
+                        <div class="store-app-card">
+                            <div class="store-app-icon">⛏️</div>
+                            <div class="store-app-name">Minecraft</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.mojang.minecraftpe', '_blank')">Get</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="store-category">
+                    <div class="store-category-title">Productivity</div>
+                    <div class="store-apps">
+                        <div class="store-app-card">
+                            <div class="store-app-icon">📝</div>
+                            <div class="store-app-name">Word</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.microsoft.office.word', '_blank')">Get</button>
+                        </div>
+                        <div class="store-app-card">
+                            <div class="store-app-icon">☁️</div>
+                            <div class="store-app-name">Drive</div>
+                            <button class="store-app-link" onclick="window.open('https://play.google.com/store/apps/details?id=com.google.android.apps.docs', '_blank')">Get</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Settings App -->
+            <div class="app-store" id="settingsApp">
+                <button class="back-btn" data-back>← Back</button>
+                <div class="app-title">⚙️ Settings</div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">Display</div>
+                    <div class="settings-item">
+                        <span class="settings-label">Brightness</span>
+                        <input type="range" id="brightness" min="0" max="100" value="80" class="settings-slider">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Theme</span>
+                        <select id="theme" class="settings-select">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">Sound & Vibration</div>
+                    <div class="settings-item">
+                        <span class="settings-label">Volume</span>
+                        <input type="range" id="volume" min="0" max="100" value="70" class="settings-slider">
+                    </div>
+                    <div class="settings-item">
+                        <input type="checkbox" id="haptic"> <label for="haptic">Haptic Feedback</label>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">Network</div>
+                    <div class="settings-item">
+                        <input type="checkbox" id="wifi" checked> <label for="wifi">WiFi</label>
+                    </div>
+                    <div class="settings-item">
+                        <input type="checkbox" id="bluetooth"> <label for="bluetooth">Bluetooth</label>
+                    </div>
+                    <div class="settings-item clickable" id="dataUsageClick">
+                        <span class="settings-label">📊 Data Used</span>
+                        <span class="settings-value" id="dataUsageDisplay">2.5GB</span>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">Security</div>
+                    <div class="settings-item">
+                        <input type="checkbox" id="lockScreen" checked> <label for="lockScreen">Lock Screen</label>
+                    </div>
+                    <div class="settings-item">
+                        <input type="checkbox" id="unknownSources"> <label for="unknownSources">Unknown Sources</label>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">About Device</div>
+                    <div class="settings-item">
+                        <span class="settings-label">Device Name</span>
+                        <span class="settings-value">MaDEX Device</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">OS Version</span>
+                        <span class="settings-value">14.0</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Build Number</span>
+                        <span class="settings-value">MADEX.001</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Battery</span>
+                        <span class="settings-value" id="batteryDisplay">85%</span>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <div class="settings-category-title">Storage</div>
+                    <div class="settings-item">
+                        <span class="settings-label">Used Space</span>
+                        <span class="settings-value" id="usedSpaceDisplay">85 GB</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Available</span>
+                        <span class="settings-value" id="availableSpaceDisplay">43 GB</span>
+                    </div>
+                </div>
+
+                <div class="settings-category">
+                    <button class="btn-action" id="resetSettingsBtn">Reset to Defaults</button>
+                    <button class="btn-danger" id="clearDataBtn">Clear All Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-btn active" data-nav="home">🏠</button>
+            <button class="nav-btn" data-nav="phone">☎️</button>
+            <button class="nav-btn" data-nav="store">🏪</button>
+            <button class="nav-btn" data-nav="settings">⚙️</button>
+        </div>
+    </div>
+
+    <script src="../js/app-maneger.js"></script>
+    <script>
+        // App State
+        let appState = {
+            currentView: 'profile',
+            phoneNumber: '',
+            userData: {},
+            allApps: {
+                phone: document.getElementById('phoneApp'),
+                store: document.getElementById('storeApp'),
+                home: document.getElementById('homeScreen'),
+                profile: document.getElementById('profileForm')
+            }
+        };
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('madexUserData');
+            if (saved) {
+                appState.userData = JSON.parse(saved);
+                showHomeScreen();
+            } else {
+                setupForm();
+            }
+            updateLockScreen();
+        });
+
+        // Lock Screen
+        const lockScreen = document.getElementById('lockScreen');
+        lockScreen.addEventListener('click', () => {
+            lockScreen.classList.add('hidden');
+        });
+
+        function updateLockScreen() {
+            const now = new Date();
+            document.getElementById('lockTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lockDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateLockScreen, 1000);
+
+        // Setup Form
+        const firstName = document.getElementById('firstName');
+        const setupNextBtn = document.getElementById('setupNextBtn');
+        const setupSkipBtn = document.getElementById('setupSkipBtn');
+
+        function setupForm() {
+            appState.currentView = 'profile';
+            document.getElementById('profileForm').style.display = 'flex';
+        }
+
+        firstName.addEventListener('input', () => {
+            const lastNameField = document.getElementById('lastNameField');
+            const emailField = document.getElementById('emailField');
+            if (firstName.value.trim() === '') {
+                lastNameField.classList.add('active');
+                emailField.classList.add('active');
+            } else {
+                lastNameField.classList.remove('active');
+                emailField.classList.remove('active');
+            }
+        });
+
+        setupNextBtn.addEventListener('click', () => {
+            const fname = firstName.value.trim();
+            const lname = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!fname) {
+                alert('First name is required');
+                return;
+            }
+
+            if (!fname && (!lname || !email)) {
+                alert('Please fill last name and email');
+                return;
+            }
+
+            appState.userData = {
+                firstName: fname,
+                lastName: lname || '',
+                email: email || ''
+            };
+
+            localStorage.setItem('madexUserData', JSON.stringify(appState.userData));
+            showHomeScreen();
+        });
+
+        setupSkipBtn.addEventListener('click', () => {
+            appState.userData = {
+                firstName: 'Guest',
+                lastName: 'User',
+                email: ''
+            };
+            localStorage.setItem('madexUserData', JSON.stringify(appState.userData));
+            showHomeScreen();
+        });
+
+        // Show Home Screen
+        function showHomeScreen() {
+            document.getElementById('profileForm').style.display = 'none';
+            document.getElementById('homeScreen').classList.add('active');
+            document.getElementById('homeGreeting').textContent = `Hi, ${appState.userData.firstName}!`;
+            appState.currentView = 'home';
+        }
+
+        // App Navigation
+        const navBtns = document.querySelectorAll('[data-nav]');
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const app = btn.getAttribute('data-nav');
+                switchApp(app);
+            });
+        });
+
+        const appIcons = document.querySelectorAll('.app-icon[data-app]');
+        appIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                const app = icon.getAttribute('data-app');
+                switchApp(app);
+                navBtns.forEach(b => b.classList.remove('active'));
+                navBtns.forEach(b => {
+                    if (b.getAttribute('data-nav') === app) b.classList.add('active');
+                });
+            });
+        });
+
+        function switchApp(app) {
+            Object.values(appState.allApps).forEach(view => {
+                if (view) view.classList.remove('active');
+            });
+            if (appState.allApps[app]) {
+                appState.allApps[app].classList.add('active');
+                appState.currentView = app;
+            }
+        }
+
+        // Back Buttons
+        document.querySelectorAll('[data-back]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchApp('home');
+                navBtns.forEach(b => b.classList.remove('active'));
+                navBtns[0].classList.add('active');
+            });
+        });
+
+        // Phone App
+        const dialBtns = document.querySelectorAll('[data-digit]');
+        const phoneDisplay = document.getElementById('phoneDisplay');
+        const callActionBtn = document.getElementById('callActionBtn');
+        const clearActionBtn = document.getElementById('clearActionBtn');
+        const endActionBtn = document.getElementById('endActionBtn');
+
+        dialBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                appState.phoneNumber += btn.getAttribute('data-digit');
+                phoneDisplay.textContent = appState.phoneNumber || '☎️';
+            });
+        });
+
+        callActionBtn.addEventListener('click', () => {
+            if (!appState.phoneNumber) {
+                alert('Enter a number');
+                return;
+            }
+            alert(`📞 Calling ${appState.phoneNumber}...`);
+        });
+
+        clearActionBtn.addEventListener('click', () => {
+            appState.phoneNumber = '';
+            phoneDisplay.textContent = '☎️';
+        });
+
+        endActionBtn.addEventListener('click', () => {
+            appState.phoneNumber = '';
+            phoneDisplay.textContent = '☎️';
+            alert('Call ended');
+        });
+    </script>
+</body>
+</html>

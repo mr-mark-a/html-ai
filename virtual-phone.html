@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Phone - User Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Form Section */
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-container h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .form-group.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-next {
+            background: #667eea;
+            color: white;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .btn-next:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .required-text {
+            color: #e74c3c;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .required-text.show {
+            display: inline;
+        }
+
+        /* Virtual Phone Section */
+        .phone-section {
+            display: none;
+        }
+
+        .phone-section.active {
+            display: block;
+        }
+
+        .phone-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .user-info strong {
+            font-size: 1.2em;
+        }
+
+        .phone-display {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            color: #667eea;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .phone-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .phone-button {
+            padding: 15px;
+            font-size: 1.5em;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .phone-button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .phone-button:active {
+            transform: scale(0.95);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .call-btn {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .call-btn:hover {
+            background: #229954;
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+
+        .end-btn {
+            background: #95a5a6;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .end-btn:hover {
+            background: #7f8c8d;
+        }
+
+        /* Supporters Section */
+        .supporters-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .supporters-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .supporters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .supporter-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .supporter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .supporter-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .supporter-card a {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .supporter-card a:hover {
+            background: #f0f0f0;
+        }
+
+        .logout-btn {
+            background: #f39c12;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: #e67e22;
+        }
+
+        /* Apps Section */
+        .apps-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .apps-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .app-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .app-tab {
+            padding: 10px 20px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .app-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .app-tab:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .app-item:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .app-icon {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .app-name {
+            font-size: 0.85em;
+            color: #333;
+            font-weight: 600;
+            word-wrap: break-word;
+        }
+
+        .view-store-btn {
+            background: #27ae60;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .view-store-btn:hover {
+            background: #229954;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Form Section -->
+        <div class="form-container" id="formSection">
+            <h1>Welcome</h1>
+            <form id="userForm">
+                <!-- Name Field -->
+                <div class="form-group active" id="nameGroup">
+                    <label for="name">First Name <span class="required-text">*</span></label>
+                    <input type="text" id="name" placeholder="Enter your first name" autocomplete="off">
+                </div>
+
+                <!-- Last Name and Email (shown only if name is empty) -->
+                <div id="additionalFields" style="display: none;">
+                    <div class="form-group active">
+                        <label for="lastName">Last Name <span class="required-text">*</span></label>
+                        <input type="text" id="lastName" placeholder="Enter your last name" autocomplete="off">
+                    </div>
+
+                    <div class="form-group active">
+                        <label for="email">Email <span class="required-text">*</span></label>
+                        <input type="email" id="email" placeholder="Enter your email" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn-next" id="submitBtn">Continue</button>
+                    <button type="button" class="btn-reset" id="resetBtn">Reset</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Virtual Phone Section -->
+        <div class="phone-section" id="phoneSection">
+            <div class="phone-container">
+                <div class="user-info">
+                    <p><strong id="displayName"></strong></p>
+                    <p id="displayEmail"></p>
+                </div>
+
+                <div class="phone-display" id="phoneDisplay">☎️</div>
+
+                <div class="phone-keypad">
+                    <button class="phone-button" data-num="0">0</button>
+                    <button class="phone-button" data-num="1">1</button>
+                    <button class="phone-button" data-num="2">2</button>
+                    <button class="phone-button" data-num="3">3</button>
+                    <button class="phone-button" data-num="4">4</button>
+                    <button class="phone-button" data-num="5">5</button>
+                    <button class="phone-button" data-num="6">6</button>
+                    <button class="phone-button" data-num="7">7</button>
+                    <button class="phone-button" data-num="8">8</button>
+                    <button class="phone-button" data-num="9">9</button>
+                    <button class="phone-button" data-num="*">*</button>
+                    <button class="phone-button" data-num="#">#</button>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="call-btn" id="callBtn">📞 Call</button>
+                    <button class="clear-btn" id="clearBtn">Clear</button>
+                    <button class="end-btn" id="endBtn">End Call</button>
+                </div>
+
+                <button class="logout-btn" id="logoutBtn">Go Back</button>
+            </div>
+
+            <!-- Apps Section -->
+            <div class="apps-container" id="appsContainer">
+                <h2>📱 Installed Apps from Play Store</h2>
+                
+                <div class="app-tabs">
+                    <button class="app-tab active" data-category="all">All Apps</button>
+                    <button class="app-tab" data-category="games">Games</button>
+                    <button class="app-tab" data-category="productivity">Productivity</button>
+                    <button class="app-tab" data-category="social">Social</button>
+                </div>
+
+                <div class="apps-grid" id="appsGrid">
+                    <!-- Apps will be populated here -->
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://play.google.com/store/apps?hl=en_US" target="_blank" class="view-store-btn">🏪 Visit Google Play Store</a>
+                </div>
+            </div>
+
+            <!-- Supporters Section -->
+            <div class="supporters-section">
+                <h2>Our Supporters & Partners</h2>
+                <div class="supporters-grid">
+                    <div class="supporter-card">
+                        <h3>GitHub</h3>
+                        <p>Open source community</p>
+                        <a href="https://github.com" target="_blank">Visit →</a>
+                    </div>
+
+                    <div class="supporter-card">
+                        <h3>Stack Overflow</h3>
+                        <p>Developer Q&A Platform</p>
+                        <a href="https://stackoverflow.com" target="_blank">Visit →</a>
+                    </div>
+
+                    <div class="supporter-card">
+                        <h3>MDN Web Docs</h3>
+                        <p>Web Documentation</p>
+                        <a href="https://developer.mozilla.org" target="_blank">Visit →</a>
+                    </div>
+
+                    <div class="supporter-card">
+                        <h3>W3C</h3>
+                        <p>Web Standards</p>
+                        <a href="https://www.w3.org" target="_blank">Visit →</a>
+                    </div>
+
+                    <div class="supporter-card">
+                        <h3>Vue.js</h3>
+                        <p>Frontend Framework</p>
+                        <a href="https://vuejs.org" target="_blank">Visit →</a>
+                    </div>
+
+                    <div class="supporter-card">
+                        <h3>React</h3>
+                        <p>JavaScript Library</p>
+                        <a href="https://react.dev" target="_blank">Visit →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        const formSection = document.getElementById('formSection');
+        const phoneSection = document.getElementById('phoneSection');
+        const nameInput = document.getElementById('name');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const additionalFields = document.getElementById('additionalFields');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const phoneDisplay = document.getElementById('phoneDisplay');
+        const phoneButtons = document.querySelectorAll('.phone-button');
+        const callBtn = document.getElementById('callBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const endBtn = document.getElementById('endBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const displayName = document.getElementById('displayName');
+        const displayEmail = document.getElementById('displayEmail');
+
+        let phoneNumber = '';
+        let userData = {};
+
+        // Popular apps from Google Play Store
+        const playStoreApps = [
+            // Games
+            { name: 'PUBG Mobile', icon: '🎮', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.tencent.ig' },
+            { name: 'Candy Crush', icon: '🍬', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.king.candycrushsaga' },
+            { name: 'Clash Royale', icon: '⚔️', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.supercell.clashroyale' },
+            { name: 'Minecraft', icon: '⛏️', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.mojang.minecraftpe' },
+            { name: 'Among Us', icon: '👾', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.innersloth.spacemafia' },
+            { name: 'Fortnite', icon: '🎯', category: 'games', url: 'https://play.google.com/store/apps/details?id=com.epicgames.fortnite' },
+
+            // Productivity
+            { name: 'Microsoft Word', icon: '📝', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.microsoft.office.word' },
+            { name: 'Google Drive', icon: '☁️', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.google.android.apps.docs' },
+            { name: 'Notion', icon: '📔', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.notion' },
+            { name: 'Slack', icon: '💬', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.slack' },
+            { name: 'Todoist', icon: '✅', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.todoist' },
+            { name: 'Evernote', icon: '📚', category: 'productivity', url: 'https://play.google.com/store/apps/details?id=com.evernote' },
+
+            // Social
+            { name: 'Instagram', icon: '📷', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.instagram.android' },
+            { name: 'Facebook', icon: '👍', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.facebook.katana' },
+            { name: 'Twitter', icon: '🐦', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.twitter.android' },
+            { name: 'TikTok', icon: '🎵', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically' },
+            { name: 'Telegram', icon: '✈️', category: 'social', url: 'https://play.google.com/store/apps/details?id=org.telegram.messenger' },
+            { name: 'WhatsApp', icon: '💚', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.whatsapp' },
+            { name: 'Discord', icon: '🎧', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.discord' },
+            { name: 'Snapchat', icon: '👻', category: 'social', url: 'https://play.google.com/store/apps/details?id=com.snapchat.android' },
+        ];
+
+        // Load data from localStorage on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('userData');
+            if (saved) {
+                userData = JSON.parse(saved);
+                loadPhoneInterface();
+            }
+        });
+
+        // Check name input and show/hide additional fields
+        nameInput.addEventListener('input', () => {
+            if (nameInput.value.trim() === '') {
+                additionalFields.style.display = 'block';
+            } else {
+                additionalFields.style.display = 'none';
+            }
+        });
+
+        // Submit form
+        submitBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const email = emailInput.value.trim();
+
+            // Validation
+            if (name === '') {
+                alert('First name is required!');
+                return;
+            }
+
+            if (name && lastName === '' && email === '') {
+                // Only first name provided
+                userData = {
+                    name: name,
+                    lastName: '',
+                    email: ''
+                };
+            } else if (name === '' || lastName === '' || email === '') {
+                // If name is empty, require last name and email
+                alert('Please fill in all required fields: Last Name and Email');
+                return;
+            } else {
+                userData = {
+                    name: name,
+                    lastName: lastName,
+                    email: email
+                };
+            }
+
+            // Save to localStorage
+            localStorage.setItem('userData', JSON.stringify(userData));
+
+            // Load phone interface
+            loadPhoneInterface();
+        });
+
+        // Reset form
+        resetBtn.addEventListener('click', () => {
+            nameInput.value = '';
+            lastNameInput.value = '';
+            emailInput.value = '';
+            additionalFields.style.display = 'none';
+            phoneNumber = '';
+        });
+
+        // Load phone interface
+        function loadPhoneInterface() {
+            formSection.style.display = 'none';
+            phoneSection.classList.add('active');
+            
+            const fullName = userData.lastName 
+                ? `${userData.name} ${userData.lastName}` 
+                : userData.name;
+            
+            displayName.textContent = fullName;
+            displayEmail.textContent = userData.email || 'No email provided';
+            
+            updatePhoneDisplay();
+            displayApps('all');
+            setupAppTabs();
+        }
+
+        // Phone keypad functionality
+        phoneButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                phoneNumber += button.getAttribute('data-num');
+                updatePhoneDisplay();
+            });
+        });
+
+        // Update phone display
+        function updatePhoneDisplay() {
+            phoneDisplay.textContent = phoneNumber || '☎️';
+        }
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            phoneNumber = '';
+            updatePhoneDisplay();
+        });
+
+        // Call button
+        callBtn.addEventListener('click', () => {
+            if (phoneNumber === '') {
+                alert('Please enter a phone number');
+                return;
+            }
+
+            console.log('Phone number dialed:', phoneNumber);
+
+            // Handle USSD codes
+            if (phoneNumber === '#777') {
+                console.log('Internet balance code triggered');
+                handleUSSDCode('internet_balance');
+                return;
+            } else if (phoneNumber === '#191') {
+                console.log('Phone ID code triggered');
+                handleUSSDCode('phone_id');
+                return;
+            } else if (phoneNumber === '#001') {
+                console.log('Support code triggered');
+                handleUSSDCode('support');
+                return;
+            }
+
+            alert(`📞 Calling ${phoneNumber}...\n(Virtual phone simulation)`);
+        });
+
+        // Handle USSD codes
+        function handleUSSDCode(code) {
+            let message = '';
+
+            if (code === 'internet_balance') {
+                message = `🌐 Internet Balance\n\n` +
+                    `Remaining: 5.2 GB\n` +
+                    `Valid Until: 2026-06-04\n` +
+                    `Daily Limit: 500 MB\n` +
+                    `Today Used: 245 MB\n\n` +
+                    `Status: Active ✓`;
+            } else if (code === 'phone_id') {
+                message = `📱 Phone ID Information\n\n` +
+                    `Phone Number: +1-XXX-XXX-7489\n` +
+                    `IMEI: 354285087654321\n` +
+                    `Device ID: MXFQ48JFG9\n` +
+                    `SIM Card: Active\n` +
+                    `Network: LTE (4G)\n\n` +
+                    `Status: Connected ✓`;
+            } else if (code === 'support') {
+                message = `📞 Support Services\n\n` +
+                    `24/7 Customer Support Available\n\n` +
+                    `📧 Email: support@telecom.com\n` +
+                    `☎️ Phone: 1-800-TELECOM\n` +
+                    `💬 WhatsApp: +1-555-SUPPORT\n` +
+                    `🌐 Website: www.support.telecom.com\n` +
+                    `🕐 Hours: Monday-Sunday 00:00-23:59\n\n` +
+                    `Average Wait Time: 2 mins`;
+            }
+
+            alert(message);
+            phoneNumber = '';
+            updatePhoneDisplay();
+        }
+
+        // End call button
+        endBtn.addEventListener('click', () => {
+            phoneNumber = '';
+            updatePhoneDisplay();
+            alert('Call ended');
+        });
+
+        // Logout button
+        logoutBtn.addEventListener('click', () => {
+            formSection.style.display = 'block';
+            phoneSection.classList.remove('active');
+            nameInput.value = '';
+            lastNameInput.value = '';
+            emailInput.value = '';
+            additionalFields.style.display = 'none';
+            phoneNumber = '';
+        });
+
+        // Display apps
+        function displayApps(category) {
+            const appsGrid = document.getElementById('appsGrid');
+            appsGrid.innerHTML = '';
+
+            let filteredApps = playStoreApps;
+            if (category !== 'all') {
+                filteredApps = playStoreApps.filter(app => app.category === category);
+            }
+
+            filteredApps.forEach(app => {
+                const appItem = document.createElement('div');
+                appItem.className = 'app-item';
+                appItem.innerHTML = `
+                    <div class="app-icon">${app.icon}</div>
+                    <div class="app-name">${app.name}</div>
+                `;
+                appItem.addEventListener('click', () => {
+                    window.open(app.url, '_blank');
+                });
+                appsGrid.appendChild(appItem);
+            });
+        }
+
+        // Setup app tabs
+        function setupAppTabs() {
+            const appTabs = document.querySelectorAll('.app-tab');
+            appTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    appTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const category = tab.getAttribute('data-category');
+                    displayApps(category);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

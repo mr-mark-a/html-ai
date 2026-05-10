@@ -1,115 +1,651 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Bot, AlertCircle, Lightbulb } from 'lucide-react';
-
-export default function App() {
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hello! What service do you need?", sender: 'ai', type: 'initial' }
-  ]);
-  const [input, setInput] = useState('');
-  const [currentStep, setCurrentStep] = useState('CHOOSING_SERVICE');
-  const [isCountingDown, setIsCountingDown] = useState(false);
-  const [timer, setTimer] = useState(5);
-  const messagesEndRef = useRef(null);
-
-  // Target URL for redirection
-  const targetUrl = "https://mr-mark-a.github.io/html-ai/marks-games.html";
-
-  // Auto-scroll to bottom of chat
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Handle Redirection Logic for real browser
-  useEffect(() => {
-    let interval;
-    if (isCountingDown && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (isCountingDown && timer === 0) {
-      // In a real browser, this triggers the navigation
-      window.location.href = targetUrl;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    return () => clearInterval(interval);
-  }, [isCountingDown, timer]);
 
-  const addMessage = (text, sender) => {
-    setMessages(prev => [...prev, { id: Date.now(), text, sender }]);
-  };
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
 
-  const handleServiceChoice = (choice) => {
-    addMessage(choice, 'user');
-    
-    setTimeout(() => {
-      if (choice === "Report a bug") {
-        addMessage("Which bug do you want us to fix?", 'ai');
-        setCurrentStep('REPORT_BUG');
-      } else {
-        addMessage("What idea do you want to add?", 'ai');
-        setCurrentStep('GIVE_IDEA');
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .bot-icon {
+      width: 40px;
+      height: 40px;
+      background: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header-info h1 {
+      font-size: 1.125rem;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .status {
+      font-size: 0.75rem;
+      color: #22c55e;
+      font-weight: 500;
+    }
+
+    .redirect-timer {
+      background: #fed7aa;
+      color: #92400e;
+      padding: 0.375rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      border: 1px solid #fdba74;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message {
+      display: flex;
+      animation: slideIn 0.3s ease;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.ai {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: 85%;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .bubble.user {
+      background: #2563eb;
+      color: white;
+      border-top-right-radius: 0.25rem;
+    }
+
+    .bubble.ai {
+      background: white;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      border-top-left-radius: 0.25rem;
+    }
+
+    .buttons-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin: 0.5rem 0;
+    }
+
+    .service-button {
+      padding: 0.75rem 1rem;
+      border: 2px solid #2563eb;
+      background: white;
+      color: #2563eb;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .service-button:hover {
+      background: #2563eb;
+      color: white;
+    }
+
+    .service-button:active {
+      transform: scale(0.95);
+    }
+
+    footer {
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem;
+      background: #f8fafc;
+    }
+
+    .input-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    input {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
-    }, 600);
-  };
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-  const handleTextSubmit = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+    .hidden {
+      display: none;
+    }
 
-    const userText = input;
-    addMessage(userText, 'user');
-    setInput('');
+    /* Console Styles */
+    .console-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.25rem;
+      z-index: 999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s;
+    }
 
-    setTimeout(() => {
-      let response = "";
-      if (currentStep === 'REPORT_BUG') {
-        response = "Ok, thanks. The bug will be fixed within 5 months. Please wait 5 seconds to be redirected...";
-      } else if (currentStep === 'GIVE_IDEA') {
-        response = "Ok, your idea may be on the web soon. Please wait 5 seconds to be redirected...";
+    .console-toggle-btn:hover {
+      background: #1d4ed8;
+      transform: scale(1.1);
+    }
+
+    .console-overlay {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      max-width: 500px;
+      height: 300px;
+      background: #1e1e1e;
+      border: 1px solid #444;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .console-overlay.active {
+      transform: translateY(0);
+    }
+
+    .console-header {
+      background: #2563eb;
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .console-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1.5rem;
+      padding: 0;
+    }
+
+    .console-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      color: #0f0;
+    }
+
+    .console-line {
+      margin: 0.25rem 0;
+      word-break: break-word;
+    }
+
+    .console-input-area {
+      border-top: 1px solid #444;
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .console-input-area input {
+      flex: 1;
+      background: #2d2d2d;
+      color: #0f0;
+      border: 1px solid #444;
+      padding: 0.5rem;
+      font-family: 'Courier New', monospace;
+      border-radius: 4px;
+    }
+
+    .console-input-area input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .console-input-area button {
+      padding: 0.5rem 1rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .console-input-area button:hover {
+      background: #1d4ed8;
+    }
+
+    /* Screen Rotation */
+    .screen-rotated {
+      transition: transform 0.3s ease;
+    }
+
+    .rotate-left {
+      transform: rotate(-90deg);
+    }
+
+    .rotate-right {
+      transform: rotate(90deg);
+    }
+
+    .rotate-upside {
+      transform: rotate(180deg);
+    }
+
+    .rotate-normal {
+      transform: rotate(0deg);
+    }
+
+    .mobile-mode {
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="container screen-rotated" id="mainContainer">
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <div class="bot-icon">🤖</div>
+        <div class="header-info">
+          <h1>Support Assistant</h1>
+          <p class="status">Online</p>
+        </div>
+      </div>
+      <div id="timerDiv" class="redirect-timer hidden">
+        Redirecting in <span id="timerCount">5</span>s...
+      </div>
+    </header>
+
+    <!-- Chat Area -->
+    <main id="chatArea">
+      <div class="message ai">
+        <div class="bubble ai">Hello! What service do you need?</div>
+      </div>
+    </main>
+
+    <!-- Input Footer -->
+    <footer>
+      <form class="input-form" id="chatForm" onsubmit="handleSubmit(event)">
+        <input 
+          type="text" 
+          id="messageInput" 
+          placeholder="Type your message..." 
+          autocomplete="off"
+        >
+        <button type="submit">Send</button>
+      </form>
+    </footer>
+  </div>
+
+  <!-- Console Button -->
+  <button class="console-toggle-btn" id="consoleToggle" title="Open Console (Press ~)">></button>
+
+  <!-- Console Overlay -->
+  <div class="console-overlay" id="console">
+    <div class="console-header">
+      <span>Developer Console</span>
+      <button class="console-close" id="consoleClose">&times;</button>
+    </div>
+    <div class="console-output" id="consoleOutput"></div>
+    <div class="console-input-area">
+      <input 
+        type="text" 
+        id="consoleInput" 
+        placeholder="Enter command: 90, -90, 0, 180, M or help"
+        autocomplete="off"
+      >
+      <button id="consoleSubmit">Execute</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 'CHOOSING_SERVICE';
+    let messageCount = 1;
+    const targetUrl = "https://mr-mark-a.github.io/html-ai/marks-games.html";
+
+    // ============ CONSOLE FUNCTIONS ============
+    function logConsole(message) {
+      const output = document.getElementById('consoleOutput');
+      const line = document.createElement('div');
+      line.className = 'console-line';
+      line.textContent = '> ' + message;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function toggleConsole() {
+      const console = document.getElementById('console');
+      console.classList.toggle('active');
+      if (console.classList.contains('active')) {
+        document.getElementById('consoleInput').focus();
+      }
+    }
+
+    function rotateScreen(degrees) {
+      const container = document.getElementById('mainContainer');
+
+      container.classList.remove('rotate-left', 'rotate-right', 'rotate-upside', 'rotate-normal', 'mobile-mode');
+      
+      switch(degrees) {
+        case -90:
+          container.classList.add('rotate-left');
+          logConsole('Screen rotated LEFT (-90°)');
+          break;
+        case 90:
+          container.classList.add('rotate-right');
+          logConsole('Screen rotated RIGHT (90°)');
+          break;
+        case 0:
+          container.classList.add('rotate-normal');
+          logConsole('Screen reset to NORMAL (0°)');
+          break;
+        case 180:
+          container.classList.add('rotate-upside');
+          logConsole('Screen rotated UPSIDE DOWN (180°)');
+          break;
+        default:
+          logConsole('Invalid rotation value');
+      }
+    }
+
+    function handleConsoleCommand(command) {
+      const cmd = command.trim().toUpperCase();
+      
+      if (!cmd) return;
+
+      logConsole('$ ' + command);
+
+      if (cmd === 'HELP' || cmd === '?') {
+        logConsole('Available commands:');
+        logConsole('  90       - Rotate screen right');
+        logConsole('  -90      - Rotate screen left');
+        logConsole('  0        - Reset to normal orientation');
+        logConsole('  180      - Rotate screen upside down');
+        logConsole('  M        - Mobile phone orientation (90°)');
+        logConsole('  CLEAR    - Clear console');
+        logConsole('  HELP     - Show this help message');
+      } else if (cmd === 'CLEAR') {
+        document.getElementById('consoleOutput').innerHTML = '';
+        logConsole('Console cleared');
+      } else if (cmd === 'M') {
+        const container = document.getElementById('mainContainer');
+        if (container.classList.contains('mobile-mode')) {
+          container.classList.remove('mobile-mode');
+          logConsole('Mobile mode OFF - Normal orientation');
+        } else {
+          container.classList.remove('rotate-left', 'rotate-right', 'rotate-upside', 'rotate-normal');
+          container.classList.add('mobile-mode');
+          logConsole('Mobile mode ON - Portrait orientation (90°)');
+        }
+      } else if (cmd === '90' || cmd === '90 ') {
+        rotateScreen(90);
+      } else if (cmd === '-90' || cmd === '-90 ') {
+        rotateScreen(-90);
+      } else if (cmd === '0' || cmd === '0 ') {
+        rotateScreen(0);
+      } else if (cmd === '180') {
+        rotateScreen(180);
+      } else {
+        logConsole('Unknown command: ' + command + ' (type HELP for commands)');
+      }
+
+      document.getElementById('consoleInput').value = '';
+    }
+
+    // Console event listeners
+    document.getElementById('consoleToggle').addEventListener('click', toggleConsole);
+    document.getElementById('consoleClose').addEventListener('click', toggleConsole);
+
+    document.getElementById('consoleSubmit').addEventListener('click', () => {
+      const input = document.getElementById('consoleInput').value;
+      handleConsoleCommand(input);
+    });
+
+    document.getElementById('consoleInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('consoleInput').value;
+        handleConsoleCommand(input);
+      }
+    });
+
+    // Toggle console with ~ key
+    document.addEventListener('keypress', (e) => {
+      if (e.key === '~' || e.key === '`') {
+        e.preventDefault();
+        toggleConsole();
+      }
+    });
+
+    // ============ CHAT FUNCTIONS ============
+
+    function addMessage(text, sender) {
+      const chatArea = document.getElementById('chatArea');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${sender}`;
+      bubble.textContent = text;
+      
+      messageDiv.appendChild(bubble);
+      chatArea.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 0);
+    }
+
+    function addButtonGroup() {
+      const chatArea = document.getElementById('chatArea');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ai';
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ai';
+      bubble.innerHTML = `
+        <div class="buttons-group">
+          <button class="service-button" onclick="handleServiceChoice('Report a bug')">Report a bug</button>
+          <button class="service-button" onclick="handleServiceChoice('Give Idea')">Give Idea</button>
+        </div>
+      `;
+      
+      messageDiv.appendChild(bubble);
+      chatArea.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 0);
+    }
+
+    function handleServiceChoice(choice) {
+      addMessage(choice, 'user');
+      document.getElementById('messageInput').value = '';
+      
+      setTimeout(() => {
+        if (choice === 'Report a bug') {
+          addMessage("Which bug do you want us to fix?", 'ai');
+          currentStep = 'REPORT_BUG';
+        } else {
+          addMessage("What idea do you want to add?", 'ai');
+          currentStep = 'GIVE_IDEA';
+        }
+      }, 600);
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      
+      if (!text) return;
+      
+      if (currentStep === 'CHOOSING_SERVICE') {
+        addButtonGroup();
+        input.value = '';
+        return;
       }
       
-      addMessage(response, 'ai');
-      setCurrentStep('FINISHED');
-      setIsCountingDown(true);
+      addMessage(text, 'user');
+      input.value = '';
+      
+      setTimeout(() => {
+        let response = "";
+        if (currentStep === 'REPORT_BUG') {
+          response = "Ok, thanks. The bug will be fixed within 5 months. Please wait 5 seconds to be redirected...";
+        } else if (currentStep === 'GIVE_IDEA') {
+          response = "Ok, your idea may be on the web soon. Please wait 5 seconds to be redirected...";
+        }
+        
+        addMessage(response, 'ai');
+        currentStep = 'FINISHED';
+        startCountdown();
+      }, 800);
+    }
+
+    function startCountdown() {
+      const timerDiv = document.getElementById('timerDiv');
+      const timerCount = document.getElementById('timerCount');
+      timerDiv.classList.remove('hidden');
+      
+      let count = 5;
+      const interval = setInterval(() => {
+        count--;
+        timerCount.textContent = count;
+        
+        if (count === 0) {
+          clearInterval(interval);
+          window.location.href = targetUrl;
+        }
+      }, 1000);
+    }
+
+    // Initial state
+    setTimeout(() => {
+      addButtonGroup();
     }, 800);
-  };
-
-  return (
-    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* Header */}
-      <header className="bg-white border-b p-4 shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md">
-            <Bot size={24} />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg leading-tight">Support Assistant</h1>
-            <p className="text-xs text-green-500 font-medium">Online</p>
-          </div>
-        </div>
-        {isCountingDown && (
-          <div className="bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-sm font-bold animate-pulse border border-orange-200">
-            Redirecting in {timer}s...
-          </div>
-        )}
-      </header>
-
-      {/* Chat Area */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-4 rounded-2xl shadow-sm transition-all duration-300 ${
-              msg.sender === 'user' 
-                ? 'bg-blue-600 text-white rounded-tr-none' 
-                : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
-            }`}>
-              <p className="text-sm md:text-base whitespace-pre-wrap">{msg.text}</p>
-            </div>
-          </div>
-        ))}
-
-        {/* Dynamic Buttons for Service Choice */}
+  </script>
+</body>
+</html>
         
