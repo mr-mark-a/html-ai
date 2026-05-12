@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Journal App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.02) 2px,
+                    rgba(0, 0, 0, 0.02) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.02) 2px,
+                    rgba(0, 0, 0, 0.02) 4px
+                ),
+                linear-gradient(135deg, #8b7355 0%, #5d4e37 100%);
+            min-height: 100vh;
+            padding: 20px;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: 
+                radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255, 248, 240, 0.3), transparent 50%),
+                linear-gradient(135deg, #fef5e7 0%, #faf3e0 50%, #f5ebe0 100%);
+            border-radius: 0px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                        inset 0 -3px 8px rgba(0, 0, 0, 0.1),
+                        8px 12px 25px rgba(0, 0, 0, 0.3),
+                        -8px 12px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            position: relative;
+            transform: perspective(1200px) rotateX(1deg) rotateZ(-1deg);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05) 80%, transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.05) 80%, transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Header/Control Bar */
+        .control-bar {
+            background: linear-gradient(180deg, #8b7355 0%, #7a6349 50%, #6b5a42 100%);
+            color: #fef5e7;
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                        0 -2px 4px rgba(0, 0, 0, 0.2);
+            border-bottom: 2px solid #5d4e37;
+            font-weight: 500;
+        }
+
+        .control-bar button, .control-bar input, .control-bar select {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .control-bar button {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fef5e7;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-bar button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-bar input[type="text"], .control-bar select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            color: #333;
+            border-radius: 3px;
+        }
+
+        .control-bar input[type="file"] {
+            cursor: pointer;
+            display: none;
+        }
+
+        .file-input-label {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            color: #fef5e7;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .separator {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Session Management */
+        .session-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .page-counter {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            border-radius: 3px;
+            font-weight: 600;
+            min-width: 100px;
+            text-align: center;
+            color: #fef5e7;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Page Tabs */
+        .tabs-container {
+            background: linear-gradient(to bottom, #e8dcc8 0%, #dfd3bf 50%, #d8ccb8 100%);
+            padding: 10px 20px;
+            overflow-x: auto;
+            border-bottom: 1px solid #c9b8a8;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                        0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .tabs-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent 0%, rgba(139, 115, 85, 0.2) 50%, transparent 100%);
+        }
+
+        .tab {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #fef5e7 0%, #faf3e0 100%);
+            border: 1px solid #d4c5b0;
+            border-radius: 0px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+            min-width: 100px;
+            text-align: center;
+            color: #5d4e37;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                        0 -1px 0 rgba(0, 0, 0, 0.1);
+            transform: perspective(600px) rotateY(-1deg) rotateZ(-0.3deg);
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.5), transparent);
+        }
+
+        .tab:hover {
+            background: linear-gradient(135deg, #ffffff 0%, #fef5e7 100%);
+            border-color: #8b7355;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                        0 -1px 0 rgba(0, 0, 0, 0.12);
+            transform: perspective(600px) rotateY(0deg) rotateZ(-0.2deg) translateY(-2px);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #fffef9 0%, #fef9f0 100%);
+            color: #3d2817;
+            border-color: #8b7355;
+            border-bottom: 1px solid #faf3e0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+                        -3px 2px 8px rgba(0, 0, 0, 0.12);
+            transform: perspective(600px) rotateY(0deg) rotateZ(0deg) translateY(-3px);
+            font-weight: 600;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab.active .tab-close {
+            opacity: 1;
+        }
+
+        .add-tab-btn {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #8b7355 0%, #6d5a42 100%);
+            color: #fef5e7;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .add-tab-btn:hover {
+            background: linear-gradient(135deg, #6d5a42 0%, #5d4e37 100%);
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Main Content */
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-section {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 31px,
+                    rgba(180, 140, 100, 0.08) 31px,
+                    rgba(180, 140, 100, 0.08) 32px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    transparent 20px,
+                    rgba(0, 0, 0, 0.02) 20px,
+                    rgba(0, 0, 0, 0.02) 21px
+                ),
+                linear-gradient(135deg, #fef5e7 0%, #faf3e0 50%, #faf8f3 100%);
+            position: relative;
+        }
+
+        .editor-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(139, 115, 85, 0.3), transparent);
+            opacity: 0.6;
+        }
+
+        .textarea-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .journal-input {
+            flex: 1;
+            padding: 20px 20px 20px 60px;
+            border: none;
+            border-radius: 0px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 16px;
+            resize: none;
+            transition: all 0.3s ease;
+            background: 
+                linear-gradient(90deg, #c9a876 0px, #c9a876 1px, transparent 1px),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 30px,
+                    #d4c5b0 30px,
+                    #d4c5b0 31px
+                ),
+                linear-gradient(180deg, #fffef9 0%, #fef9f2 100%);
+            background-size: 60px 100%, 100% 32px, 100% 100%;
+            background-attachment: local, local, local;
+            background-position: 0 0, 0 0, 0 0;
+            color: #3d2817;
+            line-height: 32px;
+            box-shadow: inset 0 0 0 1px rgba(139, 115, 85, 0.08),
+                        inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .journal-input:focus {
+            outline: none;
+            background: 
+                linear-gradient(90deg, #9d7e5d 0px, #9d7e5d 2px, transparent 2px),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 30px,
+                    #d4c5b0 30px,
+                    #d4c5b0 31px
+                ),
+                linear-gradient(180deg, #fffffe 0%, #fffaf5 100%);
+            background-size: 60px 100%, 100% 32px, 100% 100%;
+            background-attachment: local, local, local;
+            box-shadow: inset 0 0 0 2px rgba(139, 115, 85, 0.15),
+                        inset 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .quick-save-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #704a1f 0%, #5d3e1a 100%);
+            color: #fef5e7;
+            border: 1px solid #4a3115;
+            border-radius: 0px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            font-family: 'Georgia', serif;
+        }
+
+        .quick-save-btn:hover {
+            background: linear-gradient(135deg, #5d3e1a 0%, #4a3115 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Media Section */
+        .media-section {
+            width: 300px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5ebe0 0%, #f0e5d8 100%);
+            border-left: 1px solid #d4c5b0;
+            overflow-y: auto;
+            box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .media-section h3 {
+            color: #5d4e37;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #8b7355;
+            padding-bottom: 10px;
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .media-item {
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fef5e7 0%, #faf3e0 100%);
+            padding: 12px;
+            border-radius: 0px;
+            border: 1px solid #d4c5b0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transform: perspective(400px) rotateY(-0.5deg) rotateZ(-0.2deg);
+        }
+
+        .photo-item {
+            position: relative;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 0px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25),
+                        inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d4c5b0;
+        }
+
+        .audio-item audio {
+            width: 100%;
+            margin-bottom: 8px;
+            filter: brightness(1.1);
+        }
+
+        .delete-media {
+            width: 100%;
+            padding: 6px;
+            background: linear-gradient(135deg, #8b4545 0%, #6d3535 100%);
+            color: #fef5e7;
+            border: 1px solid #4a2727;
+            border-radius: 0px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+        }
+
+        .delete-media:hover {
+            background: linear-gradient(135deg, #6d3535 0%, #4a2727 100%);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .media-label {
+            font-size: 11px;
+            color: #9d7e5d;
+            margin-top: 5px;
+            font-style: italic;
+            font-family: 'Georgia', serif;
+            opacity: 0.85;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+            }
+
+            .media-section {
+                width: 100%;
+                border-left: none;
+                border-top: 2px solid #e0e0e0;
+                max-height: 250px;
+            }
+
+            .control-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .session-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: linear-gradient(to right, #f5e6d3 0%, #f0e1c8 100%);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #c9a876 0%, #a88a5c 100%);
+            border-radius: 5px;
+            border: 1px solid #8b7355;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #a88a5c 0%, #8b7355 100%);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #fef5e7 0%, #faf3e0 100%);
+            padding: 30px;
+            border-radius: 0px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            text-align: center;
+            min-width: 300px;
+            border: 1px solid #d4c5b0;
+            color: #5d4e37;
+        }
+
+        .modal-content h2 {
+            color: #5d4e37;
+            margin-bottom: 15px;
+            font-family: 'Georgia', serif;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #d4c5b0;
+            border-radius: 0px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #fffef9 0%, #fef9f0 100%);
+            color: #3d2817;
+            font-family: 'Georgia', serif;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #8b7355;
+            background: linear-gradient(135deg, #fffffe 0%, #fffef9 100%);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08),
+                        0 0 0 2px rgba(139, 115, 85, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 30px;
+            border: 1px solid transparent;
+            border-radius: 0px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #704a1f 0%, #5d3e1a 100%);
+            color: #fef5e7;
+            border-color: #4a3115;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-create:hover {
+            background: linear-gradient(135deg, #5d3e1a 0%, #4a3115 100%);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #b8a8a0 0%, #a89690 100%);
+            color: #3d2817;
+            border-color: #8b7b73;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #a89690 0%, #8b7b73 100%);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #704a1f 0%, #5d3e1a 100%);
+            color: #fef5e7;
+            padding: 15px 25px;
+            border-radius: 0px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: slideIn 0.3s ease;
+            border: 1px solid #4a3115;
+            font-family: 'Georgia', serif;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="session-controls">
+                <select id="sessionSelect" onchange="loadSession()">
+                    <option value="">Select Journal</option>
+                </select>
+                <button onclick="newSession()">+ New Journal</button>
+                <button onclick="deleteSession()">Delete Journal</button>
+            </div>
+
+            <div class="separator"></div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
+                <button onclick="previousPage()">← Previous</button>
+                <span class="page-counter"><span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+                <button onclick="nextPage()">Next →</button>
+                <button onclick="addNewPage()">+ New Page</button>
+            </div>
+
+            <div class="separator"></div>
+
+            <label class="file-input-label" for="photoInput">📷 Add Photo</label>
+            <input type="file" id="photoInput" accept="image/*" onchange="addPhoto()">
+
+            <label class="file-input-label" for="audioInput">🔊 Add Audio</label>
+            <input type="file" id="audioInput" accept="audio/wav,audio/mpeg,.wav,.mp3" onchange="addAudio()">
+        </div>
+
+        <!-- Page Tabs -->
+        <div class="tabs-container">
+            <div id="tabsContainer"></div>
+            <button class="add-tab-btn" onclick="addNewPage()">+ Page</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <div class="editor-section">
+                <div class="textarea-wrapper">
+                    <textarea 
+                        id="journalContent" 
+                        class="journal-input" 
+                        placeholder="Write your thoughts here... (Auto-saves when you click 'Quick Save' or switch pages)"
+                    ></textarea>
+                    <button class="quick-save-btn" onclick="quickSave()">💾 Quick Save Entry</button>
+                </div>
+            </div>
+
+            <!-- Media Section -->
+            <div class="media-section">
+                <h3>Media</h3>
+                <div id="mediaContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Session Modal -->
+    <div id="newSessionModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Journal</h2>
+            <input type="text" id="sessionNameInput" placeholder="Journal name...">
+            <div class="modal-buttons">
+                <button class="btn-create" onclick="createSession()">Create</button>
+                <button class="btn-cancel" onclick="closeModal('newSessionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============= STORAGE MANAGEMENT =============
+        const STORAGE_KEY = 'journalSessions';
+
+        // Initialize storage
+        function initStorage() {
+            if (!localStorage.getItem(STORAGE_KEY)) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
+            }
+        }
+
+        function getAllSessions() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        }
+
+        function saveSession(sessionName, data) {
+            const sessions = getAllSessions();
+            sessions[sessionName] = data;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+        }
+
+        function getSession(sessionName) {
+            const sessions = getAllSessions();
+            return sessions[sessionName] || null;
+        }
+
+        function deleteSessionData(sessionName) {
+            const sessions = getAllSessions();
+            delete sessions[sessionName];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+        }
+
+        // ============= SESSION MANAGEMENT =============
+        let currentSession = null;
+        let currentPageIndex = 0;
+
+        function updateSessionSelect() {
+            const sessions = getAllSessions();
+            const select = document.getElementById('sessionSelect');
+            const previousValue = select.value;
+
+            select.innerHTML = '<option value="">Select Journal</option>';
+
+            Object.keys(sessions).forEach(sessionName => {
+                const option = document.createElement('option');
+                option.value = sessionName;
+                option.textContent = sessionName;
+                select.appendChild(option);
+            });
+
+            if (previousValue && sessions[previousValue]) {
+                select.value = previousValue;
+            }
+        }
+
+        function newSession() {
+            document.getElementById('newSessionModal').classList.add('show');
+            document.getElementById('sessionNameInput').focus();
+            document.getElementById('sessionNameInput').value = '';
+        }
+
+        function createSession() {
+            const name = document.getElementById('sessionNameInput').value.trim();
+            if (!name) {
+                alert('Please enter a journal name');
+                return;
+            }
+
+            const sessions = getAllSessions();
+            if (sessions[name]) {
+                alert('Journal already exists!');
+                return;
+            }
+
+            const newSession = {
+                createdDate: new Date().toISOString(),
+                pages: [
+                    {
+                        title: 'Page 1',
+                        content: '',
+                        media: { photos: [], audios: [] }
+                    }
+                ]
+            };
+
+            saveSession(name, newSession);
+            updateSessionSelect();
+            closeModal('newSessionModal');
+            document.getElementById('sessionSelect').value = name;
+            loadSession();
+            showStatus('Journal created!');
+        }
+
+        function loadSession() {
+            const sessionName = document.getElementById('sessionSelect').value;
+            if (!sessionName) {
+                currentSession = null;
+                document.getElementById('journalContent').value = '';
+                document.getElementById('mediaContainer').innerHTML = '';
+                
+                // Clear auto-save interval
+                if (autoSaveInterval) {
+                    clearInterval(autoSaveInterval);
+                }
+                return;
+            }
+
+            currentSession = sessionName;
+            currentPageIndex = 0;
+            loadPage();
+            updateSessionSelect();
+        }
+
+        function deleteSession() {
+            if (!currentSession) {
+                alert('No journal selected');
+                return;
+            }
+
+            if (confirm(`Delete "${currentSession}" and all its pages?`)) {
+                deleteSessionData(currentSession);
+                currentSession = null;
+                currentPageIndex = 0;
+                document.getElementById('sessionSelect').value = '';
+                document.getElementById('journalContent').value = '';
+                document.getElementById('mediaContainer').innerHTML = '';
+                updateSessionSelect();
+                showStatus('Journal deleted');
+            }
+        }
+
+        // ============= PAGE MANAGEMENT =============
+        let autoSaveInterval = null;
+
+        function loadPage() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            if (!session || !session.pages[currentPageIndex]) return;
+
+            const page = session.pages[currentPageIndex];
+
+            // Load content
+            document.getElementById('journalContent').value = page.content || '';
+
+            // Update page counter
+            document.getElementById('currentPage').textContent = currentPageIndex + 1;
+            document.getElementById('totalPages').textContent = session.pages.length;
+
+            // Update tabs
+            updateTabs();
+
+            // Load media
+            loadMedia(page.media);
+
+            // Save immediately on load
+            savePage();
+
+            // Clear any existing auto-save interval
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+
+            // Start auto-save interval (every 30 seconds)
+            autoSaveInterval = setInterval(() => {
+                savePage();
+            }, 30000);
+        }
+
+        function savePage() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            const content = document.getElementById('journalContent').value;
+            session.pages[currentPageIndex].content = content;
+            saveSession(currentSession, session);
+        }
+
+        function quickSave() {
+            if (!currentSession) {
+                alert('Please select or create a journal first');
+                return;
+            }
+            savePage();
+            showStatus('Entry saved!');
+        }
+
+        function nextPage() {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (currentPageIndex < session.pages.length - 1) {
+                savePage();
+                currentPageIndex++;
+                loadPage();
+            }
+        }
+
+        function previousPage() {
+            if (!currentSession) return;
+            if (currentPageIndex > 0) {
+                savePage();
+                currentPageIndex--;
+                loadPage();
+            }
+        }
+
+        function addNewPage() {
+            if (!currentSession) {
+                alert('Please select or create a journal first');
+                return;
+            }
+
+            const session = getSession(currentSession);
+            const newPageNumber = session.pages.length + 1;
+
+            const newPage = {
+                title: `Page ${newPageNumber}`,
+                content: '',
+                media: { photos: [], audios: [] }
+            };
+
+            session.pages.push(newPage);
+            saveSession(currentSession, session);
+            currentPageIndex = session.pages.length - 1;
+            
+            // Clear auto-save interval before loading new page
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            
+            loadPage();
+            showStatus('New page added!');
+        }
+
+        function deletePage() {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (session.pages.length === 1) {
+                alert('Cannot delete the last page');
+                return;
+            }
+
+            session.pages.splice(currentPageIndex, 1);
+            if (currentPageIndex >= session.pages.length) {
+                currentPageIndex = session.pages.length - 1;
+            }
+            saveSession(currentSession, session);
+            
+            // Clear auto-save interval before loading new page
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            
+            loadPage();
+            showStatus('Page deleted');
+        }
+
+        // ============= TABS MANAGEMENT =============
+        function updateTabs() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            const tabsContainer = document.getElementById('tabsContainer');
+            tabsContainer.innerHTML = '';
+
+            session.pages.forEach((page, index) => {
+                const tab = document.createElement('div');
+                tab.className = `tab ${index === currentPageIndex ? 'active' : ''}`;
+                tab.innerHTML = `
+                    ${page.title}
+                    <span class="tab-close" onclick="deletePageFromTab(${index})">✕</span>
+                `;
+                tab.onclick = () => {
+                    if (index !== currentPageIndex) {
+                        savePage();
+                        currentPageIndex = index;
+                        
+                        // Clear auto-save interval before loading new page
+                        if (autoSaveInterval) {
+                            clearInterval(autoSaveInterval);
+                        }
+                        
+                        loadPage();
+                    }
+                };
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function deletePageFromTab(index) {
+            event.stopPropagation();
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (session.pages.length === 1) {
+                alert('Cannot delete the last page');
+                return;
+            }
+
+            session.pages.splice(index, 1);
+            if (currentPageIndex >= session.pages.length) {
+                currentPageIndex = session.pages.length - 1;
+            }
+            saveSession(currentSession, session);
+            
+            // Clear auto-save interval before loading new page
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+            }
+            
+            loadPage();
+            showStatus('Page deleted');
+        }
+
+        // ============= MEDIA MANAGEMENT =============
+        function addPhoto() {
+            const input = document.getElementById('photoInput');
+            if (!input.files[0]) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (!currentSession) {
+                    alert('Please select or create a journal first');
+                    return;
+                }
+
+                const session = getSession(currentSession);
+                const page = session.pages[currentPageIndex];
+
+                page.media.photos.push({
+                    src: e.target.result,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                saveSession(currentSession, session);
+                loadMedia(page.media);
+                input.value = '';
+                showStatus('Photo added!');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function addAudio() {
+            const input = document.getElementById('audioInput');
+            if (!input.files[0]) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (!currentSession) {
+                    alert('Please select or create a journal first');
+                    return;
+                }
+
+                const session = getSession(currentSession);
+                const page = session.pages[currentPageIndex];
+
+                page.media.audios.push({
+                    src: e.target.result,
+                    filename: file.name,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                saveSession(currentSession, session);
+                loadMedia(page.media);
+                input.value = '';
+                showStatus('Audio added!');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function loadMedia(media) {
+            const mediaContainer = document.getElementById('mediaContainer');
+            mediaContainer.innerHTML = '';
+
+            // Photos
+            if (media.photos && media.photos.length > 0) {
+                const photosTitle = document.createElement('div');
+                photosTitle.style.fontWeight = 'bold';
+                photosTitle.style.marginBottom = '10px';
+                photosTitle.style.color = '#667eea';
+                photosTitle.textContent = '📷 Photos';
+                mediaContainer.appendChild(photosTitle);
+
+                media.photos.forEach((photo, index) => {
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'media-item photo-item';
+                    photoItem.innerHTML = `
+                        <img src="${photo.src}" alt="Photo">
+                        <div class="media-label">${photo.timestamp}</div>
+                        <button class="delete-media" onclick="deletePhoto(${index})">Delete</button>
+                    `;
+                    mediaContainer.appendChild(photoItem);
+                });
+            }
+
+            // Audios
+            if (media.audios && media.audios.length > 0) {
+                const audiosTitle = document.createElement('div');
+                audiosTitle.style.fontWeight = 'bold';
+                audiosTitle.style.marginBottom = '10px';
+                audiosTitle.style.marginTop = '15px';
+                audiosTitle.style.color = '#667eea';
+                audiosTitle.textContent = '🔊 Audio Files';
+                mediaContainer.appendChild(audiosTitle);
+
+                media.audios.forEach((audio, index) => {
+                    const audioItem = document.createElement('div');
+                    audioItem.className = 'media-item audio-item';
+                    audioItem.innerHTML = `
+                        <div class="media-label">${audio.filename}</div>
+                        <audio controls style="width: 100%; margin-bottom: 8px;">
+                            <source src="${audio.src}">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div class="media-label">${audio.timestamp}</div>
+                        <button class="delete-media" onclick="deleteAudio(${index})">Delete</button>
+                    `;
+                    mediaContainer.appendChild(audioItem);
+                });
+            }
+
+            if ((!media.photos || media.photos.length === 0) && (!media.audios || media.audios.length === 0)) {
+                mediaContainer.innerHTML = '<p style="color: #999; text-align: center;">No media added yet</p>';
+            }
+        }
+
+        function deletePhoto(index) {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            const page = session.pages[currentPageIndex];
+            page.media.photos.splice(index, 1);
+            saveSession(currentSession, session);
+            loadMedia(page.media);
+            showStatus('Photo deleted');
+        }
+
+        function deleteAudio(index) {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            const page = session.pages[currentPageIndex];
+            page.media.audios.splice(index, 1);
+            saveSession(currentSession, session);
+            loadMedia(page.media);
+            showStatus('Audio deleted');
+        }
+
+        // ============= MODAL MANAGEMENT =============
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+        });
+
+        // ============= UTILITY FUNCTIONS =============
+        function showStatus(message) {
+            const status = document.createElement('div');
+            status.className = 'status-message';
+            status.textContent = message;
+            document.body.appendChild(status);
+
+            setTimeout(() => {
+                status.remove();
+            }, 2000);
+        }
+
+        // Auto-save on page change/close
+        window.addEventListener('beforeunload', () => {
+            if (currentSession) {
+                // Clear auto-save interval
+                if (autoSaveInterval) {
+                    clearInterval(autoSaveInterval);
+                }
+                
+                // Save → Load → Save sequence
+                savePage();
+                const session = getSession(currentSession);
+                const page = session.pages[currentPageIndex];
+                page.content = document.getElementById('journalContent').value;
+                saveSession(currentSession, session);
+                savePage();
+            }
+        });
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            initStorage();
+            updateSessionSelect();
+        });
+    </script>
+</body>
+</html>

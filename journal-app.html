@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Journal App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+        }
+
+        /* Header/Control Bar */
+        .control-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-bar button, .control-bar input, .control-bar select {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .control-bar button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .control-bar button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .control-bar input[type="text"], .control-bar select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            color: #333;
+        }
+
+        .control-bar input[type="file"] {
+            cursor: pointer;
+            display: none;
+        }
+
+        .file-input-label {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .separator {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Session Management */
+        .session-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .page-counter {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* Page Tabs */
+        .tabs-container {
+            background: #f5f5f5;
+            padding: 10px 20px;
+            overflow-x: auto;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .tab {
+            padding: 8px 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .tab:hover {
+            background: #f9f9f9;
+            border-color: #667eea;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab.active .tab-close {
+            opacity: 1;
+        }
+
+        .add-tab-btn {
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-tab-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        /* Main Content */
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-section {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .textarea-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .journal-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .journal-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .quick-save-btn {
+            padding: 12px 30px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .quick-save-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Media Section */
+        .media-section {
+            width: 300px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 2px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .media-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .media-item {
+            margin-bottom: 15px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .photo-item {
+            position: relative;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .audio-item audio {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .delete-media {
+            width: 100%;
+            padding: 6px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .delete-media:hover {
+            background: #c82333;
+        }
+
+        .media-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+            }
+
+            .media-section {
+                width: 100%;
+                border-left: none;
+                border-top: 2px solid #e0e0e0;
+                max-height: 250px;
+            }
+
+            .control-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .session-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-create {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            background: #ccc;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #bbb;
+        }
+
+        .status-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="session-controls">
+                <select id="sessionSelect" onchange="loadSession()">
+                    <option value="">Select Journal</option>
+                </select>
+                <button onclick="newSession()">+ New Journal</button>
+                <button onclick="deleteSession()">Delete Journal</button>
+            </div>
+
+            <div class="separator"></div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
+                <button onclick="previousPage()">← Previous</button>
+                <span class="page-counter"><span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+                <button onclick="nextPage()">Next →</button>
+                <button onclick="addNewPage()">+ New Page</button>
+            </div>
+
+            <div class="separator"></div>
+
+            <label class="file-input-label" for="photoInput">📷 Add Photo</label>
+            <input type="file" id="photoInput" accept="image/*" onchange="addPhoto()">
+
+            <label class="file-input-label" for="audioInput">🔊 Add Audio</label>
+            <input type="file" id="audioInput" accept="audio/wav,audio/mpeg,.wav,.mp3" onchange="addAudio()">
+        </div>
+
+        <!-- Page Tabs -->
+        <div class="tabs-container">
+            <div id="tabsContainer"></div>
+            <button class="add-tab-btn" onclick="addNewPage()">+ Page</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <div class="editor-section">
+                <div class="textarea-wrapper">
+                    <textarea 
+                        id="journalContent" 
+                        class="journal-input" 
+                        placeholder="Write your thoughts here... (Auto-saves when you click 'Quick Save' or switch pages)"
+                    ></textarea>
+                    <button class="quick-save-btn" onclick="quickSave()">💾 Quick Save Entry</button>
+                </div>
+            </div>
+
+            <!-- Media Section -->
+            <div class="media-section">
+                <h3>Media</h3>
+                <div id="mediaContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Session Modal -->
+    <div id="newSessionModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Journal</h2>
+            <input type="text" id="sessionNameInput" placeholder="Journal name...">
+            <div class="modal-buttons">
+                <button class="btn-create" onclick="createSession()">Create</button>
+                <button class="btn-cancel" onclick="closeModal('newSessionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============= STORAGE MANAGEMENT =============
+        const STORAGE_KEY = 'journalSessions';
+
+        // Initialize storage
+        function initStorage() {
+            if (!localStorage.getItem(STORAGE_KEY)) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
+            }
+        }
+
+        function getAllSessions() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        }
+
+        function saveSession(sessionName, data) {
+            const sessions = getAllSessions();
+            sessions[sessionName] = data;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+        }
+
+        function getSession(sessionName) {
+            const sessions = getAllSessions();
+            return sessions[sessionName] || null;
+        }
+
+        function deleteSessionData(sessionName) {
+            const sessions = getAllSessions();
+            delete sessions[sessionName];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+        }
+
+        // ============= SESSION MANAGEMENT =============
+        let currentSession = null;
+        let currentPageIndex = 0;
+
+        function updateSessionSelect() {
+            const sessions = getAllSessions();
+            const select = document.getElementById('sessionSelect');
+            const previousValue = select.value;
+
+            select.innerHTML = '<option value="">Select Journal</option>';
+
+            Object.keys(sessions).forEach(sessionName => {
+                const option = document.createElement('option');
+                option.value = sessionName;
+                option.textContent = sessionName;
+                select.appendChild(option);
+            });
+
+            if (previousValue && sessions[previousValue]) {
+                select.value = previousValue;
+            }
+        }
+
+        function newSession() {
+            document.getElementById('newSessionModal').classList.add('show');
+            document.getElementById('sessionNameInput').focus();
+            document.getElementById('sessionNameInput').value = '';
+        }
+
+        function createSession() {
+            const name = document.getElementById('sessionNameInput').value.trim();
+            if (!name) {
+                alert('Please enter a journal name');
+                return;
+            }
+
+            const sessions = getAllSessions();
+            if (sessions[name]) {
+                alert('Journal already exists!');
+                return;
+            }
+
+            const newSession = {
+                createdDate: new Date().toISOString(),
+                pages: [
+                    {
+                        title: 'Page 1',
+                        content: '',
+                        media: { photos: [], audios: [] }
+                    }
+                ]
+            };
+
+            saveSession(name, newSession);
+            updateSessionSelect();
+            closeModal('newSessionModal');
+            document.getElementById('sessionSelect').value = name;
+            loadSession();
+            showStatus('Journal created!');
+        }
+
+        function loadSession() {
+            const sessionName = document.getElementById('sessionSelect').value;
+            if (!sessionName) {
+                currentSession = null;
+                document.getElementById('journalContent').value = '';
+                document.getElementById('mediaContainer').innerHTML = '';
+                return;
+            }
+
+            currentSession = sessionName;
+            currentPageIndex = 0;
+            loadPage();
+            updateSessionSelect();
+        }
+
+        function deleteSession() {
+            if (!currentSession) {
+                alert('No journal selected');
+                return;
+            }
+
+            if (confirm(`Delete "${currentSession}" and all its pages?`)) {
+                deleteSessionData(currentSession);
+                currentSession = null;
+                currentPageIndex = 0;
+                document.getElementById('sessionSelect').value = '';
+                document.getElementById('journalContent').value = '';
+                document.getElementById('mediaContainer').innerHTML = '';
+                updateSessionSelect();
+                showStatus('Journal deleted');
+            }
+        }
+
+        // ============= PAGE MANAGEMENT =============
+        function loadPage() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            if (!session || !session.pages[currentPageIndex]) return;
+
+            const page = session.pages[currentPageIndex];
+
+            // Load content
+            document.getElementById('journalContent').value = page.content || '';
+
+            // Update page counter
+            document.getElementById('currentPage').textContent = currentPageIndex + 1;
+            document.getElementById('totalPages').textContent = session.pages.length;
+
+            // Update tabs
+            updateTabs();
+
+            // Load media
+            loadMedia(page.media);
+        }
+
+        function savePage() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            const content = document.getElementById('journalContent').value;
+            session.pages[currentPageIndex].content = content;
+            saveSession(currentSession, session);
+        }
+
+        function quickSave() {
+            if (!currentSession) {
+                alert('Please select or create a journal first');
+                return;
+            }
+            savePage();
+            showStatus('Entry saved!');
+        }
+
+        function nextPage() {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (currentPageIndex < session.pages.length - 1) {
+                savePage();
+                currentPageIndex++;
+                loadPage();
+            }
+        }
+
+        function previousPage() {
+            if (!currentSession) return;
+            if (currentPageIndex > 0) {
+                savePage();
+                currentPageIndex--;
+                loadPage();
+            }
+        }
+
+        function addNewPage() {
+            if (!currentSession) {
+                alert('Please select or create a journal first');
+                return;
+            }
+
+            const session = getSession(currentSession);
+            const newPageNumber = session.pages.length + 1;
+
+            const newPage = {
+                title: `Page ${newPageNumber}`,
+                content: '',
+                media: { photos: [], audios: [] }
+            };
+
+            session.pages.push(newPage);
+            saveSession(currentSession, session);
+            currentPageIndex = session.pages.length - 1;
+            loadPage();
+            showStatus('New page added!');
+        }
+
+        function deletePage() {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (session.pages.length === 1) {
+                alert('Cannot delete the last page');
+                return;
+            }
+
+            session.pages.splice(currentPageIndex, 1);
+            if (currentPageIndex >= session.pages.length) {
+                currentPageIndex = session.pages.length - 1;
+            }
+            saveSession(currentSession, session);
+            loadPage();
+            showStatus('Page deleted');
+        }
+
+        // ============= TABS MANAGEMENT =============
+        function updateTabs() {
+            if (!currentSession) return;
+
+            const session = getSession(currentSession);
+            const tabsContainer = document.getElementById('tabsContainer');
+            tabsContainer.innerHTML = '';
+
+            session.pages.forEach((page, index) => {
+                const tab = document.createElement('div');
+                tab.className = `tab ${index === currentPageIndex ? 'active' : ''}`;
+                tab.innerHTML = `
+                    ${page.title}
+                    <span class="tab-close" onclick="deletePageFromTab(${index})">✕</span>
+                `;
+                tab.onclick = () => {
+                    if (index !== currentPageIndex) {
+                        savePage();
+                        currentPageIndex = index;
+                        loadPage();
+                    }
+                };
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function deletePageFromTab(index) {
+            event.stopPropagation();
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            if (session.pages.length === 1) {
+                alert('Cannot delete the last page');
+                return;
+            }
+
+            session.pages.splice(index, 1);
+            if (currentPageIndex >= session.pages.length) {
+                currentPageIndex = session.pages.length - 1;
+            }
+            saveSession(currentSession, session);
+            loadPage();
+            showStatus('Page deleted');
+        }
+
+        // ============= MEDIA MANAGEMENT =============
+        function addPhoto() {
+            const input = document.getElementById('photoInput');
+            if (!input.files[0]) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (!currentSession) {
+                    alert('Please select or create a journal first');
+                    return;
+                }
+
+                const session = getSession(currentSession);
+                const page = session.pages[currentPageIndex];
+
+                page.media.photos.push({
+                    src: e.target.result,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                saveSession(currentSession, session);
+                loadMedia(page.media);
+                input.value = '';
+                showStatus('Photo added!');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function addAudio() {
+            const input = document.getElementById('audioInput');
+            if (!input.files[0]) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (!currentSession) {
+                    alert('Please select or create a journal first');
+                    return;
+                }
+
+                const session = getSession(currentSession);
+                const page = session.pages[currentPageIndex];
+
+                page.media.audios.push({
+                    src: e.target.result,
+                    filename: file.name,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                saveSession(currentSession, session);
+                loadMedia(page.media);
+                input.value = '';
+                showStatus('Audio added!');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function loadMedia(media) {
+            const mediaContainer = document.getElementById('mediaContainer');
+            mediaContainer.innerHTML = '';
+
+            // Photos
+            if (media.photos && media.photos.length > 0) {
+                const photosTitle = document.createElement('div');
+                photosTitle.style.fontWeight = 'bold';
+                photosTitle.style.marginBottom = '10px';
+                photosTitle.style.color = '#667eea';
+                photosTitle.textContent = '📷 Photos';
+                mediaContainer.appendChild(photosTitle);
+
+                media.photos.forEach((photo, index) => {
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'media-item photo-item';
+                    photoItem.innerHTML = `
+                        <img src="${photo.src}" alt="Photo">
+                        <div class="media-label">${photo.timestamp}</div>
+                        <button class="delete-media" onclick="deletePhoto(${index})">Delete</button>
+                    `;
+                    mediaContainer.appendChild(photoItem);
+                });
+            }
+
+            // Audios
+            if (media.audios && media.audios.length > 0) {
+                const audiosTitle = document.createElement('div');
+                audiosTitle.style.fontWeight = 'bold';
+                audiosTitle.style.marginBottom = '10px';
+                audiosTitle.style.marginTop = '15px';
+                audiosTitle.style.color = '#667eea';
+                audiosTitle.textContent = '🔊 Audio Files';
+                mediaContainer.appendChild(audiosTitle);
+
+                media.audios.forEach((audio, index) => {
+                    const audioItem = document.createElement('div');
+                    audioItem.className = 'media-item audio-item';
+                    audioItem.innerHTML = `
+                        <div class="media-label">${audio.filename}</div>
+                        <audio controls style="width: 100%; margin-bottom: 8px;">
+                            <source src="${audio.src}">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div class="media-label">${audio.timestamp}</div>
+                        <button class="delete-media" onclick="deleteAudio(${index})">Delete</button>
+                    `;
+                    mediaContainer.appendChild(audioItem);
+                });
+            }
+
+            if ((!media.photos || media.photos.length === 0) && (!media.audios || media.audios.length === 0)) {
+                mediaContainer.innerHTML = '<p style="color: #999; text-align: center;">No media added yet</p>';
+            }
+        }
+
+        function deletePhoto(index) {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            const page = session.pages[currentPageIndex];
+            page.media.photos.splice(index, 1);
+            saveSession(currentSession, session);
+            loadMedia(page.media);
+            showStatus('Photo deleted');
+        }
+
+        function deleteAudio(index) {
+            if (!currentSession) return;
+            const session = getSession(currentSession);
+            const page = session.pages[currentPageIndex];
+            page.media.audios.splice(index, 1);
+            saveSession(currentSession, session);
+            loadMedia(page.media);
+            showStatus('Audio deleted');
+        }
+
+        // ============= MODAL MANAGEMENT =============
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+        });
+
+        // ============= UTILITY FUNCTIONS =============
+        function showStatus(message) {
+            const status = document.createElement('div');
+            status.className = 'status-message';
+            status.textContent = message;
+            document.body.appendChild(status);
+
+            setTimeout(() => {
+                status.remove();
+            }, 2000);
+        }
+
+        // Auto-save on page change/close
+        window.addEventListener('beforeunload', () => {
+            if (currentSession) {
+                savePage();
+            }
+        });
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            initStorage();
+            updateSessionSelect();
+        });
+    </script>
+</body>
+</html>
