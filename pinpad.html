@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .pin-pad-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .display {
+            background: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-input {
+            font-size: 32px;
+            letter-spacing: 8px;
+            color: #333;
+            font-weight: bold;
+            min-height: 40px;
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+            border-color: #999;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background: #e0e0e0;
+            transform: scale(0.98);
+        }
+
+        .num-btn {
+            font-weight: bold;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        .clear-btn:hover {
+            background: #ff5252;
+            border-color: #ff5252;
+        }
+
+        #backspaceBtn {
+            background: white;
+            color: #333;
+            border-color: #ddd;
+        }
+
+        #backspaceBtn:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .submit-btn {
+            grid-column: 1 / -1;
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-size: 20px;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+            border-color: #45a049;
+        }
+
+        .status-message {
+            text-align: center;
+            min-height: 20px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="pin-pad-container">
+        <div class="header">
+            <h1>🏢 Entry System</h1>
+            <p>Enter your PIN code</p>
+        </div>
+
+        <div class="display">
+            <div class="pin-input" id="pinDisplay"></div>
+        </div>
+
+        <div class="pin-pad">
+            <button class="num-btn" data-num="1">1</button>
+            <button class="num-btn" data-num="2">2</button>
+            <button class="num-btn" data-num="3">3</button>
+            <button class="num-btn" data-num="4">4</button>
+            <button class="num-btn" data-num="5">5</button>
+            <button class="num-btn" data-num="6">6</button>
+            <button class="num-btn" data-num="7">7</button>
+            <button class="num-btn" data-num="8">8</button>
+            <button class="num-btn" data-num="9">9</button>
+            <button class="num-btn" data-num="0">0</button>
+            <button class="num-btn" data-num="*">*</button>
+            <button class="num-btn" data-num="#">#</button>
+        </div>
+
+        <div class="control-row">
+            <button class="clear-btn" id="clearBtn">Clear</button>
+            <button id="backspaceBtn">⌫</button>
+        </div>
+
+        <button class="submit-btn" id="submitBtn">Open Door</button>
+
+        <div class="status-message" id="statusMsg"></div>
+    </div>
+
+    <script>
+        let pinCode = '';
+        const pinDisplay = document.getElementById('pinDisplay');
+        const statusMsg = document.getElementById('statusMsg');
+        const CORRECT_PIN = '000054'; // Change this to your desired PIN
+        const REDIRECT_URL = 'https://maps.apple/p/45vVk6zCqqvYCH'; // Change this to your desired link
+
+        // Number buttons
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (pinCode.length < 6) {
+                    pinCode += this.dataset.num;
+                    updateDisplay();
+                }
+            });
+        });
+
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            pinCode = '';
+            updateDisplay();
+            statusMsg.textContent = '';
+        });
+
+        // Backspace button
+        document.getElementById('backspaceBtn').addEventListener('click', function() {
+            pinCode = pinCode.slice(0, -1);
+            updateDisplay();
+            statusMsg.textContent = '';
+        });
+
+        // Submit button
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            if (pinCode === CORRECT_PIN) {
+                statusMsg.textContent = 'Access Granted! ✓';
+                statusMsg.className = 'status-message success';
+                setTimeout(() => {
+                    window.location.href = REDIRECT_URL;
+                }, 1000);
+            } else {
+                statusMsg.textContent = 'Access Denied! ✗';
+                statusMsg.className = 'status-message error';
+                pinCode = '';
+                updateDisplay();
+                setTimeout(() => {
+                    statusMsg.textContent = '';
+                }, 2000);
+            }
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9' && pinCode.length < 6) {
+                pinCode += e.key;
+                updateDisplay();
+            } else if (e.key === 'Backspace') {
+                pinCode = pinCode.slice(0, -1);
+                updateDisplay();
+            } else if (e.key === 'Enter') {
+                document.getElementById('submitBtn').click();
+            }
+        });
+
+        function updateDisplay() {
+            const masked = '●'.repeat(pinCode.length);
+            pinDisplay.textContent = masked;
+        }
+    </script>
+</body>
+</html>
