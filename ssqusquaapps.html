@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squish Squash Apps</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='95' fill='%235a3fa5' stroke='%238b5cf6' stroke-width='10'/%3E%3Ctext x='100' y='130' font-size='80' font-weight='bold' fill='%23ff3333' text-anchor='middle' font-family='Arial'%3EM%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #5a3fa5 0%, #8b5cf6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            font-weight: bold;
+            color: #ff3333;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .title-section h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .title-section p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Apps Grid */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .app-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .app-card p {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .rating {
+            color: #ffc107;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .app-size {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        /* Featured Section */
+        .featured {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .featured h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .featured-apps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .featured-app-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .featured-app-card:hover {
+            transform: scale(1.05);
+        }
+
+        .featured-app-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .featured-app-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .social-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .device-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .device-btn {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .device-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <div class="icon">M</div>
+                <div class="title-section">
+                    <h1>MG Store</h1>
+                    <p>Your Ultimate App Hub</p>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search apps..." id="searchInput">
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="categories">
+            <button class="category-btn active" onclick="filterApps('all')">All Apps</button>
+            <button class="category-btn" onclick="filterApps('games')">Games</button>
+            <button class="category-btn" onclick="filterApps('productivity')">Productivity</button>
+            <button class="category-btn" onclick="filterApps('social')">Social</button>
+            <button class="category-btn" onclick="filterApps('media')">Media</button>
+            <button class="category-btn" onclick="filterApps('utilities')">Utilities</button>
+        </div>
+
+        <!-- Featured Apps -->
+        <div class="featured">
+            <h2>⭐ Featured This Week</h2>
+            <div class="featured-apps">
+                <div class="featured-app-card">
+                    <h3>🎮 Galaxy Quest</h3>
+                    <p>Epic space adventure game with stunning graphics</p>
+                </div>
+                <div class="featured-app-card">
+                    <h3>📱 Photo Pro</h3>
+                    <p>Professional photo editing tools at your fingertips</p>
+                </div>
+                <div class="featured-app-card">
+                    <h3>💼 Task Master</h3>
+                    <p>Organize your life with smart task management</p>
+                </div>
+                <div class="featured-app-card">
+                    <h3>🎵 Sound Wave</h3>
+                    <p>Stream millions of songs with premium quality</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apps Grid -->
+        
+                <div class="rating">⭐⭐⭐⭐ (4.6)</div>
+                <button class="download-btn">Install</button>
+                <div class="app-size">54 MB</div>
+            </div>
+
+            <div class="app-card" data-category="utilities" data-ios="https://apps.apple.com/us/app/documents-by-readdle/id364901807" data-android="https://play.google.com/store/apps/details?id=com.readdle.documentspro" data-windows="https://www.microsoft.com/en-us/p/documents-by-readdle/9nblggh4nns1" data-mac="https://www.readdle.com/documents">
+                <div class="app-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📄</div>
+                <h3>Documents</h3>
+                <p>File manager and document viewer</p>
+                <div class="rating">⭐⭐⭐⭐ (4.4)</div>
+                <button class="download-btn">Install</button>
+                <div class="app-size">127 MB</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2026 MG App Store. All rights reserved.</p>
+            <p>Download amazing apps and enhance your digital experience</p>
+            <div class="social-links">
+                <a href="#" onclick="alert('Twitter page')">Twitter</a>
+                <a href="#" onclick="alert('Facebook page')">Facebook</a>
+                <a href="#" onclick="alert('Instagram page')">Instagram</a>
+                <a href="#" onclick="alert('Support page')">Support</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Selection Modal -->
+    <div id="deviceModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeDeviceModal()">&times;</span>
+            <h2>Select Your Device</h2>
+            <p id="appNameDisplay"></p>
+            <div class="device-options">
+                <button class="device-btn" onclick="selectDevice('ios')">📱 iOS (App Store)</button>
+                <button class="device-btn" onclick="selectDevice('android')">🤖 Android (Google Play)</button>
+                <button class="device-btn" onclick="selectDevice('windows')">🪟 Windows (Microsoft Store)</button>
+                <button class="device-btn" onclick="selectDevice('mac')">🍎 macOS (Mac App Store)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterApps(category) {
+            const apps = document.querySelectorAll('.app-card');
+            const buttons = document.querySelectorAll('.category-btn');
+
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter apps
+            apps.forEach(app => {
+                if (category === 'all' || app.dataset.category === category) {
+                    app.style.display = 'block';
+                    setTimeout(() => {
+                        app.style.opacity = '1';
+                    }, 10);
+                } else {
+                    app.style.display = 'none';
+                }
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const apps = document.querySelectorAll('.app-card');
+
+            apps.forEach(app => {
+                const title = app.querySelector('h3').textContent.toLowerCase();
+                const description = app.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm) || searchTerm === '') {
+                    app.style.display = 'block';
+                } else {
+                    app.style.display = 'none';
+                }
+            });
+        });
+
+        // Device selection and app store links
+        let currentAppCard = null;
+
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentAppCard = this.closest('.app-card');
+                const appName = currentAppCard.querySelector('h3').textContent;
+                document.getElementById('appNameDisplay').textContent = `Where would you like to download ${appName}?`;
+                document.getElementById('deviceModal').style.display = 'flex';
+            });
+        });
+
+        function closeDeviceModal() {
+            document.getElementById('deviceModal').style.display = 'none';
+        }
+
+        function selectDevice(device) {
+            if (!currentAppCard) return;
+
+            let appStoreUrl = '';
+
+            if (device === 'ios') {
+                appStoreUrl = currentAppCard.getAttribute('data-ios');
+            } else if (device === 'android') {
+                appStoreUrl = currentAppCard.getAttribute('data-android');
+            } else if (device === 'windows') {
+                appStoreUrl = currentAppCard.getAttribute('data-windows');
+            } else if (device === 'mac') {
+                appStoreUrl = currentAppCard.getAttribute('data-mac');
+            }
+
+            if (appStoreUrl) {
+                window.open(appStoreUrl, '_blank');
+                closeDeviceModal();
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('deviceModal');
+            if (event.target === modal) {
+                closeDeviceModal();
+            }
+        };
+    </script>
+</body>
+</html>
