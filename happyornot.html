@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --color-vhappy: #10B981;
+            --color-happy: #84CC16;
+            --color-sad: #F97316;
+            --color-vsad: #EF4444;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #020617, #0f172a, #1e293b);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Animated background elements */
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.5;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .blob-1 {
+            top: 15%; left: 15%;
+            width: 300px; height: 300px;
+            background: rgba(16, 185, 129, 0.2);
+            animation-delay: 0s;
+        }
+        .blob-2 {
+            bottom: 15%; right: 15%;
+            width: 350px; height: 350px;
+            background: rgba(239, 68, 68, 0.15);
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 4rem 5rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 90%;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header {
+            margin-bottom: 3.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .header h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(to right, #f8fafc, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .rating-group {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rating-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .rating-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            transform: scale(0.8);
+        }
+
+        .rating-btn:hover {
+            transform: translateY(-8px);
+        }
+
+        .rating-btn:hover::before {
+            opacity: 0.05;
+            transform: scale(1.1);
+        }
+
+        .rating-btn:active {
+            transform: translateY(2px) scale(0.95);
+        }
+
+        .icon-wrapper {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.05),
+                        0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rating-btn:hover .icon-wrapper {
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.1),
+                        0 15px 30px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+        }
+
+        .rating-btn svg {
+            width: 54px;
+            height: 54px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rating-label {
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .rating-btn:hover .rating-label {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific Button Colors */
+        .btn-vhappy { color: var(--color-vhappy); }
+        .btn-happy { color: var(--color-happy); }
+        .btn-sad { color: var(--color-sad); }
+        .btn-vsad { color: var(--color-vsad); }
+
+        .btn-vhappy:hover .rating-label { color: var(--color-vhappy); font-weight: 600; }
+        .btn-happy:hover .rating-label { color: var(--color-happy); font-weight: 600; }
+        .btn-sad:hover .rating-label { color: var(--color-sad); font-weight: 600; }
+        .btn-vsad:hover .rating-label { color: var(--color-vsad); font-weight: 600; }
+
+        /* Face animations on hover */
+        .btn-vhappy:hover svg { transform: rotate(-5deg); stroke-width: 2.5; }
+        .btn-happy:hover svg { stroke-width: 2.5; }
+        .btn-sad:hover svg { stroke-width: 2.5; }
+        .btn-vsad:hover svg { transform: rotate(5deg); stroke-width: 2.5; }
+
+        /* Success State */
+        .success-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.9);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .success-state.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            color: #10B981;
+            margin-bottom: 1.5rem;
+            animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+        }
+
+        .success-state h2 {
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            color: var(--text-main);
+        }
+
+        .success-state p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hide-main {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .rating-group {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            .rating-btn {
+                padding: 0.5rem;
+            }
+            .icon-wrapper {
+                width: 70px;
+                height: 70px;
+            }
+            .rating-btn svg {
+                width: 36px;
+                height: 36px;
+            }
+            .container {
+                padding: 2.5rem 2rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .rating-label {
+                opacity: 1;
+                transform: none;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container" id="feedback-container">
+        <!-- Main Interface -->
+        <div id="main-interface" style="transition: all 0.4s ease;">
+            <div class="header">
+                <h1>How was your experience?</h1>
+                <p>Your feedback helps us improve.</p>
+            </div>
+
+            <div class="rating-group">
+                <button class="rating-btn btn-vhappy" onclick="submitFeedback('very-happy')">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 9h.01M16 9h.01"></path>
+                            <!-- Big Smile -->
+                            <path d="M8 13.5c2 3 6 3 8 0"></path>
+                        </svg>
+                    </div>
+                    <span class="rating-label">Very Happy</span>
+                </button>
+
+                <button class="rating-btn btn-happy" onclick="submitFeedback('happy')">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 9h.01M16 9h.01"></path>
+                            <!-- Smile -->
+                            <path d="M8 14.5c1.5 1.5 4.5 1.5 6 0"></path>
+                        </svg>
+                    </div>
+                    <span class="rating-label">Happy</span>
+                </button>
+
+                <button class="rating-btn btn-sad" onclick="submitFeedback('sad')">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 9h.01M16 9h.01"></path>
+                            <!-- Frown -->
+                            <path d="M8 16c1.5-1.5 4.5-1.5 6 0"></path>
+                        </svg>
+                    </div>
+                    <span class="rating-label">Unhappy</span>
+                </button>
+
+                <button class="rating-btn btn-vsad" onclick="submitFeedback('very-sad')">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <!-- Angry eyebrows -->
+                            <path d="M7 8l2.5 1.5"></path>
+                            <path d="M17 8l-2.5 1.5"></path>
+                            <path d="M8 10h.01M16 10h.01"></path>
+                            <!-- Deep Frown -->
+                            <path d="M8 17c2-3 6-3 8 0"></path>
+                        </svg>
+                    </div>
+                    <span class="rating-label">Very Unhappy</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Interface -->
+        <div class="success-state" id="success-interface">
+            <svg class="success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2>Thank You!</h2>
+            <p>Your feedback has been recorded.</p>
+        </div>
+    </div>
+
+    <script>
+        function submitFeedback(rating) {
+            console.log('Feedback recorded:', rating);
+            
+            const mainInterface = document.getElementById('main-interface');
+            const successInterface = document.getElementById('success-interface');
+            
+            // Hide main interface
+            mainInterface.classList.add('hide-main');
+            
+            // Show success after short delay for smooth transition
+            setTimeout(() => {
+                successInterface.classList.add('active');
+            }, 300);
+
+            // Redirect to marks-games.html after a short delay
+            setTimeout(() => {
+                window.location.href = 'marks-games.html';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

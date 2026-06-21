@@ -176,12 +176,12 @@
   }
 </style>
   <style>
-    .logout-fixed {
+    .rate-fixed {
       position: fixed;
       top: 18px;
       left: 18px;
       z-index: 1002;
-      background: #e53935;
+      background: #10B981;
       color: #fff;
       border: none;
       border-radius: 6px;
@@ -189,11 +189,11 @@
       font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 2px 8px #b71c1c33;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
       transition: background 0.2s;
     }
-    .logout-fixed:hover {
-      background: #b71c1c;
+    .rate-fixed:hover {
+      background: #059669;
     }
     .tokens-fixed {
       position: fixed;
@@ -248,7 +248,7 @@
 </head>
 
 <body>
-<button class="logout-fixed" onclick="logoutGames()">Log Out</button>
+<button class="rate-fixed" onclick="window.location.href='happyornot.html'">Rate The Web</button>
 <button class="profile-fixed" id="profileBtn" onclick="window.location.href='profilemenu/profile.html'" title="Settings">👤</button>
 <button class="tokens-fixed" id="tokenDisplay" onclick="showTokenDetails()">
   <img src="token.png" alt="token">
