@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NameMyPet - Find the Perfect Name for Your Best Friend</title>
+    <meta name="description"
+        content="Discover the perfect name for your cat, dog, or rabbit using our smart filters and beautiful UI.">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --primary-color: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --accent-color: #ec4899;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15), transparent 40%);
+            background-attachment: fixed;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-out;
+        }
+
+        /* Type Selector */
+        .pet-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .pet-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pet-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .pet-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            border-color: transparent;
+            box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Filter Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alphabet-filter {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .alpha-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .alpha-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .alpha-btn.active {
+            background: var(--primary-color);
+            border-color: transparent;
+            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.4);
+        }
+
+        @media (max-width: 640px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        select option {
+            background: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+        }
+
+        .search-btn {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent-color), #be185d);
+            border: none;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 56px;
+            /* Match input height */
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Grid */
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .results-count {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: scaleIn 0.4s ease-out backwards;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .card-theme {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .card-types {
+            margin-top: 0.75rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .type-icon {
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>NameMyPet</h1>
+        <p>Find the perfect identity for your new best friend</p>
+    </header>
+
+    <div class="container">
+        <div class="pet-selector" id="petSelector">
+            <button class="pet-btn active" data-type="ALL">🐾 All Pets</button>
+            <button class="pet-btn" data-type="CAT">🐱 Cat</button>
+            <button class="pet-btn" data-type="DOG">🐶 Dog</button>
+            <button class="pet-btn" data-type="RABBIT">🐰 Rabbit</button>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label for="searchInput">Starts with / Name</label>
+                <input type="text" id="searchInput" placeholder="e.g., L or Luna..." autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label for="themeSelect">Theme</label>
+                <select id="themeSelect">
+                    <option value="ALL">Any Theme</option>
+                    <option value="Cute">Cute</option>
+                    <option value="Fierce">Fierce</option>
+                    <option value="Nature">Nature</option>
+                    <option value="Space">Space</option>
+                    <option value="Funny">Funny</option>
+                    <option value="Royalty">Royalty</option>
+                    <option value="Animals">Animals</option>
+                </select>
+            </div>
+
+            <button class="search-btn" id="searchBtn">✨ Discover</button>
+        </div>
+        
+        <div class="alphabet-filter" id="alphabetFilter">
+            <!-- Alphabet buttons populated via JS -->
+        </div>
+
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Suggested Names</h2>
+                <span class="results-count" id="resultsCount">0 names found</span>
+            </div>
+            <div class="grid" id="resultsGrid">
+                <!-- Cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="petnames.h"></script>
+    <script src="petnames_cats.h"></script>
+    <script src="petnames_dogs.h"></script>
+    <script src="petnames_rabbits.h"></script>
+    <script>
+        // Load external data
+        const petData = window.externalPetData || [];
+
+        const typeIcons = {
+            'CAT': '🐱',
+            'DOG': '🐶',
+            'RABBIT': '🐰'
+        };
+
+        // State
+        let selectedType = 'ALL';
+        let selectedLetter = 'ALL';
+
+        // Initialize Alphabet Bar
+        const alphabetFilter = document.getElementById('alphabetFilter');
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+        
+        // Add "All" button
+        const allBtn = document.createElement('button');
+        allBtn.className = 'alpha-btn active';
+        allBtn.textContent = 'All';
+        allBtn.onclick = () => filterByLetter('ALL', allBtn);
+        alphabetFilter.appendChild(allBtn);
+
+        // Add A-Z buttons
+        alphabet.forEach(letter => {
+            const btn = document.createElement('button');
+            btn.className = 'alpha-btn';
+            btn.textContent = letter;
+            btn.onclick = () => filterByLetter(letter, btn);
+            alphabetFilter.appendChild(btn);
+        });
+
+        function filterByLetter(letter, btnElement) {
+            // Update active state
+            document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+            
+            selectedLetter = letter;
+            performSearch();
+        }
+
+        // DOM Elements
+        const petBtns = document.querySelectorAll('.pet-btn');
+        const searchInput = document.getElementById('searchInput');
+        const themeSelect = document.getElementById('themeSelect');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const resultsCount = document.getElementById('resultsCount');
+
+        // Event Listeners
+        petBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active class
+                petBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update state
+                selectedType = btn.getAttribute('data-type');
+
+                // Optional: auto-search on type change for better UX
+                performSearch();
+            });
+        });
+
+        searchBtn.addEventListener('click', performSearch);
+
+        // Allow pressing Enter in the search input
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Search Logic
+        function performSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const selectedTheme = themeSelect.value;
+
+            // Filter the data
+            const results = petData.filter(pet => {
+                // Type filter
+                const typeMatch = selectedType === 'ALL' || pet.types.includes(selectedType);
+
+                // Theme filter
+                const themeMatch = selectedTheme === 'ALL' || pet.theme === selectedTheme;
+
+                // Name/Start Letter filter
+                const searchMatch = searchTerm === '' || pet.name.toLowerCase().startsWith(searchTerm);
+                
+                // Alphabet bar filter
+                const alphaMatch = selectedLetter === 'ALL' || pet.name.toUpperCase().startsWith(selectedLetter);
+
+                return typeMatch && themeMatch && searchMatch && alphaMatch;
+            });
+
+            renderResults(results);
+        }
+
+        // Render Results
+        function renderResults(results) {
+            resultsGrid.innerHTML = '';
+            resultsCount.textContent = `${results.length} name${results.length !== 1 ? 's' : ''} found`;
+
+            if (results.length === 0) {
+                resultsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🐾</div>
+                        <h3>No names found</h3>
+                        <p>Try adjusting your filters to discover more names!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Shuffle array to make it feel fresh
+            const shuffled = results.sort(() => 0.5 - Math.random());
+
+            shuffled.forEach((pet, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Add staggered animation delay
+                card.style.animationDelay = `${index * 0.05}s`;
+
+                const typeIconsHtml = pet.types.map(t => `<span class="type-icon" title="${t}">${typeIcons[t]}</span>`).join('');
+
+                card.innerHTML = `
+                    <div class="card-name">${pet.name}</div>
+                    <div class="card-theme">${pet.theme}</div>
+                    <div class="card-types">
+                        ${typeIconsHtml}
+                    </div>
+                `;
+
+                resultsGrid.appendChild(card);
+            });
+        }
+
+        // Initial render
+        performSearch();
+    </script>
+</body>
+
+</html>
