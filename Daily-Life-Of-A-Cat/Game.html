@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Life of a Cat 🐱</title>
+  <meta name="description" content="A cozy top-down cat life simulator. Choose your cat and explore a fenced yard and two-story house!">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="Game.css">
+  <link rel="stylesheet" href="minimap.css">
+  <link rel="stylesheet" href="House/House-L1.css">
+  <link rel="stylesheet" href="House/House-L2.css">
+</head>
+<body>
+
+  <!-- ─── Game Canvas ─────────────────────────────────────── -->
+  <canvas id="game-canvas" aria-label="Game world"></canvas>
+
+  <!-- ─── Night Overlay ──────────────────────────────────── -->
+  <div id="night-overlay"></div>
+
+  <!-- ─── Zone Transition Fade ────────────────────────────── -->
+  <div id="transition-overlay"></div>
+
+  <!-- ─── HUD ─────────────────────────────────────────────── -->
+  <div id="hud">
+    <div id="stat-panel">
+      <div class="cat-hud-name" id="hud-cat-name">🐱 Cat</div>
+
+      <div class="stat-row-hud">
+        <span class="stat-icon">🍖</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill hunger" id="bar-hunger" style="width:80%"></div>
+        </div>
+        <span class="stat-val" id="val-hunger">80</span>
+      </div>
+
+      <div class="stat-row-hud">
+        <span class="stat-icon">⚡</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill energy" id="bar-energy" style="width:90%"></div>
+        </div>
+        <span class="stat-val" id="val-energy">90</span>
+      </div>
+
+      <div class="stat-row-hud">
+        <span class="stat-icon">💖</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill happiness" id="bar-happiness" style="width:75%"></div>
+        </div>
+        <span class="stat-val" id="val-happiness">75</span>
+      </div>
+    </div>
+
+    <div id="info-panel">
+      <div id="time-display">🌤 12:00</div>
+      <div id="zone-label">🌿 Yard</div>
+    </div>
+  </div>
+
+  <!-- ─── Minimap ──────────────────────────────────────────── -->
+  <div id="minimap-container">
+    <div id="minimap-title">MAP</div>
+    <!-- canvas injected by minimap.js -->
+    <div id="minimap-zone-label">Yard</div>
+  </div>
+
+  <!-- ─── Sound Toggle ─────────────────────────────────────── -->
+  <button id="sound-toggle" aria-label="Toggle sound">🔊 Sound</button>
+
+  <!-- ─── Toast Notification ──────────────────────────────── -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ─── Scripts — dependency order ──────────────────────── -->
+  <!-- Audio (first — no deps) -->
+  <script src="Audio.js"></script>
+
+  <!-- Player classes -->
+  <script src="Players/Cheetah.js"></script>
+  <script src="Players/Button.js"></script>
+  <script src="Players/Restrictions.js"></script>
+  <script src="Players/Player-selector.js"></script>
+  <script src="Players/Cheetah-Joins/cheetah-file-manager.js"></script>
+  <script src="Players/Cheetah-Joins/cheetah-meet.js"></script>
+
+  <!-- World maps & objects -->
+  <script src="House/House-objects.js"></script>
+  <script src="House/House-L1.js"></script>
+  <script src="House/House-L2.js"></script>
+  <script src="Fence-Map.js"></script>
+
+  <!-- Minimap -->
+  <script src="minimap.js"></script>
+
+  <!-- ─── Main Game Script ─────────────────────────────────── -->
+  <script>
+  // ═══════════════════════════════════════════════════════════
+  //  GAME BOOTSTRAP
+  // ═══════════════════════════════════════════════════════════
+
+  const canvas  = document.getElementById('game-canvas');
+  const ctx     = canvas.getContext('2d');
+
+  // HUD elements
+  const hudName    = document.getElementById('hud-cat-name');
+  const barHunger  = document.getElementById('bar-hunger');
+  const barEnergy  = document.getElementById('bar-energy');
+  const barHappy   = document.getElementById('bar-happiness');
+  const valHunger  = document.getElementById('val-hunger');
+  const valEnergy  = document.getElementById('val-energy');
+  const valHappy   = document.getElementById('val-happiness');
+  const timeDisplay= document.getElementById('time-display');
+  const zoneLabel  = document.getElementById('zone-label');
+  const mmZoneLabel= document.getElementById('minimap-zone-label');
+  const nightOverlay = document.getElementById('night-overlay');
+  const transOverlay = document.getElementById('transition-overlay');
+
+  // ─── Game state ────────────────────────────────────────────
+  let player   = null;
+  let zone     = 'yard';   // 'yard' | 'l1' | 'l2'
+  let camX     = 0;
+  let camY     = 0;
+  let gameTime = 12 * 60; // minutes (12:00)
+  let lastTs   = null;
+  let running  = false;
+  let transitionActive = false;
+
+  // ─── Zone config ───────────────────────────────────────────
+  const ZONE_CONFIG = {
+    yard: {
+      map: YARD_MAP, tileSize: YARD_TILE_SIZE, solid: YARD_SOLID,
+      getBounds: getYardBounds, getSize: getYardSize,
+      render: (cx, cy, cw, ch) => renderYard(ctx, cx, cy, cw, ch),
+      objects: YARD_OBJECTS,
+      label: '🌿 Yard',
+      mmLabel: 'Yard'
+    },
+    l1: {
+      map: L1_MAP, tileSize: L1_TILE_SIZE, solid: L1_SOLID,
+      getBounds: getL1Bounds, getSize: getL1Size,
+      render: (cx, cy, cw, ch, near) => renderL1(ctx, cx, cy, cw, ch, near),
+      objects: L1_OBJECTS,
+      label: '🏠 Ground Floor',
+      mmLabel: 'Ground Floor'
+    },
+    l2: {
+      map: L2_MAP, tileSize: L2_TILE_SIZE, solid: L2_SOLID,
+      getBounds: getL2Bounds, getSize: getL2Size,
+      render: (cx, cy, cw, ch, near) => renderL2(ctx, cx, cy, cw, ch, near, false),
+      objects: L2_OBJECTS,
+      label: '🛏 Upper Floor',
+      mmLabel: 'Upper Floor'
+    },
+    l2_cheetah: {
+      map: L2_CHEETAH_MAP, tileSize: L2_TILE_SIZE, solid: L2_SOLID,
+      getBounds: getL2CheetahBounds, getSize: getL2CheetahSize,
+      render: (cx, cy, cw, ch, near) => renderL2(ctx, cx, cy, cw, ch, near, true),
+      objects: L2_CHEETAH_OBJECTS,
+      label: '🐾 Cheetah Room',
+      mmLabel: 'Cheetah Room'
+    }
+  };
+
+  // ─── Minimap zone data ─────────────────────────────────────
+  const MM_ZONE_DATA = {
+    yard: { map: YARD_MAP, colors: {
+      0:'#6abf4b',1:'#8b6914',2:'#7a5a0f',3:'#3a8c27',4:'#ffcf5e',5:'#c8aa72',6:'#60b8e0',7:'#8b5e2a',8:'#5c3d0a'
+    }},
+    l1:  { map: L1_MAP,  colors: {
+      0:'#d4a96e',1:'#7a5c3a',2:'#6a4c2a',3:'#c09060',4:'#e0dfe0',5:'#b04040',6:'#c4a96a',7:'#a0cce0'
+    }},
+    l2:  { map: L2_MAP,  colors: {
+      0:'#e8d5b0',1:'#8a6a4a',2:'#6a4a2a',3:'#d4b880',4:'#d4eef7',5:'#8060c0',6:'#c4a96a',7:'#b8dff0',8:'#8a6a4a'
+    }},
+    l2_cheetah: { map: L2_CHEETAH_MAP, colors: {
+      0:'#e8d5b0',1:'#8a6a4a',2:'#6a4a2a',3:'#d4b880',4:'#d4eef7',5:'#8060c0',6:'#c4a96a',7:'#b8dff0',8:'#8a6a4a'
+    }}
+  };
+
+  // ─── Canvas resize ─────────────────────────────────────────
+  function resizeCanvas() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // ─── Toast notification ────────────────────────────────────
+  let _toastTimer = null;
+  function showToast(msg, duration = 2200) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  // ─── Zone transition ───────────────────────────────────────
+  function doTransition(destZone, spawnX, spawnY) {
+    if (transitionActive) return;
+    transitionActive = true;
+
+    // Fade out
+    transOverlay.classList.add('fade-in');
+    SoundManager.play('transition');
+
+    setTimeout(() => {
+      zone = destZone;
+      player.x = spawnX;
+      player.y = spawnY;
+
+      const cfg    = ZONE_CONFIG[zone];
+      const bounds = cfg.getBounds();
+      // centre camera on player
+      _updateCamera(cfg.getSize());
+
+      zoneLabel.textContent  = cfg.label;
+      mmZoneLabel.textContent = cfg.mmLabel;
+
+      showToast(cfg.label);
+
+      // Fade in
+      transOverlay.classList.remove('fade-in');
+      transOverlay.classList.add('fade-out');
+      setTimeout(() => {
+        transOverlay.classList.remove('fade-out');
+        transitionActive = false;
+      }, 320);
+    }, 320);
+  }
+
+  // ─── Camera ────────────────────────────────────────────────
+  function _updateCamera(worldSize) {
+    const cw = canvas.width;
+    const ch = canvas.height;
+    camX = Math.max(0, Math.min(worldSize.width  - cw, player.x + player.width  / 2 - cw / 2));
+    camY = Math.max(0, Math.min(worldSize.height - ch, player.y + player.height / 2 - ch / 2));
+  }
+
+  // ─── Time of day ───────────────────────────────────────────
+  const TIME_ICONS = ['🌙','🌙','🌙','🌙','🌙','🌙','🌅','☀️','☀️','☀️','☀️','☀️','🌤','☀️','☀️','☀️','☀️','☀️','🌆','🌆','🌃','🌙','🌙','🌙'];
+  function updateTime(dt) {
+    gameTime += dt * 2; // 1 real second = 2 game minutes
+    if (gameTime >= 24 * 60) gameTime -= 24 * 60;
+
+    const hours   = Math.floor(gameTime / 60) % 24;
+    const minutes = Math.floor(gameTime % 60);
+    const ampm    = hours < 12 ? 'AM' : 'PM';
+    const h12     = ((hours % 12) || 12);
+    timeDisplay.textContent = `${TIME_ICONS[hours]} ${h12}:${String(minutes).padStart(2,'0')} ${ampm}`;
+
+    // Night tint
+    const nightStrength = hours >= 20 || hours < 6
+      ? 0.45
+      : hours >= 18 ? (hours - 18) / 2 * 0.45
+      : hours < 8   ? (8 - hours) / 2 * 0.45
+      : 0;
+    nightOverlay.style.background = `rgba(20,10,60,${nightStrength})`;
+  }
+
+  // ─── HUD update ────────────────────────────────────────────
+  function updateHUD() {
+    const h = Math.round(player.hunger);
+    const e = Math.round(player.energy);
+    const hp= Math.round(player.happiness);
+    barHunger.style.width  = h  + '%';
+    barEnergy.style.width  = e  + '%';
+    barHappy.style.width   = hp + '%';
+    valHunger.textContent  = h;
+    valEnergy.textContent  = e;
+    valHappy.textContent   = hp;
+  }
+
+  // ─── Near objects ──────────────────────────────────────────
+  function getNearObjects() {
+    const cfg    = ZONE_CONFIG[zone];
+    const bounds = player.getBounds();
+    return cfg.objects.filter(obj => {
+      if (obj instanceof HouseObject) return obj.isNear(bounds);
+      // yard objects (plain objects)
+      const reach = 48;
+      return (
+        bounds.right  + reach > obj.x &&
+        bounds.left   - reach < obj.x + (obj.width  || 40) &&
+        bounds.bottom + reach > obj.y &&
+        bounds.top    - reach < obj.y + (obj.height || 40)
+      );
+    });
+  }
+
+  // ─── Main game loop ────────────────────────────────────────
+  function gameLoop(ts) {
+    if (!running) return;
+
+    const dt = lastTs !== null ? Math.min((ts - lastTs) / 1000, 0.1) : 0.016;
+    lastTs = ts;
+
+    const cfg     = ZONE_CONFIG[zone];
+    const size    = cfg.getSize();
+    const bounds  = cfg.getBounds();
+
+    // Input
+    const input = InputController.getState();
+
+    // Cheetah Story Arc Logic
+    CheetahFileManager.tick(gameTime);
+
+    if (CheetahMeet.isActive()) {
+        CheetahMeet.update(dt, camX, camY);
+        // Block player movement and interaction during cutscene
+        input.dx = 0;
+        input.dy = 0;
+        input.interact = false;
+    } else {
+        // Check for first meet trigger if Cheetah NPC is present on L2 and player is near
+        const cheetahNPC = CheetahFileManager.getCheetahNPC();
+        if (cheetahNPC && zone === 'l2' && CheetahFileManager.getPhase() === CheetahFileManager.STATE.ARRIVED) {
+           const dist = Math.hypot(player.x - cheetahNPC.x, player.y - cheetahNPC.y);
+           if (dist < 100) { // Trigger distance
+               if (CheetahFileManager.triggerFirstMeeting()) {
+                   // Started cutscene!
+                   input.dx = 0;
+                   input.dy = 0;
+                   input.interact = false;
+               }
+           }
+        }
+    }
+
+    // Cat Switching (TAB)
+    if (CheetahFileManager.isCheetahPlayable() && !CheetahMeet.isActive()) {
+         // Need to track TAB key independently or add it to InputController. Let's add simple listener here for one-off press.
+         // Actually, let's just check standard keydown.
+         if (window._tabPressed) {
+             window._tabPressed = false;
+             // Switch cats
+             const otherCat = player === CheetahFileManager.getCheetahPlayer() ? window._buttonPlayer : CheetahFileManager.getCheetahPlayer();
+             if (otherCat) {
+                 // Check if other cat's zone is allowed (Cheetah in Yard check)
+                 let allowed = true;
+                 if (otherCat.breed === 'cheetah' && window._buttonPlayerZone === 'yard') {
+                     showToast("Cheetah refuses to go outside!", 3000);
+                     allowed = false;
+                 }
+                 if (allowed) {
+                    // Save current cat's state
+                    if (player.breed === 'button') {
+                        window._buttonPlayerZone = zone;
+                    } else {
+                        window._cheetahPlayerZone = zone;
+                    }
+
+                    player = otherCat;
+                    zone = player.breed === 'button' ? (window._buttonPlayerZone || 'l1') : (window._cheetahPlayerZone || 'l2_cheetah');
+
+                    hudName.textContent = '🐱 ' + player.name;
+                    const cfg = ZONE_CONFIG[zone];
+                    zoneLabel.textContent = cfg.label;
+                    mmZoneLabel.textContent = cfg.mmLabel;
+                    showToast("Switched to " + player.name);
+                 }
+             }
+         }
+    }
+
+    // Blocked function
+    const blockedFn = Restrictions.makeBlockedFn(cfg.map, cfg.tileSize, cfg.solid, player.width, player.height);
+
+    // Move
+    player.move(input.dx, input.dy, dt, blockedFn, bounds);
+
+    // Update player stats
+    player.update(dt);
+
+    // Camera
+    _updateCamera(size);
+
+    // Nearby objects
+    const nearObjs = getNearObjects();
+
+    // Update house objects
+    cfg.objects.forEach(obj => {
+      if (obj instanceof HouseObject) obj.update(dt);
+    });
+
+    // Interact
+    if (input.interact && nearObjs.length > 0) {
+      nearObjs.forEach(obj => {
+        const result = player.interact(obj);
+        if (result && obj instanceof HouseObject) obj.flash();
+        if (result) {
+          const labels = { food_bowl:'😋 Nom nom!', water_bowl:'💧 Refreshing!', bed:'😴 Zzzz...', toy:'🎉 Playtime!', litter_box:'✅ Ah, better!', couch:'😌 So comfy!', window:'🌍 What a view!', stairs:'🪜 Going!', door:'🚪 Going!' };
+          showToast(labels[obj.type] || '✨');
+        }
+      });
+    }
+
+    // Door transition check
+    if (!transitionActive && !CheetahMeet.isActive()) {
+      const dest = Restrictions.checkDoorTransition(player.x, player.y, player.width, player.height, zone, player.breed);
+      if (dest) {
+          // Extra check handled by Restrictions, but let's be safe
+          if (!Restrictions.canGoOutside(player.breed) && dest.zone === 'yard') {
+              showToast("Cheetah refuses to go outside!", 3000);
+          } else {
+              doTransition(dest.zone, dest.spawnX, dest.spawnY);
+          }
+      }
+    }
+
+    // Time
+    updateTime(dt);
+
+    // HUD
+    updateHUD();
+
+    // ─── Render ────────────────────────────────────────────
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background fill (sky / room colour)
+    const bgColors = { yard: '#4a8c2a', l1: '#8a6a4a', l2: '#8a6a4a' };
+    ctx.fillStyle = bgColors[zone];
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Zone map
+    cfg.render(camX, camY, canvas.width, canvas.height, nearObjs);
+
+    // Render Cheetah NPC if in same zone or Cheetah is active and Button is NPC
+    if (CheetahFileManager.isCheetahVisible()) {
+        const cheetahNPC = CheetahFileManager.getCheetahNPC();
+        if (cheetahNPC && zone === 'l2' && !CheetahFileManager.isCheetahPlayable()) {
+             // Only render if she's arrived/locked and we are on l2.
+             // (During locked phase, she's technically in l2_cheetah room, but we render her on l2 map for the 'peek' effect,
+             // or we rely on her x,y being correct relative to L2 origin).
+             cheetahNPC.render(ctx, camX, camY);
+        } else if (CheetahFileManager.isCheetahPlayable()) {
+             // If they are both playable, render the one that is NOT currently controlled, IF they are in the same zone.
+             const inactiveCat = player.breed === 'button' ? CheetahFileManager.getCheetahPlayer() : window._buttonPlayer;
+             const inactiveZone = player.breed === 'button' ? (window._cheetahPlayerZone || 'l2_cheetah') : (window._buttonPlayerZone || 'l1');
+             if (inactiveCat && inactiveZone === zone) {
+                 inactiveCat.render(ctx, camX, camY);
+             }
+        }
+    }
+
+    // Player
+    player.render(ctx, camX, camY);
+
+    // Cutscene overlays
+    if (CheetahMeet.isActive()) {
+        CheetahMeet.render(ctx);
+    }
+
+    // Minimap
+    Minimap.render(zone, player.x, player.y, size.width, size.height);
+
+    InputController.endFrame();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // ─── Start game ────────────────────────────────────────────
+  function startGame(preset) {
+    player = new CatPlayer(preset);
+    player.x = 240;
+    player.y = 240;
+    
+    // Store button globally for switching later
+    window._buttonPlayer = player;
+    window._buttonPlayerZone = zone;
+
+    hudName.textContent = '🐱 ' + preset.name;
+
+    InputController.init();
+    Minimap.init(MM_ZONE_DATA);
+
+    // Init Cheetah story arc
+    CheetahFileManager.init({
+        onArrived: () => {
+            showToast("A new cat has arrived! 🐾", 5000);
+            SoundManager.play('interact');
+        },
+        onFirstMeet: () => {
+            CheetahMeet.start(window._buttonPlayer, CheetahFileManager.getCheetahNPC(), ctx, () => {
+                Restrictions.lockDoor('l2_to_cheetah_room');
+                // Move cheetah NPC into the actual room bounds to stay there
+                const cNPC = CheetahFileManager.getCheetahNPC();
+                if(cNPC) {
+                    cNPC.x = 650;
+                    cNPC.y = 120;
+                }
+            });
+        },
+        onUnlocked: () => {
+            showToast("Cheetah is warming up! 🐾 Press TAB to switch cats.", 6000);
+            Restrictions.unlockDoor('l2_to_cheetah_room');
+            SoundManager.play('interact');
+            // Init cheetah zone
+            window._cheetahPlayerZone = 'l2_cheetah';
+        },
+        getGameTime: () => gameTime
+    });
+
+    zoneLabel.textContent   = ZONE_CONFIG[zone].label;
+    mmZoneLabel.textContent = ZONE_CONFIG[zone].mmLabel;
+
+    SoundManager.play('select');
+
+    running = true;
+    requestAnimationFrame(gameLoop);
+  }
+
+  // ─── Sound toggle ──────────────────────────────────────────
+  let soundOn = true;
+  document.getElementById('sound-toggle').addEventListener('click', () => {
+    soundOn = !soundOn;
+    SoundManager.setEnabled(soundOn);
+    document.getElementById('sound-toggle').textContent = soundOn ? '🔊 Sound' : '🔇 Muted';
+  });
+  
+  // ─── Global Key Listeners ──────────────────────────────────
+  window.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+          e.preventDefault(); // Prevent UI focus cycling
+          window._tabPressed = true;
+      }
+  });
+
+  // ─── Show selector on load ─────────────────────────────────
+  PlayerSelector.show(startGame);
+
+  </script>
+</body>
+</html>
