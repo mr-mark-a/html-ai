@@ -55,6 +55,7 @@
 
     <div id="info-panel">
       <div id="time-display">🌤 12:00</div>
+      <div id="speed-display">⏱️ 1 sec = 3 hrs</div>
       <div id="zone-label">🌿 Yard</div>
     </div>
   </div>
@@ -66,8 +67,9 @@
     <div id="minimap-zone-label">Yard</div>
   </div>
 
-  <!-- ─── Sound Toggle ─────────────────────────────────────── -->
+  <!-- ─── Sound & Auto-feed Toggles ────────────────────────────────────────── -->
   <button id="sound-toggle" aria-label="Toggle sound">🔊 Sound</button>
+  <button id="auto-feed-toggle" aria-label="Toggle auto feed">🍽️ Auto Feed</button>
 
   <!-- ─── Toast Notification ──────────────────────────────── -->
   <div id="toast" role="status" aria-live="polite"></div>
@@ -241,7 +243,12 @@
   // ─── Time of day ───────────────────────────────────────────
   const TIME_ICONS = ['🌙','🌙','🌙','🌙','🌙','🌙','🌅','☀️','☀️','☀️','☀️','☀️','🌤','☀️','☀️','☀️','☀️','☀️','🌆','🌆','🌃','🌙','🌙','🌙'];
   function updateTime(dt) {
-    gameTime += dt * 2; // 1 real second = 2 game minutes
+    const fastForward = window._fastForwardPressed &&
+      typeof CheetahFileManager !== 'undefined' &&
+      CheetahFileManager.getPhase() === CheetahFileManager.STATE.ABSENT;
+
+    const speed = fastForward ? 180 : 2;
+    gameTime += dt * speed;
     if (gameTime >= 24 * 60) gameTime -= 24 * 60;
 
     const hours   = Math.floor(gameTime / 60) % 24;
@@ -258,6 +265,18 @@
       : 0;
     nightOverlay.style.background = `rgba(20,10,60,${nightStrength})`;
   }
+
+  // Advance to the next day (called when player sleeps)
+  window.advanceToNextDay = function() {
+    // Set game time to morning (08:00)
+    gameTime = 8 * 60;
+    // Notify cheetah manager of day rollover
+    if (typeof CheetahFileManager !== 'undefined' && typeof CheetahFileManager.advanceDay === 'function') {
+      CheetahFileManager.advanceDay();
+    }
+    showToast('A new day begins 🌅', 3000);
+    SoundManager.play && SoundManager.play('transition');
+  };
 
   // ─── HUD update ────────────────────────────────────────────
   function updateHUD() {
@@ -372,6 +391,9 @@
 
     // Update player stats
     player.update(dt);
+
+    // Auto feed logic
+    autoFeedUpdate(dt);
 
     // Camera
     _updateCamera(size);
@@ -513,17 +535,60 @@
 
   // ─── Sound toggle ──────────────────────────────────────────
   let soundOn = true;
+  let autoFeedEnabled = false;
+  const autoFeedToggle = document.getElementById('auto-feed-toggle');
+
   document.getElementById('sound-toggle').addEventListener('click', () => {
     soundOn = !soundOn;
     SoundManager.setEnabled(soundOn);
     document.getElementById('sound-toggle').textContent = soundOn ? '🔊 Sound' : '🔇 Muted';
   });
-  
+
+  autoFeedToggle.addEventListener('click', () => {
+    autoFeedEnabled = !autoFeedEnabled;
+    autoFeedToggle.textContent = autoFeedEnabled ? '🍽️ Auto Feed ON' : '🍽️ Auto Feed';
+    showToast(autoFeedEnabled ? 'Auto Feed enabled' : 'Auto Feed disabled', 1600);
+  });
+
+  function autoFeedUpdate(dt) {
+    if (!autoFeedEnabled || !player) return;
+    const cfg = ZONE_CONFIG[zone];
+    const foodBowls = cfg.objects.filter(obj => obj.type === 'food_bowl');
+    if (foodBowls.length === 0) return;
+
+    // Refill food bowls gradually when auto-feed is enabled.
+    foodBowls.forEach(obj => {
+      if (obj.amount < 100) {
+        obj.amount = Math.min(100, obj.amount + 24 * dt);
+      }
+    });
+
+    if (player.hunger >= 100) return;
+    const nearFood = foodBowls.find(obj => obj.isNear(player.getBounds()));
+    if (!nearFood) return;
+    player.interact(nearFood);
+  }
+
   // ─── Global Key Listeners ──────────────────────────────────
+  window._fastForwardPressed = false;
+
   window.addEventListener('keydown', (e) => {
       if (e.key === 'Tab') {
           e.preventDefault(); // Prevent UI focus cycling
           window._tabPressed = true;
+      }
+      if (e.key === 'f' || e.key === 'F') {
+          window._fastForwardPressed = true;
+          if (typeof CheetahFileManager !== 'undefined' &&
+              CheetahFileManager.getPhase() === CheetahFileManager.STATE.ABSENT) {
+            showToast('Fast-forwarding to Cheetah arrival', 1400);
+          }
+      }
+  });
+
+  window.addEventListener('keyup', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+          window._fastForwardPressed = false;
       }
   });
 

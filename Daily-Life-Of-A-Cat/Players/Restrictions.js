@@ -25,11 +25,15 @@ const Restrictions = (() => {
       // Stairs: go back to L1
       { id: 'l2_to_l1',        rect: { x: 650, y: 336, w: 70, h: 96 }, dest: { zone: 'l1', spawnX: 600, spawnY: 400 } },
       // Cheetah room door: normally open after FRIENDS phase
-      { id: 'l2_to_cheetah_room', rect: { x: 500, y: 320, w: 60, h: 70 },  dest: { zone: 'l2_cheetah', spawnX: 140, spawnY: 336 } }
+      { id: 'l2_to_cheetah_room', rect: { x: 500, y: 320, w: 60, h: 70 },  dest: { zone: 'l2_cheetah', spawnX: 140, spawnY: 336 } },
+      // Alternate door to Cheetah room (lockable by scenario)
+      { id: 'l2_to_cheetah_room_alt', rect: { x: 240, y: 320, w: 60, h: 70 }, dest: { zone: 'l2_cheetah', spawnX: 200, spawnY: 336 } }
     ],
     l2_cheetah: [
       // Exit Cheetah's room back to L2
-      { id: 'cheetah_room_to_l2', rect: { x: 80, y: 320, w: 50, h: 70 }, dest: { zone: 'l2', spawnX: 470, spawnY: 336 } }
+      { id: 'cheetah_room_to_l2', rect: { x: 80, y: 320, w: 50, h: 70 }, dest: { zone: 'l2', spawnX: 470, spawnY: 336 } },
+      // Alternate exit corresponding to the alternate L2 door
+      { id: 'cheetah_room_to_l2_alt', rect: { x: 144, y: 320, w: 50, h: 70 }, dest: { zone: 'l2', spawnX: 240, spawnY: 336 } }
     ]
   };
 

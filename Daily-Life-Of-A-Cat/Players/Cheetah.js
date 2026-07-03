@@ -145,6 +145,16 @@ class CatPlayer {
         this.energy   = Math.min(100, this.energy    + 40);
         this.happiness= Math.min(100, this.happiness + 10);
         consumed = true;
+        // Sleeping advances the game to the next day
+        try {
+          if (typeof window !== 'undefined' && typeof window.advanceToNextDay === 'function') {
+            window.advanceToNextDay();
+          } else if (typeof CheetahFileManager !== 'undefined' && typeof CheetahFileManager.advanceDay === 'function') {
+            CheetahFileManager.advanceDay();
+          }
+        } catch (e) {
+          // fail silently if the environment doesn't expose globals yet
+        }
         break;
       case 'toy':
         this.happiness = Math.min(100, this.happiness + 25);

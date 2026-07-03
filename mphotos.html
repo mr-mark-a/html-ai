@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,7 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: red;
             margin-bottom: 40px;
         }
 
@@ -35,12 +36,12 @@
         }
 
         .toolbar {
-            background: white;
+            background: greenyellow;
             padding: 20px;
             border-radius: 15px;
             margin: 0 auto 30px;
             max-width: 1400px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
@@ -74,7 +75,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .btn:disabled {
@@ -132,7 +133,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -243,7 +244,7 @@
             background: white;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             cursor: pointer;
@@ -251,7 +252,7 @@
 
         .photo-item:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
         .photo-item.selected {
@@ -326,6 +327,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>📸 M Photos</h1>
@@ -418,7 +420,7 @@
         function displayPhotos() {
             const gallery = document.getElementById('photoGallery');
             const isSelectMode = new URLSearchParams(window.location.search).get('selectForAd') === 'true';
-            
+
             if (savedPhotos.length === 0) {
                 gallery.innerHTML = `
                     <div class="empty-state">
@@ -437,7 +439,7 @@
                 if (selectedPhotos.has(index)) {
                     item.classList.add('selected');
                 }
-                
+
                 // Add click handler for ad selection mode
                 if (isSelectMode) {
                     item.style.cursor = 'pointer';
@@ -445,7 +447,7 @@
                         selectImageForAd(photo.data);
                     });
                 }
-                
+
                 item.innerHTML = `
                     <input type="checkbox" class="selection-checkbox" onchange="toggleSelection(${index})" ${selectedPhotos.has(index) ? 'checked' : ''}>
                     <img src="${photo.data}" alt="${photo.name}">
@@ -457,7 +459,7 @@
                 `;
                 gallery.appendChild(item);
             });
-            
+
             updateSelectionCount();
         }
 
@@ -499,7 +501,7 @@
             // Simulate drive detection
             const drives = ['C', 'D', 'E', 'F'];
             const detectedDrives = [];
-            
+
             // Add some simulated external drives
             if (Math.random() > 0.5) {
                 availableLocations['external_d'] = {
@@ -509,7 +511,7 @@
                 };
                 detectedDrives.push('D:');
             }
-            
+
             if (Math.random() > 0.7) {
                 availableLocations['external_e'] = {
                     name: 'External Drive (E:)',
@@ -518,9 +520,9 @@
                 };
                 detectedDrives.push('E:');
             }
-            
+
             updateLocationDropdown();
-            
+
             if (detectedDrives.length > 0) {
                 showNotification(`✓ Detected drives: ${detectedDrives.join(', ')}`, 'success');
             } else {
@@ -531,7 +533,7 @@
         function updateLocationDropdown() {
             const select = document.getElementById('currentLocation');
             select.innerHTML = '';
-            
+
             for (const [key, location] of Object.entries(availableLocations)) {
                 const option = document.createElement('option');
                 option.value = key;
@@ -564,10 +566,10 @@
             const list = document.getElementById(listId);
             list.innerHTML = '';
             selectedDestination = null;
-            
+
             for (const [key, location] of Object.entries(availableLocations)) {
                 if (key === currentLocation) continue; // Skip current location
-                
+
                 const item = document.createElement('div');
                 item.className = 'location-item';
                 item.onclick = () => selectDestination(key, listId);
@@ -595,19 +597,19 @@
                 alert('Please select a destination!');
                 return;
             }
-            
+
             const photosToC = Array.from(selectedPhotos).map(i => savedPhotos[i]);
             const destKey = `${selectedDestination}_gallery`;
-            
+
             let destPhotos = [];
             const stored = localStorage.getItem(destKey);
             if (stored) {
                 destPhotos = JSON.parse(stored);
             }
-            
+
             destPhotos.push(...photosToC);
             localStorage.setItem(destKey, JSON.stringify(destPhotos));
-            
+
             closeModal('copyModal');
             showNotification(`✓ Copied ${photosToC.length} photo(s) to ${availableLocations[selectedDestination].name}`, 'success');
             clearSelection();
@@ -618,10 +620,10 @@
                 alert('Please select a destination!');
                 return;
             }
-            
+
             const photosToMove = Array.from(selectedPhotos).map(i => savedPhotos[i]);
             const destKey = `${selectedDestination}_gallery`;
-            
+
             // Copy to destination
             let destPhotos = [];
             const stored = localStorage.getItem(destKey);
@@ -630,15 +632,15 @@
             }
             destPhotos.push(...photosToMove);
             localStorage.setItem(destKey, JSON.stringify(destPhotos));
-            
+
             // Remove from source
             const remainingPhotos = savedPhotos.filter((_, i) => !selectedPhotos.has(i));
             const sourceKey = `${currentLocation}_gallery`;
             localStorage.setItem(sourceKey, JSON.stringify(remainingPhotos));
-            
+
             closeModal('moveModal');
             showNotification(`✓ Moved ${photosToMove.length} photo(s) to ${availableLocations[selectedDestination].name}`, 'success');
-            
+
             clearSelection();
             loadPhotos();
         }
@@ -647,11 +649,11 @@
             if (!confirm(`Delete ${selectedPhotos.size} photo(s)? This cannot be undone.`)) {
                 return;
             }
-            
+
             const remainingPhotos = savedPhotos.filter((_, i) => !selectedPhotos.has(i));
             const key = `${currentLocation}_gallery`;
             localStorage.setItem(key, JSON.stringify(remainingPhotos));
-            
+
             showNotification(`✓ Deleted ${selectedPhotos.size} photo(s)`, 'success');
             clearSelection();
             loadPhotos();
@@ -668,7 +670,7 @@
                 'warning': 'linear-gradient(135deg, #ffc107, #ff9800)',
                 'error': 'linear-gradient(135deg, #dc3545, #c82333)'
             };
-            
+
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -685,7 +687,7 @@
             `;
             notification.textContent = message;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => notification.remove(), 300);
@@ -728,7 +730,7 @@
         function selectImageForAd(imageData) {
             localStorage.setItem('selectedAdImage', imageData);
             showNotification('✅ Image selected for ad! You can close this window.', 'success');
-            
+
             // Auto-close after 2 seconds
             setTimeout(() => {
                 window.close();
@@ -760,4 +762,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -154,6 +154,14 @@ const CheetahFileManager = (() => {
     getLockDaysLeft,
     isCheetahVisible,
     isCheetahPlayable,
-    canGoYard
+    canGoYard,
+    /**
+     * Force a day advance (useful when player sleeps).
+     * Increments internal day counter and runs day-rollover logic.
+     */
+    advanceDay() {
+      _lastDayFloor = _lastDayFloor + 1;
+      _onDayRollover(_lastDayFloor);
+    }
   };
 })();
