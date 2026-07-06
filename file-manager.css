@@ -1,0 +1,72 @@
+/* Glass?morphic design system */
+:root {
+  --bg-color: rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(12px);
+  --border-radius: 12px;
+  --primary-hue: 210; /* cool blue */
+  --primary: hsl(var(--primary-hue), 20%, 70%);
+  --accent: hsl(var(--primary-hue), 50%, 85%);
+  --text-color: #e0e0e0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
+  color: var(--text-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.glass-header {
+  backdrop-filter: var(--glass-blur);
+  background: var(--bg-color);
+  border-radius: var(--border-radius);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.glass-header h1 { font-size: 1.5rem; color: var(--accent); }
+
+.glass-header button {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.glass-header button:hover {
+  background: hsl(var(--primary-hue), 30%, 80%);
+  transform: scale(1.05);
+}
+
+.glass-main { flex: 1; display: grid; grid-template-columns: 250px 1fr 300px; gap: 1rem; padding: 0 1rem 1rem; }
+
+.glass-sidebar, .glass-grid, .glass-preview {
+  background: var(--bg-color);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  overflow: auto;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+}
+
+.glass-sidebar { max-height: calc(100vh - 140px); }
+
+.glass-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.8rem; }
+
+.file-card { background: rgba(255,255,255,0.08); border-radius: var(--border-radius); padding: 0.5rem; text-align: center; cursor: pointer; transition: transform 0.2s, background 0.2s; color: var(--text-color); }
+.file-card:hover { background: rgba(255,255,255,0.12); transform: scale(1.03); }
+.file-card img { max-width: 48px; height: auto; margin-bottom: 0.4rem; }
+
+.glass-preview { max-height: calc(100vh - 140px); }
+.glass-preview pre { white-space: pre-wrap; word-wrap: break-word; background: rgba(0,0,0,0.4); padding: 0.8rem; border-radius: var(--border-radius); }

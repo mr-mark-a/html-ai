@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desktop File Manager</title>
+  <link rel="stylesheet" href="file-manager.css" />
+</head>
+<body>
+  <header class="glass-header">
+    <h1>🗂️ Desktop File Manager</h1>
+    <button id="selectFolderBtn">Select Folder</button>
+  </header>
+  <main class="glass-main">
+    <section id="sidebar" class="glass-sidebar">
+      <nav id="breadcrumb"></nav>
+    </section>
+    <section id="fileGrid" class="glass-grid"></section>
+    <section id="previewPane" class="glass-preview">
+      <p>Select a file to preview</p>
+    </section>
+  </main>
+  <script defer src="file-manager.js"></script>
+</body>
+</html>
