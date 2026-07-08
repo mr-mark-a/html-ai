@@ -36,7 +36,11 @@
         <img src="Save.PNG" alt="Save" style="height:150px; width:auto;">
     </a>
     <script>
-      // No redirection is needed anymore, and wrapping in <a> with download attribute handles it locally
+      document.getElementById('downloadMacBtn').addEventListener('click', function() {
+        setTimeout(function() {
+          window.location.href = '../marks-games.html';
+        }, 3000);
+      });
     </script>
 </body>
 
