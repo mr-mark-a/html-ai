@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Games Menu</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .button-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    /* Background panels */
+    .background-left,
+    .background-right {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      z-index: 0;
+    }
+
+    .background-left {
+      left: 0;
+      background-color: tan;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .background-right {
+      right: 0;
+      background-color: tan;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    /* Center vertical line */
+    .button-container::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background-color: #ccc;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* Left panel flex column */
+    .left-content-wrapper {
+      position: relative;
+      width: 50%;
+      height: 100%;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      background-color: transparent;
+      /* background-left covers */
+    }
+
+    /* Search sticky top */
+    .search-container {
+      position: sticky;
+      top: 0;
+      background-color: tan;
+      padding: 10px 15px;
+      border-bottom: 1px solid #ccc;
+      box-sizing: border-box;
+      z-index: 25;
+    }
+
+    .search-container input {
+      width: 100%;
+      max-width: 250px;
+      padding: 6px 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .search-underline {
+      height: 1px;
+      background-color: #ccc;
+      margin-top: 4px;
+      width: 100%;
+    }
+
+    /* Buttons scroll area fills remaining space below search */
+    .buttons-scroll {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding: 10px 15px;
+    }
+
+    /* Buttons style */
+    .buttons-scroll button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color 0.3s;
+    }
+
+    .buttons-scroll button:hover {
+      background-color: #45a049;
+    }
+
+    .buttons-scroll a {
+      display: block;
+      text-decoration: none;
+    }
+
+    /* Right fixed panel */
+    .right-button-container {
+      position: fixed;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Vertical label */
+    .vertical-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      color: #9b1c31;
+      font-weight: bold;
+      font-size: 14px;
+      user-select: none;
+      pointer-events: none;
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    /* Shaking vertical button */
+    .right-button {
+      background-color: #e91e63;
+      color: white;
+      border: none;
+      padding: 15px 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      user-select: none;
+      animation: shake 0.04s infinite linear;
+      box-shadow: 0 0 10px #e91e63;
+    }
+
+    @keyframes shake {
+      0% {
+        transform: translateY(-50%) translateX(0) rotate(0deg);
+      }
+
+      10% {
+        transform: translateY(-50%) translateX(-1px) rotate(-1deg);
+      }
+
+      20% {
+        transform: translateY(-50%) translateX(1px) rotate(1deg);
+      }
+
+      30% {
+        transform: translateY(-50%) translateX(-1px) rotate(-1deg);
+      }
+
+      40% {
+        transform: translateY(-50%) translateX(1px) rotate(1deg);
+      }
+
+      50% {
+        transform: translateY(-50%) translateX(-1px) rotate(-1deg);
+      }
+
+      60% {
+        transform: translateY(-50%) translateX(1px) rotate(1deg);
+      }
+
+      70% {
+        transform: translateY(-50%) translateX(-1px) rotate(-1deg);
+      }
+
+      80% {
+        transform: translateY(-50%) translateX(1px) rotate(1deg);
+      }
+
+      90% {
+        transform: translateY(-50%) translateX(-1px) rotate(-1deg);
+      }
+
+      100% {
+        transform: translateY(-50%) translateX(0) rotate(0deg);
+      }
+    }
+  </style>
+  <style>
+    .blue-line {
+      border: none;
+      height: 90px;
+      background-color: #2196F3;
+      margin: 0;
+    }
+
+    .syncnow {
+      margin-top: 10px;
+      color: white;
+      font-size: 1.1em;
+      white-space: pre-line;
+    }
+
+    .rate-fixed {
+      position: fixed;
+      top: 110px;
+      left: 18px;
+      z-index: 1002;
+      background: #10B981;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 22px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+      transition: background 0.2s;
+    }
+
+    .rate-fixed:hover {
+      background: #059669;
+    }
+
+    .tokens-fixed {
+      position: fixed;
+      top: 110px;
+      right: 18px;
+      z-index: 1002;
+      background: #ffeb3b;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .tokens-fixed img {
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .tokens-fixed:hover {
+      background: #fdd835;
+    }
+
+    .profile-fixed {
+      position: fixed;
+      top: 110px;
+      right: 160px;
+      z-index: 1001;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s;
+      color: white;
+      font-weight: bold;
+    }
+
+    .profile-fixed:hover {
+      transform: scale(1.1);
+    }
+  </style>
+<script src="APIKEY.js"></script>
+</head>
+
+<body>
+  <hr class="blue-line">
+  <div class="syncnow" id="syncNow"></div>
+  <button class="rate-fixed" onclick="window.location.href='happyornot.html'">Rate The Web</button>
+  <button class="profile-fixed" id="profileBtn" onclick="window.location.href='profilemenu/profile.html'"
+    title="Settings">👤</button>
+  <button class="tokens-fixed" id="tokenDisplay" onclick="showTokenDetails()">
+    <img src="token.png" alt="token">
+    <span id="tokenCount">0</span>
+  </button>
+
+  <div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
+    <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
+<div id="apiKeySection" style="margin-top:10px; text-align:center;">
+  <input type="password" id="apiKeyInput" placeholder="Enter API Key" style="padding:5px;"/>
+  <button onclick="verifyApiKey()" style="margin-left:5px; padding:5px;">Download Site</button>
+  <span id="apiKeyMessage" style="color:red; margin-left:10px;"></span>
+</div>
+  </div>
+  <div class="button-container">
+
+    <div class="background-left"></div>
+    <div class="background-right"></div>
+
+    <div class="left-content-wrapper">
+
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search games..." />
+        <div class="search-underline"></div>
+      </div>
+
+      <div class="buttons-scroll">
+        <div style="margin-bottom:18px;padding:8px 0;border-bottom:2px solid #ccc;font-weight:bold;color:#222;">Today's
+          Edits</div>
+        <button onclick="window.location.href='browser.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Mini Browser</button>
+        <button onclick="window.location.href='roket.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Rocket Game</button>
+        <button onclick="window.location.href='marks-games.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Games Menu</button>
+        <div style="margin-bottom:18px;"></div>
+        <!-- ...existing code... -->
+        <button onclick="window.location.href='token.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Token</button>
+        <button onclick="window.location.href='storagemanegment.html'"
+          style="background:#ff9800;color:#fff;font-weight:bold;">🗄️ Storage Manager</button>
+        <button ondblclick="window.location.href='vending.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Vending Machine</button>
+        <button onclick="window.location.href='cat-and-mouse-game.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Cat & Mouse Game</button>
+        <button onclick="window.location.href='citybulder.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">City Builder</button>
+        <button onclick="window.location.href='clean-up.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Clean Up Game</button>
+        <button onclick="window.location.href='nav/mars-mapsfolder/codegenerator.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Code Generator</button>
+        <button onclick="window.location.href='drum practice app/main-drum.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Drum Practice</button>
+        <button onclick="window.location.href='simulateors/ios/main.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">iOS Simulator</button>
+        <button onclick="window.location.href='lod2.html'" style="background:#4caf50;color:#fff;font-weight:bold;">Lod2
+          Cat and Mouse Game</button>
+        <button onclick="window.location.href='marks-race.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Mark's Race</button>
+        <button onclick="window.location.href='new-york-adventure.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">New York Adventure</button>
+        <button onclick="window.location.href='snowtail-game/snowtail-index.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Whisker's NY City Adventure</button>
+        <button onclick="window.location.href='tests/map.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Map Test</button>
+        <button onclick="window.location.href='translate/all.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Translation Tool</button>
+        <button onclick="window.location.href='minemark/code/game.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Utility Game System</button>
+        <button onclick="window.location.href='catmaze.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Cat Maze</button>
+        <button onclick="window.location.href='wallet.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Wallet</button>
+        <button onclick="window.location.href='robobattle.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Robo Battle</button>
+        <button onclick="window.location.href='greenempire.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">🌿 Green Empire</button>
+        <button onclick="window.location.href='photo-library.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Photo Library</button>
+        <button onclick="window.location.href='Mmusic.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Music Player</button>
+        <button onclick="window.location.href='math.html'" style="background:#4caf50;color:#fff;font-weight:bold;">📚
+          Math Learning App</button>
+        <button onclick="window.location.href='activity.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Activity</button>
+        <button onclick="window.location.href='jedigameoverload.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Jedi Game Overload</button>
+        <button onclick="window.location.href='galaxtyonfire.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Galaxy on Fire</button>
+        <button onclick="window.location.href='library.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Library</button>
+        <button onclick="window.location.href='store.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Store</button>
+        <button onclick="window.location.href='tour-marriot.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Tour Marriot</button>
+        <button onclick="window.location.href='camplace.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Camplace</button>
+        <button onclick="window.location.href='file-pro.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">File Pro</button>
+        <button onclick="window.location.href='git-bot.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Git Bot</button>
+        <button onclick="window.location.href='GROK.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">GROK</button>
+        <button onclick="window.location.href='imagen.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Imagen</button>
+        <button onclick="window.location.href='codeeasypeasy.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Code Easy Peasy</button>
+        <button onclick="window.location.href='l3.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">L3</button>
+        <button onclick="window.location.href='loading.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Loading</button>
+        <button onclick="window.location.href='vidio-ai.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Video AI</button>
+        <button onclick="window.location.href='platform-cat.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Platform Cat</button>
+        <button onclick="window.location.href='productpulse.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Product Pulse</button>
+        <button onclick="window.location.href='select.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Account Select</button>
+        <button onclick="window.location.href='storagemanegment.html'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">Storage Management</button>
+      </div>
+
+    </div>
+
+    <div class="right-button-container">
+      <button class="right-button" onclick="window.location.href='https://t.me/'">Massage Caller</button>
+      <div class="vertical-label">FEATURED PREMIUM</div>
+    </div>
+
+  </div>
+
+  <script>
+    // Token management system
+    function getStoredTokens() {
+      return parseInt(localStorage.getItem('tokens') || '0', 10);
+    }
+
+    function setStoredTokens(n) {
+      localStorage.setItem('tokens', n);
+    }
+
+    function getLastUpdate() {
+      return parseInt(localStorage.getItem('tokensLastUpdate') || '0', 10);
+    }
+
+    function setLastUpdate(ts) {
+      localStorage.setItem('tokensLastUpdate', ts);
+    }
+
+    function updateTokens() {
+      const now = Date.now();
+      const last = getLastUpdate();
+      if (!last) {
+        setLastUpdate(now);
+        setStoredTokens(getStoredTokens() + 20);
+      } else {
+        const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+        if (days > 0) {
+          const added = days * 20;
+          setStoredTokens(getStoredTokens() + added);
+          setLastUpdate(now);
+        }
+      }
+      updateTokenDisplay();
+    }
+
+    function updateTokenDisplay() {
+      document.getElementById('tokenCount').textContent = getStoredTokens();
+    }
+
+    function useTokens(amount) {
+      let t = getStoredTokens();
+      if (t >= amount) {
+        t -= amount;
+        setStoredTokens(t);
+        updateTokenDisplay();
+        return true;
+      } else {
+        alert('Not enough tokens');
+        return false;
+      }
+    }
+
+    function showTokenDetails() {
+      const t = getStoredTokens();
+      const msg = `You have ${t} token${t === 1 ? '' : 's'}.\n` +
+        `You earn 20 tokens per day; tokens do NOT carry over between cycles.\n\n` +
+        `Click OK to purchase a subscription (money, not tokens) and receive 8,000 tokens a month.`;
+      if (confirm(msg)) {
+        window.location.href = 'subscription.html';
+      }
+    }
+
+    function paySimulation(cost) {
+      if (useTokens(cost)) {
+        console.log(`paid ${cost} tokens`);
+        return true;
+      }
+      return false;
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const searchTerm = this.value.toLowerCase();
+      const buttons = document.querySelectorAll('.buttons-scroll button');
+
+      buttons.forEach(button => {
+        const buttonText = button.textContent.toLowerCase();
+        if (buttonText.includes(searchTerm)) {
+          button.style.display = 'block';
+        } else {
+          button.style.display = 'none';
+        }
+      });
+    });
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('searchInput').blur();
+        document.getElementById('searchInput').value = '';
+        // Show all buttons
+        const buttons = document.querySelectorAll('.buttons-scroll button');
+        buttons.forEach(button => {
+          button.style.display = 'block';
+        });
+      }
+    });
+
+    function logoutGames() {
+      // Example: clear user session or redirect
+      localStorage.removeItem('currentUser');
+      window.location.href = 'select.html';
+    }
+
+    // Initialize tokens on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      updateTokens();
+      // Set member since date if not exists
+      if (!localStorage.getItem('memberSince')) {
+        localStorage.setItem('memberSince', new Date().toLocaleDateString());
+      }
+    });
+
+    // SyncNow system: sync file text every 25 ticks (1 tick = 4 sec)
+    function syncNow() {
+      fetch('MYINFO.txt')
+        .then(r => r.text())
+        .then(text => {
+          document.getElementById('syncNow').textContent = text;
+        })
+        .catch(err => console.error('SyncNow error', err));
+    }
+    // Run every 25 ticks = 100 seconds
+    setInterval(syncNow, 100000);
+    // Initial sync
+    syncNow();
+  function verifyApiKey() {
+  const entered = document.getElementById('apiKeyInput').value;
+  if (entered === API_KEY) {
+    const link = document.createElement('a');
+    link.href = 'My Website.zip';
+    link.download = 'My Website.zip';
+    link.click();
+    document.getElementById('apiKeyMessage').textContent = '';
+  } else {
+    document.getElementById('apiKeyMessage').textContent = 'Invalid API Key';
+  }
+}
+</script>
+
+</body>
+
+</html>
