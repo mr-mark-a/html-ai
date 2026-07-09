@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Canvas - Premium Photo & Art Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #080b11;
+            --bg-panel: rgba(15, 22, 36, 0.7);
+            --bg-panel-solid: #0f1624;
+            --border-glow: rgba(139, 92, 246, 0.2);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --accent-teal: #14b8a6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dark: #4b5563;
+            --sidebar-width: 320px;
+            --toolbar-width: 72px;
+            --header-height: 64px;
+            --transition-speed: 0.2s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: var(--header-height) 1fr;
+            grid-template-columns: var(--toolbar-width) 1fr var(--sidebar-width);
+            grid-template-areas: 
+                "header header header"
+                "toolbar viewport sidebar";
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Glassmorphism Common */
+        .glass-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-light);
+        }
+
+        /* Header styling */
+        header {
+            grid-area: header;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 10;
+            border-bottom: 1px solid var(--border-light);
+            background: rgba(8, 11, 17, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-teal));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .top-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition-speed);
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-light);
+        }
+
+        .menu-btn.primary {
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            border: none;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .menu-btn.primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-light);
+            margin: 0 8px;
+        }
+
+        .canvas-stats {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+        }
+
+        /* Toolbar styling */
+        .toolbar {
+            grid-area: toolbar;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 12px;
+            border-right: 1px solid var(--border-light);
+            z-index: 5;
+        }
+
+        .tool-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all var(--transition-speed);
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .tool-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c084fc;
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.1);
+        }
+
+        .tool-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 64px;
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .tool-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
+            left: 60px;
+        }
+
+        /* Color Circle / Picker wrapper */
+        .color-selector {
+            margin-top: auto;
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .color-selector input[type="color"] {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        /* Viewport / Canvas Container */
+        .viewport {
+            grid-area: viewport;
+            position: relative;
+            background-color: #121620;
+            background-image: 
+                radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0),
+                radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Canvas Workspace Wrapper containing layered canvases */
+        .canvas-workspace {
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            transform-origin: center center;
+            border: 1px solid rgba(255,255,255,0.05);
+            background: #fff; /* Base background for transparent layers */
+        }
+
+        .canvas-workspace canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Pointer events handled by workspace overlay */
+        }
+
+        .canvas-workspace canvas:first-child {
+            position: relative; /* Establish dynamic dimensions */
+        }
+
+        .workspace-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            cursor: crosshair;
+        }
+
+        .workspace-overlay.pan-tool {
+            cursor: grab;
+        }
+        .workspace-overlay.pan-tool:active {
+            cursor: grabbing;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            grid-area: sidebar;
+            border-left: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 5;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid var(--border-light);
+            padding: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-title button {
+            background: transparent;
+            border: none;
+            color: var(--accent-teal);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Tool settings panel */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-glow);
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .setting-value {
+            font-size: 12px;
+            min-width: 32px;
+            text-align: right;
+            font-family: monospace;
+            color: var(--text-main);
+        }
+
+        /* Layers Panel */
+        .layer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .layer-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .layer-item.active {
+            background: rgba(139, 92, 246, 0.08);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+        }
+
+        .layer-thumb {
+            width: 36px;
+            height: 36px;
+            background: #111;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .layer-thumb canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .layer-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .layer-name {
+            font-size: 13px;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .layer-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .layer-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .layer-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+        }
+
+        .layer-action-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .layer-action-btn.active {
+            color: var(--accent-teal);
+        }
+
+        /* Adjustment filters grid */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        /* Zoom indicator & overlays */
+        .zoom-overlay {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-light);
+            padding: 6px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        .zoom-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .zoom-text {
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* Hidden inputs */
+        #image-loader {
+            display: none;
+        }
+
+        /* Crop overlay selection indicator */
+        .crop-selector-overlay {
+            position: absolute;
+            border: 2px dashed var(--accent-teal);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            display: none;
+            pointer-events: none;
+            z-index: 105;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header containing studio brand & file operations -->
+    <header class="glass-panel">
+        <div class="logo-section">
+            <div class="logo-icon">A</div>
+            <div class="logo-text">Aura Studio</div>
+        </div>
+        <div class="top-menu">
+            <button class="menu-btn" onclick="createNewCanvas()" title="Reset workspace and start new project">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                New
+            </button>
+            <button class="menu-btn" onclick="triggerImport()" title="Import local image as layer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                Import Image
+            </button>
+            <input type="file" id="image-loader" accept="image/*" onchange="handleImageImport(event)">
+            
+            <div class="divider"></div>
+
+            <button class="menu-btn" onclick="undo()" title="Undo action">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            </button>
+            <button class="menu-btn" onclick="redo()" title="Redo action">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+            </button>
+
+            <div class="divider"></div>
+
+            <span class="canvas-stats" id="canvas-dimensions-display">Size: 800 x 600</span>
+        </div>
+        <div>
+            <button class="menu-btn primary" onclick="exportCanvas()" title="Download merged canvas artwork">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export
+            </button>
+        </div>
+    </header>
+
+    <!-- Toolbox on the left -->
+    <div class="toolbar glass-panel">
+        <button class="tool-btn active" data-tool="brush" data-tooltip="Brush Tool" onclick="setTool('brush')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.0434 16.4525C3.22094 16.8091 3.28001 17.2173 3.19794 17.6105L2.57723 20.5898C2.45199 21.19 2.9782 21.721 3.58288 21.6033L6.58661 21.0187C6.96918 20.9442 7.36647 21.0028 7.71358 21.1764C9.05264 21.8444 10.5645 22 12 22Z" stroke-width="2"/><path d="M12 8v8M8 12h8"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="eraser" data-tooltip="Eraser Tool" onclick="setTool('eraser')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H7L3 16c-1-1-1-3 0-4L13 2l8 8-3 3 5 5-3 2Z"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="line" data-tooltip="Line Tool" onclick="setTool('line')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="rect" data-tooltip="Rectangle Tool" onclick="setTool('rect')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="circle" data-tooltip="Circle Tool" onclick="setTool('circle')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="pan" data-tooltip="Pan & Zoom Tool" onclick="setTool('pan')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-2 3 2 3M9 5l3-2 3 2M15 19l-3 2-3-2M19 9l2 3-2 3M12 3v18M3 12h18"/></svg>
+        </button>
+
+        <div class="color-selector" title="Select color">
+            <input type="color" id="color-picker" value="#8b5cf6" onchange="updateBrushColor(this.value)">
+        </div>
+    </div>
+
+    <!-- Center Viewport with interactive canvas stack -->
+    <div class="viewport" id="viewport" onwheel="handleWheel(event)">
+        
+        <div class="canvas-workspace" id="canvas-workspace" style="width: 800px; height: 600px;">
+            <!-- Layers are inserted here programmatically -->
+            <div class="workspace-overlay" id="workspace-overlay"></div>
+        </div>
+
+        <div class="crop-selector-overlay" id="crop-overlay"></div>
+
+        <!-- Zoom Indicator overlay -->
+        <div class="zoom-overlay">
+            <button class="zoom-btn" onclick="adjustZoom(-0.1)" title="Zoom Out">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <span class="zoom-text" id="zoom-percentage">100%</span>
+            <button class="zoom-btn" onclick="adjustZoom(0.1)" title="Zoom In">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8m0 0H15m6 0V2"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Sidebar with Layer manager & filters -->
+    <div class="sidebar glass-panel">
+        
+        <!-- Tool settings configuration -->
+        <div class="sidebar-section">
+            <div class="sidebar-title">Tool Configuration</div>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Brush Size</span>
+                        <span class="setting-value" id="brush-size-val">12px</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="brush-size-slider" min="1" max="100" value="12" oninput="updateBrushSize(this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Brush Opacity</span>
+                        <span class="setting-value" id="brush-opacity-val">100%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="brush-opacity-slider" min="1" max="100" value="100" oninput="updateBrushOpacity(this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transformations / Quick operations -->
+        <div class="sidebar-section">
+            <div class="sidebar-title">Transformations</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <button class="menu-btn" style="justify-content: center; font-size: 11px;" onclick="rotateActiveLayer(90)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    Rot 90°
+                </button>
+                <button class="menu-btn" style="justify-content: center; font-size: 11px;" onclick="flipActiveLayer('horizontal')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 2v20M20 12l-8-8v16l8-8ZM4 12l8-8v16L4 12Z"/></svg>
+                    Flip H
+                </button>
+                <button class="menu-btn" style="justify-content: center; font-size: 11px;" onclick="flipActiveLayer('vertical')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M2 12h20M12 4l-8 8h16l-8-8ZM12 20l-8-8h16l-8 8Z"/></svg>
+                    Flip V
+                </button>
+            </div>
+        </div>
+
+        <!-- Layers panel list -->
+        <div class="sidebar-section">
+            <div class="sidebar-title">
+                Layers
+                <button onclick="addNewLayer()" title="Add custom transparent layer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Add
+                </button>
+            </div>
+            <div class="layer-list" id="layers-container">
+                <!-- Programmatically rendered layer elements -->
+            </div>
+        </div>
+
+        <!-- Adjustments / filters panel -->
+        <div class="sidebar-section" style="border-bottom: none;">
+            <div class="sidebar-title">
+                Adjustments
+                <button onclick="resetFilters()" title="Reset adjustments to default value" style="color: var(--text-muted);">Reset</button>
+            </div>
+            <div class="filter-grid">
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Brightness</span>
+                        <span class="setting-value" id="val-brightness">100%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-brightness" min="0" max="200" value="100" oninput="applyActiveFilter('brightness', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Contrast</span>
+                        <span class="setting-value" id="val-contrast">100%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-contrast" min="0" max="200" value="100" oninput="applyActiveFilter('contrast', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Saturation</span>
+                        <span class="setting-value" id="val-saturate">100%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-saturate" min="0" max="200" value="100" oninput="applyActiveFilter('saturate', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Hue-Rotate</span>
+                        <span class="setting-value" id="val-hue-rotate">0°</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-hue-rotate" min="0" max="360" value="0" oninput="applyActiveFilter('hue-rotate', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Gaussian Blur</span>
+                        <span class="setting-value" id="val-blur">0px</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-blur" min="0" max="20" value="0" oninput="applyActiveFilter('blur', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Grayscale</span>
+                        <span class="setting-value" id="val-grayscale">0%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-grayscale" min="0" max="100" value="0" oninput="applyActiveFilter('grayscale', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Sepia</span>
+                        <span class="setting-value" id="val-sepia">0%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-sepia" min="0" max="100" value="0" oninput="applyActiveFilter('sepia', this.value)">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span>Invert</span>
+                        <span class="setting-value" id="val-invert">0%</span>
+                    </div>
+                    <div class="slider-control">
+                        <input type="range" id="filter-invert" min="0" max="100" value="0" oninput="applyActiveFilter('invert', this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic Controller script -->
+    <script>
+        // State variables
+        let layers = [];
+        let activeLayerId = null;
+        let layerCounter = 0;
+        
+        let canvasWidth = 800;
+        let canvasHeight = 600;
+
+        let currentTool = 'brush'; // brush, eraser, line, rect, circle, pan
+        let brushColor = '#8b5cf6';
+        let brushSize = 12;
+        let brushOpacity = 1.0;
+
+        // Viewport transformations
+        let zoom = 1.0;
+        let panX = 0;
+        let panY = 0;
+        let isPanningState = false;
+        let panStartX = 0;
+        let panStartY = 0;
+
+        // Draw variables
+        let isDrawingState = false;
+        let drawStartX = 0;
+        let drawStartY = 0;
+        let drawTempCanvas = null; // Temp canvas for overlay visual guidance (shapes/lines)
+        let drawTempCtx = null;
+
+        // Undo & Redo queues
+        const maxHistory = 20;
+        let undoStack = [];
+        let redoStack = [];
+
+        // Initialization
+        window.addEventListener('load', () => {
+            createNewCanvas();
+            // Connect resize event
+            window.addEventListener('resize', centerWorkspace);
+        });
+
+        function createNewCanvas() {
+            layers = [];
+            layerCounter = 0;
+            undoStack = [];
+            redoStack = [];
+            
+            const workspace = document.getElementById('canvas-workspace');
+            workspace.innerHTML = '<div class="workspace-overlay" id="workspace-overlay"></div>';
+            
+            // Setup overlay mouse listeners
+            setupWorkspaceListeners();
+
+            // Set dimension labels
+            document.getElementById('canvas-dimensions-display').textContent = `Size: ${canvasWidth} x ${canvasHeight}`;
+
+            // Add default background layer
+            addNewLayer('Background', '#ffffff');
+            // Add custom art layer
+            addNewLayer('Artwork Layer');
+
+            resetZoom();
+            centerWorkspace();
+            saveHistoryState();
+        }
+
+        function setupWorkspaceListeners() {
+            const overlay = document.getElementById('workspace-overlay');
+            overlay.addEventListener('mousedown', (e) => startPointer(e));
+            window.addEventListener('mousemove', (e) => trackPointer(e));
+            window.addEventListener('mouseup', (e) => endPointer(e));
+        }
+
+        // Layer Class structure
+        class CanvasLayer {
+            constructor(id, name, width, height, initialBg = null) {
+                this.id = id;
+                this.name = name;
+                this.width = width;
+                this.height = height;
+                this.visible = true;
+                this.opacity = 1.0;
+                
+                // Create Canvas Node
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = width;
+                this.canvas.height = height;
+                this.canvas.id = `layer-canvas-${id}`;
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                
+                // Init settings
+                this.filters = {
+                    brightness: 100,
+                    contrast: 100,
+                    saturate: 100,
+                    blur: 0,
+                    'hue-rotate': 0,
+                    grayscale: 0,
+                    sepia: 0,
+                    invert: 0
+                };
+
+                if (initialBg) {
+                    this.ctx.fillStyle = initialBg;
+                    this.ctx.fillRect(0, 0, width, height);
+                }
+            }
+
+            // Sync visual filters of canvas node
+            updateCSSFilterString() {
+                const f = this.filters;
+                const filterString = `
+                    brightness(${f.brightness}%) 
+                    contrast(${f.contrast}%) 
+                    saturate(${f.saturate}%) 
+                    blur(${f.blur}px) 
+                    hue-rotate(${f['hue-rotate']}deg) 
+                    grayscale(${f.grayscale}%) 
+                    sepia(${f.sepia}%) 
+                    invert(${f.invert}%)
+                `;
+                this.canvas.style.filter = filterString;
+                this.canvas.style.opacity = this.opacity;
+            }
+        }
+
+        // Add layer to workspace
+        function addNewLayer(name = null, initialBg = null) {
+            layerCounter++;
+            const id = layerCounter;
+            const newName = name || `Layer ${id}`;
+            const layer = new CanvasLayer(id, newName, canvasWidth, canvasHeight, initialBg);
+
+            // Put DOM canvas node before the top-overlay
+            const workspace = document.getElementById('canvas-workspace');
+            const overlay = document.getElementById('workspace-overlay');
+            workspace.insertBefore(layer.canvas, overlay);
+
+            // Push to array (bottom layers sit at index 0, rendering happens in index order)
+            layers.push(layer);
+            setActiveLayer(id);
+            refreshLayersUI();
+        }
+
+        function setActiveLayer(id) {
+            activeLayerId = id;
+            
+            // Highlight row
+            const rows = document.querySelectorAll('.layer-item');
+            rows.forEach(r => r.classList.remove('active'));
+            const selectedRow = document.getElementById(`layer-item-${id}`);
+            if (selectedRow) selectedRow.classList.add('active');
+
+            // Load filters sliders from active layer
+            const layer = layers.find(l => l.id === id);
+            if (layer) {
+                for (const filterKey in layer.filters) {
+                    const slider = document.getElementById(`filter-${filterKey}`);
+                    if (slider) {
+                        slider.value = layer.filters[filterKey];
+                        const valDisplay = document.getElementById(`val-${filterKey}`);
+                        if (valDisplay) {
+                            const unit = filterKey === 'blur' ? 'px' : (filterKey === 'hue-rotate' ? '°' : '%');
+                            valDisplay.textContent = `${layer.filters[filterKey]}${unit}`;
+                        }
+                    }
+                }
+            }
+        }
+
+        function deleteActiveLayer() {
+            if (layers.length <= 1) {
+                alert("You need at least one layer!");
+                return;
+            }
+            const index = layers.findIndex(l => l.id === activeLayerId);
+            if (index !== -1) {
+                const layer = layers[index];
+                layer.canvas.remove();
+                layers.splice(index, 1);
+                
+                // Select next active
+                const nextActiveIndex = index > 0 ? index - 1 : 0;
+                setActiveLayer(layers[nextActiveIndex].id);
+                refreshLayersUI();
+                saveHistoryState();
+            }
+        }
+
+        function toggleLayerVisibility(id, e) {
+            if (e) e.stopPropagation();
+            const layer = layers.find(l => l.id === id);
+            if (layer) {
+                layer.visible = !layer.visible;
+                layer.canvas.style.display = layer.visible ? 'block' : 'none';
+                const eyeBtn = document.querySelector(`#layer-item-${id} .layer-action-btn:first-child`);
+                if (eyeBtn) {
+                    eyeBtn.innerHTML = layer.visible ? 
+                        `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>` :
+                        `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+                }
+            }
+        }
+
+        function changeLayerOpacity(id, opacity) {
+            const layer = layers.find(l => l.id === id);
+            if (layer) {
+                layer.opacity = parseFloat(opacity);
+                layer.updateCSSFilterString();
+            }
+        }
+
+        function moveLayerUp(id, e) {
+            if (e) e.stopPropagation();
+            const index = layers.findIndex(l => l.id === id);
+            if (index < layers.length - 1) {
+                // Swap in array
+                const temp = layers[index];
+                layers[index] = layers[index + 1];
+                layers[index + 1] = temp;
+                
+                // Reorder in DOM
+                const workspace = document.getElementById('canvas-workspace');
+                workspace.insertBefore(layers[index + 1].canvas, layers[index].canvas.nextSibling);
+                
+                refreshLayersUI();
+                saveHistoryState();
+            }
+        }
+
+        function moveLayerDown(id, e) {
+            if (e) e.stopPropagation();
+            const index = layers.findIndex(l => l.id === id);
+            if (index > 0) {
+                // Swap in array
+                const temp = layers[index];
+                layers[index] = layers[index - 1];
+                layers[index - 1] = temp;
+                
+                // Reorder in DOM
+                const workspace = document.getElementById('canvas-workspace');
+                workspace.insertBefore(layers[index].canvas, layers[index - 1].canvas);
+                
+                refreshLayersUI();
+                saveHistoryState();
+            }
+        }
+
+        // Render layer rows to right sidebar
+        function refreshLayersUI() {
+            const container = document.getElementById('layers-container');
+            container.innerHTML = '';
+            
+            // Render in reverse order (top layer shown first)
+            for (let i = layers.length - 1; i >= 0; i--) {
+                const layer = layers[i];
+                const isActive = layer.id === activeLayerId;
+                
+                const item = document.createElement('div');
+                item.className = `layer-item ${isActive ? 'active' : ''}`;
+                item.id = `layer-item-${layer.id}`;
+                item.onclick = () => setActiveLayer(layer.id);
+                
+                // Generate micro preview dynamically
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = 36;
+                thumbCanvas.height = 36;
+                const thumbCtx = thumbCanvas.getContext('2d');
+                
+                // Draw checked transparency helper patterns
+                thumbCtx.fillStyle = '#333';
+                thumbCtx.fillRect(0,0,36,36);
+                thumbCtx.fillStyle = '#44';
+                // Simply draw content
+                thumbCtx.drawImage(layer.canvas, 0, 0, 36, 36);
+
+                item.innerHTML = `
+                    <div class="layer-thumb" id="layer-thumb-${layer.id}"></div>
+                    <div class="layer-info">
+                        <div class="layer-name" title="Double click to rename" ondblclick="renameLayer(${layer.id})">${layer.name}</div>
+                        <div class="layer-meta">
+                            <span style="margin-right: 6px;">Opacity:</span>
+                            <input type="range" min="0" max="1" step="0.05" value="${layer.opacity}" 
+                                   style="width: 60px; height: 3px;"
+                                   onclick="event.stopPropagation()"
+                                   oninput="changeLayerOpacity(${layer.id}, this.value)">
+                        </div>
+                    </div>
+                    <div class="layer-actions">
+                        <button class="layer-action-btn" onclick="toggleLayerVisibility(${layer.id}, event)" title="Toggle visibility">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                        <button class="layer-action-btn" onclick="moveLayerUp(${layer.id}, event)" title="Move Layer Up">▲</button>
+                        <button class="layer-action-btn" onclick="moveLayerDown(${layer.id}, event)" title="Move Layer Down">▼</button>
+                        <button class="layer-action-btn" onclick="deleteLayerById(${layer.id}, event)" title="Delete Layer">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                `;
+
+                // Add thumbnails
+                item.querySelector('.layer-thumb').appendChild(thumbCanvas);
+                container.appendChild(item);
+            }
+        }
+
+        function deleteLayerById(id, e) {
+            if (e) e.stopPropagation();
+            const index = layers.findIndex(l => l.id === id);
+            if (index !== -1) {
+                if (layers.length <= 1) {
+                    alert("Cannot delete last remaining layer.");
+                    return;
+                }
+                layers[index].canvas.remove();
+                layers.splice(index, 1);
+                if (activeLayerId === id) {
+                    setActiveLayer(layers[Math.max(0, index - 1)].id);
+                } else {
+                    setActiveLayer(activeLayerId);
+                }
+                refreshLayersUI();
+                saveHistoryState();
+            }
+        }
+
+        function renameLayer(id) {
+            const layer = layers.find(l => l.id === id);
+            if (layer) {
+                const currentName = layer.name;
+                const newName = prompt("Enter new layer name:", currentName);
+                if (newName && newName.trim() !== '') {
+                    layer.name = newName.trim();
+                    refreshLayersUI();
+                }
+            }
+        }
+
+        // Apply Adjustments filters
+        function applyActiveFilter(filterKey, value) {
+            const layer = layers.find(l => l.id === activeLayerId);
+            if (layer) {
+                layer.filters[filterKey] = parseFloat(value);
+                layer.updateCSSFilterString();
+                
+                // Update display label
+                const display = document.getElementById(`val-${filterKey}`);
+                if (display) {
+                    const unit = filterKey === 'blur' ? 'px' : (filterKey === 'hue-rotate' ? '°' : '%');
+                    display.textContent = `${value}${unit}`;
+                }
+            }
+        }
+
+        function resetFilters() {
+            const layer = layers.find(l => l.id === activeLayerId);
+            if (layer) {
+                layer.filters = {
+                    brightness: 100,
+                    contrast: 100,
+                    saturate: 100,
+                    blur: 0,
+                    'hue-rotate': 0,
+                    grayscale: 0,
+                    sepia: 0,
+                    invert: 0
+                };
+                layer.updateCSSFilterString();
+                setActiveLayer(activeLayerId);
+            }
+        }
+
+        // Tool Settings
+        function setTool(tool) {
+            currentTool = tool;
+            
+            // Update active states
+            const buttons = document.querySelectorAll('.tool-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            const activeBtn = document.querySelector(`.tool-btn[data-tool="${tool}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const overlay = document.getElementById('workspace-overlay');
+            if (tool === 'pan') {
+                overlay.className = 'workspace-overlay pan-tool';
+            } else {
+                overlay.className = 'workspace-overlay';
+            }
+        }
+
+        function updateBrushColor(color) {
+            brushColor = color;
+            document.querySelector('.color-selector').style.borderColor = color;
+        }
+
+        function updateBrushSize(size) {
+            brushSize = parseInt(size);
+            document.getElementById('brush-size-val').textContent = `${size}px`;
+            document.getElementById('brush-size-slider').value = size;
+        }
+
+        function updateBrushOpacity(opacity) {
+            brushOpacity = parseFloat(opacity) / 100;
+            document.getElementById('brush-opacity-val').textContent = `${opacity}%`;
+            document.getElementById('brush-opacity-slider').value = opacity;
+        }
+
+        // Viewport Manipulation (Pan & Zoom)
+        function centerWorkspace() {
+            const viewport = document.getElementById('viewport');
+            const workspace = document.getElementById('canvas-workspace');
+            
+            panX = (viewport.clientWidth - canvasWidth * zoom) / 2;
+            panY = (viewport.clientHeight - canvasHeight * zoom) / 2;
+            
+            updateWorkspaceTransform();
+        }
+
+        function updateWorkspaceTransform() {
+            const workspace = document.getElementById('canvas-workspace');
+            workspace.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+            document.getElementById('zoom-percentage').textContent = `${Math.round(zoom * 100)}%`;
+        }
+
+        function adjustZoom(amount) {
+            const oldZoom = zoom;
+            zoom = Math.max(0.1, Math.min(8.0, zoom + amount));
+            
+            // Adjust pan coordinates relative to active viewport center
+            const viewport = document.getElementById('viewport');
+            const centerX = viewport.clientWidth / 2;
+            const centerY = viewport.clientHeight / 2;
+            
+            panX = centerX - (centerX - panX) * (zoom / oldZoom);
+            panY = centerY - (centerY - panY) * (zoom / oldZoom);
+
+            updateWorkspaceTransform();
+        }
+
+        function resetZoom() {
+            zoom = 1.0;
+            centerWorkspace();
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            const factor = e.deltaY < 0 ? 1.1 : 0.9;
+            const oldZoom = zoom;
+            zoom = Math.max(0.1, Math.min(8.0, zoom * factor));
+            
+            // Adjust panning to keep pointer position in center of scale
+            const rect = document.getElementById('viewport').getBoundingClientRect();
+            const pointerX = e.clientX - rect.left;
+            const pointerY = e.clientY - rect.top;
+
+            panX = pointerX - (pointerX - panX) * (zoom / oldZoom);
+            panY = pointerY - (pointerY - panY) * (zoom / oldZoom);
+
+            updateWorkspaceTransform();
+        }
+
+        // Pointer event mapping to draw actions
+        function getCanvasCoordinates(e) {
+            const workspace = document.getElementById('canvas-workspace');
+            const rect = workspace.getBoundingClientRect();
+            
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+            
+            const x = (clientX - rect.left) / zoom;
+            const y = (clientY - rect.top) / zoom;
+            
+            return { x, y };
+        }
+
+        function startPointer(e) {
+            if (currentTool === 'pan' || e.button === 1 || e.button === 2) {
+                // Pan Workspace
+                isPanningState = true;
+                panStartX = e.clientX - panX;
+                panStartY = e.clientY - panY;
+                return;
+            }
+
+            // Normal drawing mode
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer || !activeLayer.visible) return;
+
+            isDrawingState = true;
+            const coords = getCanvasCoordinates(e);
+            drawStartX = coords.x;
+            drawStartY = coords.y;
+
+            // Setup custom drawing parameters
+            const ctx = activeLayer.ctx;
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (currentTool === 'brush') {
+                ctx.strokeStyle = brushColor;
+                ctx.lineWidth = brushSize;
+                ctx.globalAlpha = brushOpacity;
+                ctx.globalCompositeOperation = 'source-over';
+                
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (currentTool === 'eraser') {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = brushSize;
+                ctx.globalAlpha = 1.0;
+                ctx.globalCompositeOperation = 'destination-out';
+                
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (['line', 'rect', 'circle'].includes(currentTool)) {
+                // Initialize temporary drawing layer for preview shape rendering
+                createTempCanvasNode();
+            }
+        }
+
+        function createTempCanvasNode() {
+            removeTempCanvasNode();
+            const workspace = document.getElementById('canvas-workspace');
+            const overlay = document.getElementById('workspace-overlay');
+            
+            drawTempCanvas = document.createElement('canvas');
+            drawTempCanvas.width = canvasWidth;
+            drawTempCanvas.height = canvasHeight;
+            drawTempCanvas.style.position = 'absolute';
+            drawTempCanvas.style.top = '0';
+            drawTempCanvas.style.left = '0';
+            drawTempCanvas.style.pointerEvents = 'none';
+            drawTempCanvas.style.zIndex = '99';
+            
+            drawTempCtx = drawTempCanvas.getContext('2d');
+            workspace.insertBefore(drawTempCanvas, overlay);
+        }
+
+        function removeTempCanvasNode() {
+            if (drawTempCanvas) {
+                drawTempCanvas.remove();
+                drawTempCanvas = null;
+                drawTempCtx = null;
+            }
+        }
+
+        function trackPointer(e) {
+            if (isPanningState) {
+                panX = e.clientX - panStartX;
+                panY = e.clientY - panStartY;
+                updateWorkspaceTransform();
+                return;
+            }
+
+            if (!isDrawingState) return;
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer) return;
+
+            const coords = getCanvasCoordinates(e);
+            const ctx = activeLayer.ctx;
+
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (['line', 'rect', 'circle'].includes(currentTool) && drawTempCtx) {
+                // Clear and redraw vector layout previews dynamically
+                drawTempCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+                drawTempCtx.strokeStyle = brushColor;
+                drawTempCtx.lineWidth = brushSize;
+                drawTempCtx.globalAlpha = brushOpacity;
+                drawTempCtx.lineCap = 'round';
+                
+                if (currentTool === 'line') {
+                    drawTempCtx.beginPath();
+                    drawTempCtx.moveTo(drawStartX, drawStartY);
+                    drawTempCtx.lineTo(coords.x, coords.y);
+                    drawTempCtx.stroke();
+                } else if (currentTool === 'rect') {
+                    const w = coords.x - drawStartX;
+                    const h = coords.y - drawStartY;
+                    drawTempCtx.beginPath();
+                    drawTempCtx.rect(drawStartX, drawStartY, w, h);
+                    drawTempCtx.stroke();
+                } else if (currentTool === 'circle') {
+                    const r = Math.sqrt(Math.pow(coords.x - drawStartX, 2) + Math.pow(coords.y - drawStartY, 2));
+                    drawTempCtx.beginPath();
+                    drawTempCtx.arc(drawStartX, drawStartY, r, 0, 2 * Math.PI);
+                    drawTempCtx.stroke();
+                }
+            }
+        }
+
+        function endPointer(e) {
+            if (isPanningState) {
+                isPanningState = false;
+                return;
+            }
+
+            if (!isDrawingState) return;
+            isDrawingState = false;
+
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer) return;
+
+            const ctx = activeLayer.ctx;
+            const coords = getCanvasCoordinates(e);
+
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                ctx.restore();
+            } else if (['line', 'rect', 'circle'].includes(currentTool) && drawTempCanvas) {
+                // Commit temporary visual vector drawing to selected canvas layer
+                ctx.save();
+                ctx.strokeStyle = brushColor;
+                ctx.lineWidth = brushSize;
+                ctx.globalAlpha = brushOpacity;
+                ctx.lineCap = 'round';
+                
+                if (currentTool === 'line') {
+                    ctx.beginPath();
+                    ctx.moveTo(drawStartX, drawStartY);
+                    ctx.lineTo(coords.x, coords.y);
+                    ctx.stroke();
+                } else if (currentTool === 'rect') {
+                    const w = coords.x - drawStartX;
+                    const h = coords.y - drawStartY;
+                    ctx.beginPath();
+                    ctx.rect(drawStartX, drawStartY, w, h);
+                    ctx.stroke();
+                } else if (currentTool === 'circle') {
+                    const r = Math.sqrt(Math.pow(coords.x - drawStartX, 2) + Math.pow(coords.y - drawStartY, 2));
+                    ctx.beginPath();
+                    ctx.arc(drawStartX, drawStartY, r, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                removeTempCanvasNode();
+            }
+
+            // Sync visual representation & snapshot states
+            refreshLayersUI();
+            saveHistoryState();
+        }
+
+        // Transformations
+        function rotateActiveLayer(deg) {
+            const layer = layers.find(l => l.id === activeLayerId);
+            if (!layer) return;
+
+            // Create temporary canvas to hold rotated content
+            const temp = document.createElement('canvas');
+            temp.width = layer.canvas.width;
+            temp.height = layer.canvas.height;
+            const tempCtx = temp.getContext('2d');
+
+            tempCtx.translate(temp.width / 2, temp.height / 2);
+            tempCtx.rotate(deg * Math.PI / 180);
+            tempCtx.drawImage(layer.canvas, -temp.width / 2, -temp.height / 2);
+
+            // Clear original and draw new rotated layer
+            layer.ctx.clearRect(0, 0, layer.width, layer.height);
+            layer.ctx.drawImage(temp, 0, 0);
+
+            refreshLayersUI();
+            saveHistoryState();
+        }
+
+        // Flip Layer contents
+        function flipActiveLayer(direction) {
+            const layer = layers.find(l => l.id === activeLayerId);
+            if (!layer) return;
+
+            const temp = document.createElement('canvas');
+            temp.width = layer.canvas.width;
+            temp.height = layer.canvas.height;
+            const tempCtx = temp.getContext('2d');
+
+            if (direction === 'horizontal') {
+                tempCtx.translate(temp.width, 0);
+                tempCtx.scale(-1, 1);
+            } else {
+                tempCtx.translate(0, temp.height);
+                tempCtx.scale(1, -1);
+            }
+            tempCtx.drawImage(layer.canvas, 0, 0);
+
+            layer.ctx.clearRect(0, 0, layer.width, layer.height);
+            layer.ctx.drawImage(temp, 0, 0);
+
+            refreshLayersUI();
+            saveHistoryState();
+        }
+
+        // File operations - Import / Upload Image
+        function triggerImport() {
+            document.getElementById('image-loader').click();
+        }
+
+        function handleImageImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Create new layer for the imported image
+                    layerCounter++;
+                    const id = layerCounter;
+                    
+                    // If image is larger than current workspace, ask user if they want to resize canvas
+                    if (img.width > canvasWidth || img.height > canvasHeight) {
+                        const resize = confirm("The image is larger than the workspace. Resize the studio canvas to match the image dimensions?");
+                        if (resize) {
+                            resizeCanvasWorkspace(img.width, img.height);
+                        }
+                    }
+
+                    const layer = new CanvasLayer(id, file.name.split('.')[0], canvasWidth, canvasHeight);
+                    
+                    // Center draw image
+                    const dx = (canvasWidth - img.width) / 2;
+                    const dy = (canvasHeight - img.height) / 2;
+                    layer.ctx.drawImage(img, dx, dy, img.width, img.height);
+
+                    const workspace = document.getElementById('canvas-workspace');
+                    const overlay = document.getElementById('workspace-overlay');
+                    workspace.insertBefore(layer.canvas, overlay);
+
+                    layers.push(layer);
+                    setActiveLayer(id);
+                    refreshLayersUI();
+                    saveHistoryState();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = ''; // Reset file input
+        }
+
+        function resizeCanvasWorkspace(width, height) {
+            canvasWidth = width;
+            canvasHeight = height;
+            
+            const workspace = document.getElementById('canvas-workspace');
+            workspace.style.width = `${width}px`;
+            workspace.style.height = `${height}px`;
+
+            document.getElementById('canvas-dimensions-display').textContent = `Size: ${width} x ${height}`;
+
+            // Resize existing canvases
+            layers.forEach(layer => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = layer.canvas.width;
+                tempCanvas.height = layer.canvas.height;
+                tempCanvas.getContext('2d').drawImage(layer.canvas, 0, 0);
+
+                layer.canvas.width = width;
+                layer.canvas.height = height;
+                layer.width = width;
+                layer.height = height;
+                
+                layer.ctx.drawImage(tempCanvas, 0, 0);
+            });
+
+            centerWorkspace();
+        }
+
+        // Export Merged Canvas Image
+        function exportCanvas() {
+            // Create target assembly canvas
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = canvasWidth;
+            exportCanvas.height = canvasHeight;
+            const exportCtx = exportCanvas.getContext('2d');
+
+            // Render visible layers from bottom to top, applying active adjustment filters
+            layers.forEach(layer => {
+                if (!layer.visible) return;
+
+                exportCtx.save();
+                exportCtx.globalAlpha = layer.opacity;
+                
+                // Compute filter properties
+                const f = layer.filters;
+                exportCtx.filter = `
+                    brightness(${f.brightness}%) 
+                    contrast(${f.contrast}%) 
+                    saturate(${f.saturate}%) 
+                    blur(${f.blur}px) 
+                    hue-rotate(${f['hue-rotate']}deg) 
+                    grayscale(${f.grayscale}%) 
+                    sepia(${f.sepia}%) 
+                    invert(${f.invert}%)
+                `;
+                
+                exportCtx.drawImage(layer.canvas, 0, 0);
+                exportCtx.restore();
+            });
+
+            // Trigger export prompt & download flow
+            const link = document.createElement('a');
+            link.download = 'aura-artwork.png';
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Undo & Redo History System
+        function saveHistoryState() {
+            // Build current snapshot structure
+            const state = layers.map(layer => {
+                return {
+                    id: layer.id,
+                    name: layer.name,
+                    visible: layer.visible,
+                    opacity: layer.opacity,
+                    filters: { ...layer.filters },
+                    dataUrl: layer.canvas.toDataURL()
+                };
+            });
+
+            undoStack.push(state);
+            if (undoStack.length > maxHistory) {
+                undoStack.shift();
+            }
+            redoStack = []; // Clear redo stack on new action
+        }
+
+        function undo() {
+            if (undoStack.length <= 1) return; // Need at least current state
+            
+            // Pop current state and push to redo stack
+            const currentState = undoStack.pop();
+            redoStack.push(currentState);
+
+            // Fetch previous state
+            const prevState = undoStack[undoStack.length - 1];
+            restoreState(prevState);
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+
+            const nextState = redoStack.pop();
+            undoStack.push(nextState);
+            restoreState(nextState);
+        }
+
+        function restoreState(state) {
+            // Remove current layers from DOM
+            layers.forEach(l => l.canvas.remove());
+            layers = [];
+
+            const workspace = document.getElementById('canvas-workspace');
+            const overlay = document.getElementById('workspace-overlay');
+
+            // Rebuild layer modules
+            let loadedCount = 0;
+            state.forEach(layerState => {
+                const layer = new CanvasLayer(layerState.id, layerState.name, canvasWidth, canvasHeight);
+                layer.visible = layerState.visible;
+                layer.opacity = layerState.opacity;
+                layer.filters = { ...layerState.filters };
+                layer.canvas.style.display = layer.visible ? 'block' : 'none';
+                layer.updateCSSFilterString();
+
+                const img = new Image();
+                img.onload = () => {
+                    layer.ctx.drawImage(img, 0, 0);
+                    loadedCount++;
+                    if (loadedCount === state.length) {
+                        refreshLayersUI();
+                    }
+                };
+                img.src = layerState.dataUrl;
+
+                workspace.insertBefore(layer.canvas, overlay);
+                layers.push(layer);
+            });
+
+            // Restore active selection
+            if (layers.length > 0) {
+                const stillExists = layers.some(l => l.id === activeLayerId);
+                setActiveLayer(stillExists ? activeLayerId : layers[layers.length - 1].id);
+            }
+        }
+    </script>
+</body>
+</html>
