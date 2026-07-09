@@ -313,7 +313,7 @@
       transform: scale(1.1);
     }
   </style>
-<script src="APIKEY.js"></script>
+  <script src="APIKEY.js"></script>
 </head>
 
 <body>
@@ -329,12 +329,13 @@
 
   <div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
     <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
-<div id="apiKeySection" style="margin-top:10px; text-align:center;">
-  <input type="password" id="apiKeyInput" placeholder="Enter API Key" style="padding:5px;"/>
-  <button onclick="verifyApiKey()" style="margin-left:5px; padding:5px;">Download Site</button>
-  <button onclick="window.location.href='Download/download.html'" style="margin-left:5px; padding:5px;">Download App</button>
-  <span id="apiKeyMessage" style="color:red; margin-left:10px;"></span>
-</div>
+    <div id="apiKeySection" style="margin-top:10px; text-align:center;">
+      <input type="password" id="apiKeyInput" placeholder="Enter API Key" style="padding:5px;" />
+      <button onclick="verifyApiKey()" style="margin-left:5px; padding:5px;">Download Site</button>
+      <button onclick="window.location.href='Download/download.html'" style="margin-left:5px; padding:5px;">Download
+        App</button>
+      <span id="apiKeyMessage" style="color:red; margin-left:10px;"></span>
+    </div>
   </div>
   <div class="button-container">
 
@@ -443,6 +444,8 @@
           style="background:#4caf50;color:#fff;font-weight:bold;">Account Select</button>
         <button onclick="window.location.href='storagemanegment.html'"
           style="background:#4caf50;color:#fff;font-weight:bold;">Storage Management</button>
+        <button onclick="window.location.href='../../../../https://app.clipchamp.com'"
+          style="background:#4caf50;color:#fff;font-weight:bold;">ClipChamp AI</button>
       </div>
 
     </div>
@@ -584,19 +587,19 @@
     setInterval(syncNow, 100000);
     // Initial sync
     syncNow();
-  function verifyApiKey() {
-  const entered = document.getElementById('apiKeyInput').value;
-  if (entered === API_KEY) {
-    const link = document.createElement('a');
-    link.href = 'My Website.zip';
-    link.download = 'My Website.zip';
-    link.click();
-    document.getElementById('apiKeyMessage').textContent = '';
-  } else {
-    document.getElementById('apiKeyMessage').textContent = 'Invalid API Key';
-  }
-}
-</script>
+    function verifyApiKey() {
+      const entered = document.getElementById('apiKeyInput').value;
+      if (entered === API_KEY) {
+        const link = document.createElement('a');
+        link.href = 'My Website.zip';
+        link.download = 'My Website.zip';
+        link.click();
+        document.getElementById('apiKeyMessage').textContent = '';
+      } else {
+        document.getElementById('apiKeyMessage').textContent = 'Invalid API Key';
+      }
+    }
+  </script>
 
 </body>
 
