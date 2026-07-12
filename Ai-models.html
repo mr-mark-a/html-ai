@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GBT Chat</title>
+  <meta name="description" content="Premium dark‑mode chat interface powered by GBT‑0.5 model." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="chat-container">
+    <section id="messages" class="messages" aria-live="polite"></section>
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <textarea id="user-input" rows="1" placeholder="Type a message…" required></textarea>
+      <button type="submit" aria-label="Send message">▶</button>
+    </form>
+  </main>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

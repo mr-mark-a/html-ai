@@ -1,126 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Access</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-size: 14px;
-        }
-        #passwordScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: 99999;
-        }
-        .password-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .password-container h2 {
-            margin: 0 0 20px 0;
-            color: #333;
-        }
-        .password-container input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-        }
-        .password-container button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .password-container button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .password-error {
-            color: #f44336;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-        }
-        .lock-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GBT Chat</title>
+  <meta name="description" content="Premium dark‑mode chat interface powered by GBT‑0.5 model." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Password Protection Screen -->
-    <div id="passwordScreen">
-        <div class="password-container">
-            <div class="lock-icon">🔒</div>
-            <h2>Secure Access Required</h2>
-            <p>Please enter the password to continue</p>
-            <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
-            <button id="accessBtn">Access</button>
-            <p class="password-error" id="passwordError">❌ Incorrect password</p>
-        </div>
-    </div>
-
-    <script>
-        // ========== PASSWORD PROTECTION ==========
-        const SITE_PASSWORD = '000054';
-        const passwordScreen = document.getElementById('passwordScreen');
-        const passwordInput = document.getElementById('passwordInput');
-        const accessBtn = document.getElementById('accessBtn');
-        const passwordError = document.getElementById('passwordError');
-
-        // Check if already authenticated
-        if (sessionStorage.getItem('authenticated') === 'true') {
-            window.location.href = 'marks-games.html';
-        }
-
-        accessBtn.addEventListener('click', () => {
-            if (passwordInput.value === SITE_PASSWORD) {
-                sessionStorage.setItem('authenticated', 'true');
-                window.location.href = 'marks-games.html';
-            } else {
-                passwordError.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        });
-
-        passwordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                accessBtn.click();
-            }
-        });
-
-        passwordInput.addEventListener('input', () => {
-            passwordError.style.display = 'none';
-        });
-    </script>
+  <main class="chat-container">
+    <section id="messages" class="messages" aria-live="polite"></section>
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <textarea id="user-input" rows="1" placeholder="Type a message…" required></textarea>
+      <button type="submit" aria-label="Send message">▶</button>
+    </form>
+  </main>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
