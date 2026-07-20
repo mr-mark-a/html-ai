@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aircraft Upgrade Add‑On Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo">✈️ Upgrade Store</div>
+    <nav class="nav">
+      <a href="#store">Store</a>
+    </nav>
+    <button id="cartBtn" class="btn secondary">Cart (0)</button>
+  </header>
+
+  <main>
+    <!-- Store Overview -->
+    <section id="store" class="section">
+      <h1>Aircraft Add‑On Store</h1>
+      <p>Select the add‑ons you want for your aircraft. Each add‑on costs <strong>$50</strong>.</p>
+      <button class="btn primary purchaseBtn" data-addon="Seats">Buy Seats – $50</button>
+      <button class="btn primary purchaseBtn" data-addon="Animal Lockers">Buy Animal Lockers – $50</button>
+      <button class="btn primary purchaseBtn" data-addon="Restaurant">Buy Restaurant – $50</button>
+    </section>
+  </main>
+
+  <!-- Cart Modal -->
+  <div id="modalOverlay" class="modal-overlay hidden"></div>
+  <div id="modal" class="modal hidden">
+    <h2>Your Cart</h2>
+    <ul id="cartList"></ul>
+    <p>Total: <strong id="cartTotal">$0</strong></p>
+    <button id="checkoutBtn" class="btn primary">Checkout</button>
+    <button id="modalClose" class="btn secondary">Close</button>
+  </div>
+
+  <!-- Load script that makes the buttons functional -->
+  <script src="Forgehub/Agents/script.js"></script>
+</body>
+</html>
