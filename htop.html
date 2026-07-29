@@ -446,7 +446,8 @@
   <span class="text-blue-400">whoami</span>   - Print current user
   <span class="text-blue-400">date</span>     - Print current date and time
   <span class="text-blue-400">echo</span>     - Print text to terminal
-  <span class="text-blue-400">htop</span>     - Launch interactive system monitor`);
+  <span class="text-blue-400">htop</span>     - Launch interactive system monitor
+  <span class="text-blue-400">pk</span>       - Package manager (audio player)`);
                     break;
                 case 'clear':
                     outputContainer.innerHTML = '';
@@ -462,6 +463,90 @@
                     break;
                 case 'htop':
                     launchHtop();
+                    break;
+                case 'pk':
+                    if (args[1] === 'install' && args[2] === 'select' && args[3]) {
+                        const pkgName = args[3];
+                        let input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'audio/*';
+                        input.onchange = e => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                window.pkFiles = window.pkFiles || {};
+                                window.pkFiles[pkgName] = file;
+                                appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> source selected. Now write 'pk brew install ${escapeHtml(pkgName)}' to install it.`);
+                                scrollToBottom();
+                            }
+                        };
+                        input.click();
+                        appendOutput(`Selecting source for <span class="text-blue-400">${escapeHtml(pkgName)}</span>...`);
+                    } else if (args[1] === 'brew' && args[2] === 'install' && args[3]) {
+                        const pkgName = args[3];
+                        window.pkFiles = window.pkFiles || {};
+                        window.pkBrewed = window.pkBrewed || {};
+                        if (window.pkFiles[pkgName]) {
+                            window.pkBrewed[pkgName] = true;
+                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> installed successfully.`);
+                        } else {
+                            appendOutput(`Error: No source selected for <span class="text-blue-400">${escapeHtml(pkgName)}</span>. Run 'pk install select ${escapeHtml(pkgName)}' first.`);
+                        }
+                    } else if (args[1] === 'stop') {
+                        if (window.currentAudio) {
+                            window.currentAudio.pause();
+                            window.currentAudio.currentTime = 0;
+                            appendOutput(`Playback stopped.`);
+                        }
+                    } else if (args[1] === 'uninstall' && args[2]) {
+                        const pkgName = args[2];
+                        window.pkBrewed = window.pkBrewed || {};
+                        if (window.pkBrewed[pkgName]) {
+                            // The user requested NOT to mark it as uninstalled
+                            // delete window.pkBrewed[pkgName];
+                            if (window.currentAudio) {
+                                window.currentAudio.pause();
+                                window.currentAudio.currentTime = 0;
+                            }
+                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> playback stopped.`);
+                        } else {
+                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> is not installed.`);
+                        }
+                    } else if (args[1] === 'forget' && args[2]) {
+                        const pkgName = args[2];
+                        window.pkFiles = window.pkFiles || {};
+                        window.pkBrewed = window.pkBrewed || {};
+                        delete window.pkBrewed[pkgName];
+                        if (window.pkFiles[pkgName]) {
+                            delete window.pkFiles[pkgName];
+                            if (window.currentAudio) {
+                                window.currentAudio.pause();
+                                window.currentAudio.currentTime = 0;
+                            }
+                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> forgotten.`);
+                        } else {
+                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> not found.`);
+                        }
+                    } else if (args[1]) {
+                        const pkgName = args[1];
+                        window.pkFiles = window.pkFiles || {};
+                        window.pkBrewed = window.pkBrewed || {};
+                        if (window.pkBrewed[pkgName] && window.pkFiles[pkgName]) {
+                            appendOutput(`Running <span class="text-blue-400">${escapeHtml(pkgName)}</span>...`);
+                            if (window.currentAudio) window.currentAudio.pause();
+                            window.currentAudio = new Audio(URL.createObjectURL(window.pkFiles[pkgName]));
+                            window.currentAudio.play();
+                        } else {
+                            appendOutput(`bash: pk: ${escapeHtml(pkgName)}: package not found or not installed.`);
+                        }
+                    } else {
+                        appendOutput(`Usage:
+  <span class="text-blue-400">pk install select &lt;name&gt;</span> - Select source file
+  <span class="text-blue-400">pk brew install &lt;name&gt;</span>   - Install package
+  <span class="text-blue-400">pk &lt;name&gt;</span>                - Run package (play audio)
+  <span class="text-blue-400">pk uninstall &lt;name&gt;</span>      - Uninstall package and stop playback
+  <span class="text-blue-400">pk forget &lt;name&gt;</span>         - Forget package source completely
+  <span class="text-blue-400">pk stop</span>                  - Stop playback`);
+                    }
                     break;
                 default:
                     appendOutput(`bash: ${escapeHtml(mainCmd)}: command not found`);
