@@ -1,459 +1,560 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terminal - htop</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts for Monospace -->
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <style>
-    body {
-      background-color: #0c0c0c;
-      color: #cccccc;
-      font-family: 'Fira Code', monospace;
-      margin: 0;
-      overflow: hidden;
-    }
-    
-    ::selection {
-      background: #cccccc;
-      color: #0c0c0c;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal - htop</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Monospace -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
 
-    #terminal-container {
-      height: 100vh;
-      width: 100vw;
-      padding: 10px;
-      overflow-y: auto;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-    }
+    <style>
+        body {
+            background-color: #0c0c0c;
+            color: #cccccc;
+            font-family: 'Fira Code', monospace;
+            margin: 0;
+            overflow: hidden;
+        }
 
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0c0c0c; }
-    ::-webkit-scrollbar-thumb { background: #333333; }
-    ::-webkit-scrollbar-thumb:hover { background: #555555; }
+        ::selection {
+            background: #cccccc;
+            color: #0c0c0c;
+        }
 
-    .prompt-user { color: #859900; font-weight: bold; }
-    .prompt-path { color: #268bd2; font-weight: bold; }
-    .prompt-char { color: #cccccc; }
+        #terminal-container {
+            height: 100vh;
+            width: 100vw;
+            padding: 10px;
+            overflow-y: auto;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
 
-    #command-input-hidden {
-      position: absolute;
-      opacity: 0;
-      top: -1000px;
-    }
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
 
-    .cursor {
-      display: inline-block;
-      width: 0.6em;
-      height: 1.2em;
-      background-color: #cccccc;
-      vertical-align: middle;
-      animation: blink 1s step-end infinite;
-      margin-left: 1px;
-    }
+        ::-webkit-scrollbar-track {
+            background: #0c0c0c;
+        }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+        }
 
-    /* HTOP Styling */
-    #htop-container {
-      display: none;
-      height: 100vh;
-      width: 100vw;
-      background-color: #0c0c0c;
-      color: #ffffff;
-      padding: 10px;
-      box-sizing: border-box;
-      flex-direction: column;
-      font-size: 14px;
-    }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
 
-    .htop-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .htop-column { flex: 1; margin-right: 20px; }
-    
-    .bar-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 2px;
-    }
-    .bar-label { width: 50px; color: #2aa198; font-weight: bold; }
-    .bar-bracket { color: #586e75; }
-    .bar-bg {
-      flex-grow: 1;
-      height: 14px;
-      background-color: #000;
-      border: 1px solid #586e75;
-      display: flex;
-      margin: 0 5px;
-      position: relative;
-    }
-    .bar-fill-cpu-user { background-color: #859900; height: 100%; transition: width 0.5s; }
-    .bar-fill-cpu-sys { background-color: #dc322f; height: 100%; transition: width 0.5s; }
-    .bar-fill-mem { background-color: #859900; height: 100%; transition: width 0.5s; }
-    .bar-fill-swp { background-color: #dc322f; height: 100%; transition: width 0.5s; }
-    .bar-text {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      font-size: 10px;
-      line-height: 14px;
-      color: #ffffff;
-      mix-blend-mode: difference;
-    }
+        .prompt-user {
+            color: #859900;
+            font-weight: bold;
+        }
 
-    .htop-stats { color: #93a1a1; line-height: 1.2; }
-    .htop-stats span { color: #ffffff; font-weight: bold; }
+        .prompt-path {
+            color: #268bd2;
+            font-weight: bold;
+        }
 
-    .htop-table { width: 100%; text-align: left; border-collapse: collapse; }
-    .htop-table th { color: #000; background-color: #859900; padding: 2px 5px; font-weight: bold; }
-    .htop-table td { padding: 2px 5px; color: #93a1a1; }
-    .htop-table tr:nth-child(even) td { background-color: #111; }
-    .htop-table .highlight { color: #ffffff; }
-    
-    .htop-footer {
-      margin-top: auto;
-      background-color: #000;
-      padding: 5px;
-      display: flex;
-      gap: 10px;
-    }
-    .footer-key { color: #000; background-color: #859900; padding: 0 4px; font-weight: bold; }
-    .footer-desc { color: #93a1a1; }
-  </style>
+        .prompt-char {
+            color: #cccccc;
+        }
+
+        #command-input-hidden {
+            position: absolute;
+            opacity: 0;
+            top: -1000px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 0.6em;
+            height: 1.2em;
+            background-color: #cccccc;
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* HTOP Styling */
+        #htop-container {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            background-color: #0c0c0c;
+            color: #ffffff;
+            padding: 10px;
+            box-sizing: border-box;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        .htop-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .htop-column {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .bar-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .bar-label {
+            width: 50px;
+            color: #2aa198;
+            font-weight: bold;
+        }
+
+        .bar-bracket {
+            color: #586e75;
+        }
+
+        .bar-bg {
+            flex-grow: 1;
+            height: 14px;
+            background-color: #000;
+            border: 1px solid #586e75;
+            display: flex;
+            margin: 0 5px;
+            position: relative;
+        }
+
+        .bar-fill-cpu-user {
+            background-color: #859900;
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        .bar-fill-cpu-sys {
+            background-color: #dc322f;
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        .bar-fill-mem {
+            background-color: #859900;
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        .bar-fill-swp {
+            background-color: #dc322f;
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        .bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            line-height: 14px;
+            color: #ffffff;
+            mix-blend-mode: difference;
+        }
+
+        .htop-stats {
+            color: #93a1a1;
+            line-height: 1.2;
+        }
+
+        .htop-stats span {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .htop-table {
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        .htop-table th {
+            color: #000;
+            background-color: #859900;
+            padding: 2px 5px;
+            font-weight: bold;
+        }
+
+        .htop-table td {
+            padding: 2px 5px;
+            color: #93a1a1;
+        }
+
+        .htop-table tr:nth-child(even) td {
+            background-color: #111;
+        }
+
+        .htop-table .highlight {
+            color: #ffffff;
+        }
+
+        .htop-footer {
+            margin-top: auto;
+            background-color: #000;
+            padding: 5px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .footer-key {
+            color: #000;
+            background-color: #859900;
+            padding: 0 4px;
+            font-weight: bold;
+        }
+
+        .footer-desc {
+            color: #93a1a1;
+        }
+    </style>
 </head>
+
 <body>
 
-  <!-- TERMINAL VIEW -->
-  <div id="terminal-container" onclick="document.getElementById('command-input-hidden').focus()">
-    <div id="terminal-output">
-      <div>Welcome to WebOS Server v1.0.4</div>
-      <div>Type <span class="text-green-400">'help'</span> to see a list of available commands.</div>
-      <div>Try typing <span class="text-blue-400">'htop'</span> to view the system monitor.</div>
-      <br>
-    </div>
-    
-    <div id="input-line" class="flex items-center">
-      <span class="prompt"><span class="prompt-user">admin@server</span>:<span class="prompt-path">~</span><span class="prompt-char">$</span> </span>
-      <span id="command-text" class="ml-2 whitespace-pre"></span><span class="cursor"></span>
-    </div>
-    <input type="text" id="command-input-hidden" autocomplete="off" spellcheck="false" autofocus>
-  </div>
+    <!-- TERMINAL VIEW -->
+    <div id="terminal-container" onclick="document.getElementById('command-input-hidden').focus()">
+        <div id="terminal-output">
+            <div>Welcome to WebOS Server v1.0.4</div>
+            <div>Type <span class="text-green-400">'help'</span> to see a list of available commands.</div>
+            <div>Try typing <span class="text-blue-400">'htop'</span> to view the system monitor.</div>
+            <br>
+        </div>
 
-  <!-- HTOP VIEW -->
-  <div id="htop-container">
-    <div class="htop-header">
-      <div class="htop-column">
-        <!-- CPU Bars -->
-        <div class="bar-container">
-          <span class="bar-label">1</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-cpu-user" id="cpu1-user" style="width: 15%"></div>
-            <div class="bar-fill-cpu-sys" id="cpu1-sys" style="width: 5%"></div>
-            <div class="bar-text" id="cpu1-text">20.0%</div>
-          </div>
-          <span class="bar-bracket">]</span>
+        <div id="input-line" class="flex items-center">
+            <span class="prompt"><span class="prompt-user">admin@server</span>:<span class="prompt-path">~</span><span
+                    class="prompt-char">$</span> </span>
+            <span id="command-text" class="ml-2 whitespace-pre"></span><span class="cursor"></span>
         </div>
-        <div class="bar-container">
-          <span class="bar-label">2</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-cpu-user" id="cpu2-user" style="width: 8%"></div>
-            <div class="bar-fill-cpu-sys" id="cpu2-sys" style="width: 2%"></div>
-            <div class="bar-text" id="cpu2-text">10.0%</div>
-          </div>
-          <span class="bar-bracket">]</span>
-        </div>
-        <div class="bar-container">
-          <span class="bar-label">3</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-cpu-user" id="cpu3-user" style="width: 45%"></div>
-            <div class="bar-fill-cpu-sys" id="cpu3-sys" style="width: 12%"></div>
-            <div class="bar-text" id="cpu3-text">57.0%</div>
-          </div>
-          <span class="bar-bracket">]</span>
-        </div>
-        <div class="bar-container">
-          <span class="bar-label">4</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-cpu-user" id="cpu4-user" style="width: 2%"></div>
-            <div class="bar-fill-cpu-sys" id="cpu4-sys" style="width: 1%"></div>
-            <div class="bar-text" id="cpu4-text">3.0%</div>
-          </div>
-          <span class="bar-bracket">]</span>
-        </div>
-      </div>
-      
-      <div class="htop-column">
-        <!-- Mem / Swp Bars -->
-        <div class="bar-container">
-          <span class="bar-label">Mem</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-mem" style="width: 42%"></div>
-            <div class="bar-text">3.27G/7.78G</div>
-          </div>
-          <span class="bar-bracket">]</span>
-        </div>
-        <div class="bar-container">
-          <span class="bar-label">Swp</span><span class="bar-bracket">[</span>
-          <div class="bar-bg">
-            <div class="bar-fill-swp" style="width: 0%"></div>
-            <div class="bar-text">0K/2.00G</div>
-          </div>
-          <span class="bar-bracket">]</span>
-        </div>
-      </div>
-      
-      <div class="htop-column htop-stats">
-        <div>Tasks: <span>85</span>, <span>120</span> thr; <span>1</span> running</div>
-        <div>Load average: <span>0.24 0.35 0.38</span></div>
-        <div>Uptime: <span>14 days, 05:22:15</span></div>
-      </div>
-    </div>
-    
-    <div style="flex-grow: 1; overflow: hidden;">
-      <table class="htop-table">
-        <thead>
-          <tr>
-            <th>PID</th>
-            <th>USER</th>
-            <th>PRI</th>
-            <th>NI</th>
-            <th>VIRT</th>
-            <th>RES</th>
-            <th>SHR</th>
-            <th>S</th>
-            <th>CPU%</th>
-            <th>MEM%</th>
-            <th>TIME+</th>
-            <th>Command</th>
-          </tr>
-        </thead>
-        <tbody id="htop-process-list">
-          <!-- Filled by JS -->
-        </tbody>
-      </table>
+        <input type="text" id="command-input-hidden" autocomplete="off" spellcheck="false" autofocus>
     </div>
 
-    <div class="htop-footer">
-      <div><span class="footer-key">F1</span><span class="footer-desc">Help</span></div>
-      <div><span class="footer-key">F2</span><span class="footer-desc">Setup</span></div>
-      <div><span class="footer-key">F3</span><span class="footer-desc">Search</span></div>
-      <div><span class="footer-key">F4</span><span class="footer-desc">Filter</span></div>
-      <div><span class="footer-key">F5</span><span class="footer-desc">Tree</span></div>
-      <div><span class="footer-key">F6</span><span class="footer-desc">SortBy</span></div>
-      <div><span class="footer-key">F7</span><span class="footer-desc">Nice-</span></div>
-      <div><span class="footer-key">F8</span><span class="footer-desc">Nice+</span></div>
-      <div><span class="footer-key">F9</span><span class="footer-desc">Kill</span></div>
-      <div><span class="footer-key">F10/q</span><span class="footer-desc">Quit</span></div>
+    <!-- HTOP VIEW -->
+    <div id="htop-container">
+        <div class="htop-header">
+            <div class="htop-column">
+                <!-- CPU Bars -->
+                <div class="bar-container">
+                    <span class="bar-label">1</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-cpu-user" id="cpu1-user" style="width: 15%"></div>
+                        <div class="bar-fill-cpu-sys" id="cpu1-sys" style="width: 5%"></div>
+                        <div class="bar-text" id="cpu1-text">20.0%</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+                <div class="bar-container">
+                    <span class="bar-label">2</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-cpu-user" id="cpu2-user" style="width: 8%"></div>
+                        <div class="bar-fill-cpu-sys" id="cpu2-sys" style="width: 2%"></div>
+                        <div class="bar-text" id="cpu2-text">10.0%</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+                <div class="bar-container">
+                    <span class="bar-label">3</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-cpu-user" id="cpu3-user" style="width: 45%"></div>
+                        <div class="bar-fill-cpu-sys" id="cpu3-sys" style="width: 12%"></div>
+                        <div class="bar-text" id="cpu3-text">57.0%</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+                <div class="bar-container">
+                    <span class="bar-label">4</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-cpu-user" id="cpu4-user" style="width: 2%"></div>
+                        <div class="bar-fill-cpu-sys" id="cpu4-sys" style="width: 1%"></div>
+                        <div class="bar-text" id="cpu4-text">3.0%</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+            </div>
+
+            <div class="htop-column">
+                <!-- Mem / Swp Bars -->
+                <div class="bar-container">
+                    <span class="bar-label">Mem</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-mem" style="width: 42%"></div>
+                        <div class="bar-text">3.27G/7.78G</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+                <div class="bar-container">
+                    <span class="bar-label">Swp</span><span class="bar-bracket">[</span>
+                    <div class="bar-bg">
+                        <div class="bar-fill-swp" style="width: 0%"></div>
+                        <div class="bar-text">0K/2.00G</div>
+                    </div>
+                    <span class="bar-bracket">]</span>
+                </div>
+            </div>
+
+            <div class="htop-column htop-stats">
+                <div>Tasks: <span>85</span>, <span>120</span> thr; <span>1</span> running</div>
+                <div>Load average: <span>0.24 0.35 0.38</span></div>
+                <div>Uptime: <span>14 days, 05:22:15</span></div>
+            </div>
+        </div>
+
+        <div style="flex-grow: 1; overflow: hidden;">
+            <table class="htop-table">
+                <thead>
+                    <tr>
+                        <th>PID</th>
+                        <th>USER</th>
+                        <th>PRI</th>
+                        <th>NI</th>
+                        <th>VIRT</th>
+                        <th>RES</th>
+                        <th>SHR</th>
+                        <th>S</th>
+                        <th>CPU%</th>
+                        <th>MEM%</th>
+                        <th>TIME+</th>
+                        <th>Command</th>
+                    </tr>
+                </thead>
+                <tbody id="htop-process-list">
+                    <!-- Filled by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="htop-footer">
+            <div><span class="footer-key">F1</span><span class="footer-desc">Help</span></div>
+            <div><span class="footer-key">F2</span><span class="footer-desc">Setup</span></div>
+            <div><span class="footer-key">F3</span><span class="footer-desc">Search</span></div>
+            <div><span class="footer-key">F4</span><span class="footer-desc">Filter</span></div>
+            <div><span class="footer-key">F5</span><span class="footer-desc">Tree</span></div>
+            <div><span class="footer-key">F6</span><span class="footer-desc">SortBy</span></div>
+            <div><span class="footer-key">F7</span><span class="footer-desc">Nice-</span></div>
+            <div><span class="footer-key">F8</span><span class="footer-desc">Nice+</span></div>
+            <div><span class="footer-key">F9</span><span class="footer-desc">Kill</span></div>
+            <div><span class="footer-key">F10/q</span><span class="footer-desc">Quit</span></div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // --- TERMINAL LOGIC ---
-    const inputHidden = document.getElementById('command-input-hidden');
-    const commandText = document.getElementById('command-text');
-    const outputContainer = document.getElementById('terminal-output');
-    const terminalContainer = document.getElementById('terminal-container');
-    const htopContainer = document.getElementById('htop-container');
+    <script>
+        // --- TERMINAL LOGIC ---
+        const inputHidden = document.getElementById('command-input-hidden');
+        const commandText = document.getElementById('command-text');
+        const outputContainer = document.getElementById('terminal-output');
+        const terminalContainer = document.getElementById('terminal-container');
+        const htopContainer = document.getElementById('htop-container');
 
-    const commandHistory = [];
-    let historyIndex = -1;
-    let isHtopActive = false;
+        const commandHistory = [];
+        let historyIndex = -1;
+        let isHtopActive = false;
 
-    // Focus input to start
-    inputHidden.focus();
-
-    // Mirror hidden input value to visible span
-    inputHidden.addEventListener('input', () => {
-      commandText.textContent = inputHidden.value;
-    });
-
-    // Handle keys
-    inputHidden.addEventListener('keydown', (e) => {
-      if (isHtopActive) {
-        e.preventDefault();
-        return; // Handled by document keydown
-      }
-
-      if (e.key === 'Enter') {
-        const cmdRaw = inputHidden.value;
-        const cmd = cmdRaw.trim();
-        
-        // Print prompt + command
-        appendOutput(`<span class="prompt"><span class="prompt-user">admin@server</span>:<span class="prompt-path">~</span><span class="prompt-char">$</span> </span>${escapeHtml(cmdRaw)}`);
-        
-        if (cmd !== '') {
-          commandHistory.push(cmd);
-          historyIndex = commandHistory.length;
-          processCommand(cmd);
-        }
-        
-        inputHidden.value = '';
-        commandText.textContent = '';
-        scrollToBottom();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (historyIndex > 0) {
-          historyIndex--;
-          inputHidden.value = commandHistory[historyIndex];
-          commandText.textContent = inputHidden.value;
-        }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) {
-          historyIndex++;
-          inputHidden.value = commandHistory[historyIndex];
-          commandText.textContent = inputHidden.value;
-        } else {
-          historyIndex = commandHistory.length;
-          inputHidden.value = '';
-          commandText.textContent = '';
-        }
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (isHtopActive && (e.key.toLowerCase() === 'q' || e.key === 'F10')) {
-        e.preventDefault();
-        exitHtop();
-      } else if (!isHtopActive) {
+        // Focus input to start
         inputHidden.focus();
-      }
-    });
 
-    function processCommand(cmd) {
-      const args = cmd.split(' ');
-      const mainCmd = args[0].toLowerCase();
+        // Mirror hidden input value to visible span
+        inputHidden.addEventListener('input', () => {
+            commandText.textContent = inputHidden.value;
+        });
 
-      switch (mainCmd) {
-        case 'help':
-          appendOutput(`Available commands:
+        // Handle keys
+        inputHidden.addEventListener('keydown', (e) => {
+            if (isHtopActive) {
+                e.preventDefault();
+                return; // Handled by document keydown
+            }
+
+            if (e.key === 'Enter') {
+                const cmdRaw = inputHidden.value;
+                const cmd = cmdRaw.trim();
+
+                // Print prompt + command
+                appendOutput(`<span class="prompt"><span class="prompt-user">admin@server</span>:<span class="prompt-path">~</span><span class="prompt-char">$</span> </span>${escapeHtml(cmdRaw)}`);
+
+                if (cmd !== '') {
+                    commandHistory.push(cmd);
+                    historyIndex = commandHistory.length;
+                    processCommand(cmd);
+                }
+
+                inputHidden.value = '';
+                commandText.textContent = '';
+                scrollToBottom();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    inputHidden.value = commandHistory[historyIndex];
+                    commandText.textContent = inputHidden.value;
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    inputHidden.value = commandHistory[historyIndex];
+                    commandText.textContent = inputHidden.value;
+                } else {
+                    historyIndex = commandHistory.length;
+                    inputHidden.value = '';
+                    commandText.textContent = '';
+                }
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (isHtopActive && (e.key.toLowerCase() === 'q' || e.key === 'F10')) {
+                e.preventDefault();
+                exitHtop();
+            } else if (!isHtopActive) {
+                inputHidden.focus();
+            }
+        });
+
+        function processCommand(cmd) {
+            const args = cmd.split(' ');
+            const mainCmd = args[0].toLowerCase();
+
+            switch (mainCmd) {
+                case 'help':
+                    appendOutput(`Available commands:
   <span class="text-blue-400">help</span>     - Show this help message
   <span class="text-blue-400">clear</span>    - Clear the terminal screen
   <span class="text-blue-400">whoami</span>   - Print current user
   <span class="text-blue-400">date</span>     - Print current date and time
   <span class="text-blue-400">echo</span>     - Print text to terminal
   <span class="text-blue-400">htop</span>     - Launch interactive system monitor`);
-          break;
-        case 'clear':
-          outputContainer.innerHTML = '';
-          break;
-        case 'whoami':
-          appendOutput('admin');
-          break;
-        case 'date':
-          appendOutput(new Date().toString());
-          break;
-        case 'echo':
-          appendOutput(escapeHtml(args.slice(1).join(' ')));
-          break;
-        case 'htop':
-          launchHtop();
-          break;
-        default:
-          appendOutput(`bash: ${escapeHtml(mainCmd)}: command not found`);
-      }
-    }
+                    break;
+                case 'clear':
+                    outputContainer.innerHTML = '';
+                    break;
+                case 'whoami':
+                    appendOutput('admin');
+                    break;
+                case 'date':
+                    appendOutput(new Date().toString());
+                    break;
+                case 'echo':
+                    appendOutput(escapeHtml(args.slice(1).join(' ')));
+                    break;
+                case 'htop':
+                    launchHtop();
+                    break;
+                default:
+                    appendOutput(`bash: ${escapeHtml(mainCmd)}: command not found`);
+            }
+        }
 
-    function appendOutput(html) {
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      div.style.marginBottom = '2px';
-      outputContainer.appendChild(div);
-    }
+        function appendOutput(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            div.style.marginBottom = '2px';
+            outputContainer.appendChild(div);
+        }
 
-    function scrollToBottom() {
-      terminalContainer.scrollTop = terminalContainer.scrollHeight;
-    }
+        function scrollToBottom() {
+            terminalContainer.scrollTop = terminalContainer.scrollHeight;
+        }
 
-    function escapeHtml(unsafe) {
-      return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-    // --- HTOP LOGIC ---
-    let htopInterval;
+        // --- HTOP LOGIC ---
+        let htopInterval;
 
-    const mockProcesses = [
-      { pid: 1423, user: 'root', pri: 20, ni: 0, virt: '48.3M', res: '8.2M', shr: '4.1M', s: 'S', cpu: 1.2, mem: 0.1, time: '2:14.33', cmd: '/usr/sbin/nginx -g daemon off;' },
-      { pid: 2841, user: 'admin', pri: 20, ni: 0, virt: '1024M', res: '256M', shr: '64M', s: 'R', cpu: 24.5, mem: 3.2, time: '14:23.01', cmd: 'node server.js' },
-      { pid: 832, user: 'root', pri: 20, ni: 0, virt: '0', res: '0', shr: '0', s: 'S', cpu: 0.0, mem: 0.0, time: '0:01.42', cmd: '[kworker/0:2]' },
-      { pid: 4091, user: 'postgres', pri: 20, ni: 0, virt: '840M', res: '128M', shr: '110M', s: 'S', cpu: 4.3, mem: 1.6, time: '3:41.10', cmd: 'postgres: checkpointer process' },
-      { pid: 1, user: 'root', pri: 20, ni: 0, virt: '24.1M', res: '4.8M', shr: '2.4M', s: 'S', cpu: 0.1, mem: 0.1, time: '1:02.39', cmd: '/sbin/init' },
-      { pid: 22, user: 'root', pri: 20, ni: 0, virt: '0', res: '0', shr: '0', s: 'S', cpu: 0.0, mem: 0.0, time: '0:00.00', cmd: '[rcu_sched]' },
-      { pid: 914, user: 'admin', pri: 20, ni: 0, virt: '12.4M', res: '3.1M', shr: '2.5M', s: 'S', cpu: 0.5, mem: 0.0, time: '0:43.11', cmd: 'bash' },
-      { pid: 1104, user: 'admin', pri: 20, ni: 0, virt: '15.2M', res: '4.5M', shr: '3.2M', s: 'R', cpu: 1.8, mem: 0.1, time: '0:00.41', cmd: 'htop' },
-      { pid: 3042, user: 'redis', pri: 20, ni: 0, virt: '54.2M', res: '12.4M', shr: '1.2M', s: 'S', cpu: 0.8, mem: 0.2, time: '1:14.22', cmd: '/usr/bin/redis-server 127.0.0.1:6379' },
-      { pid: 3881, user: 'admin', pri: 20, ni: 0, virt: '210M', res: '42M', shr: '12M', s: 'S', cpu: 2.1, mem: 0.5, time: '0:21.05', cmd: 'python3 background_worker.py' },
-    ];
+        const mockProcesses = [
+            { pid: 1423, user: 'root', pri: 20, ni: 0, virt: '48.3M', res: '8.2M', shr: '4.1M', s: 'S', cpu: 1.2, mem: 0.1, time: '2:14.33', cmd: '/usr/sbin/nginx -g daemon off;' },
+            { pid: 2841, user: 'admin', pri: 20, ni: 0, virt: '1024M', res: '256M', shr: '64M', s: 'R', cpu: 24.5, mem: 3.2, time: '14:23.01', cmd: 'node server.js' },
+            { pid: 832, user: 'root', pri: 20, ni: 0, virt: '0', res: '0', shr: '0', s: 'S', cpu: 0.0, mem: 0.0, time: '0:01.42', cmd: '[kworker/0:2]' },
+            { pid: 4091, user: 'postgres', pri: 20, ni: 0, virt: '840M', res: '128M', shr: '110M', s: 'S', cpu: 4.3, mem: 1.6, time: '3:41.10', cmd: 'postgres: checkpointer process' },
+            { pid: 1, user: 'root', pri: 20, ni: 0, virt: '24.1M', res: '4.8M', shr: '2.4M', s: 'S', cpu: 0.1, mem: 0.1, time: '1:02.39', cmd: '/sbin/init' },
+            { pid: 22, user: 'root', pri: 20, ni: 0, virt: '0', res: '0', shr: '0', s: 'S', cpu: 0.0, mem: 0.0, time: '0:00.00', cmd: '[rcu_sched]' },
+            { pid: 914, user: 'admin', pri: 20, ni: 0, virt: '12.4M', res: '3.1M', shr: '2.5M', s: 'S', cpu: 0.5, mem: 0.0, time: '0:43.11', cmd: 'bash' },
+            { pid: 1104, user: 'admin', pri: 20, ni: 0, virt: '15.2M', res: '4.5M', shr: '3.2M', s: 'R', cpu: 1.8, mem: 0.1, time: '0:00.41', cmd: 'htop' },
+            { pid: 3042, user: 'redis', pri: 20, ni: 0, virt: '54.2M', res: '12.4M', shr: '1.2M', s: 'S', cpu: 0.8, mem: 0.2, time: '1:14.22', cmd: '/usr/bin/redis-server 127.0.0.1:6379' },
+            { pid: 3881, user: 'admin', pri: 20, ni: 0, virt: '210M', res: '42M', shr: '12M', s: 'S', cpu: 2.1, mem: 0.5, time: '0:21.05', cmd: 'python3 background_worker.py' },
+        ];
 
-    function launchHtop() {
-      isHtopActive = true;
-      terminalContainer.style.display = 'none';
-      htopContainer.style.display = 'flex';
-      
-      updateHtop(); // Initial render
-      htopInterval = setInterval(updateHtop, 1500); // Update every 1.5s
-    }
+        function launchHtop() {
+            isHtopActive = true;
+            terminalContainer.style.display = 'none';
+            htopContainer.style.display = 'flex';
 
-    function exitHtop() {
-      isHtopActive = false;
-      clearInterval(htopInterval);
-      htopContainer.style.display = 'none';
-      terminalContainer.style.display = 'flex';
-      inputHidden.focus();
-      
-      // We don't append a prompt here, because closing htop usually clears screen or returns to prompt
-      // Let's just return to where we were.
-      scrollToBottom();
-    }
+            updateHtop(); // Initial render
+            htopInterval = setInterval(updateHtop, 1500); // Update every 1.5s
+        }
 
-    function updateHtop() {
-      // Randomize CPU bars slightly
-      for(let i=1; i<=4; i++) {
-        const u = Math.floor(Math.random() * 60) + 5; // User 5-65%
-        const s = Math.floor(Math.random() * 20) + 1; // Sys 1-21%
-        
-        document.getElementById(`cpu${i}-user`).style.width = u + '%';
-        document.getElementById(`cpu${i}-sys`).style.width = s + '%';
-        document.getElementById(`cpu${i}-text`).textContent = (u + s).toFixed(1) + '%';
-      }
+        function exitHtop() {
+            isHtopActive = false;
+            clearInterval(htopInterval);
+            htopContainer.style.display = 'none';
+            terminalContainer.style.display = 'flex';
+            inputHidden.focus();
 
-      // Render processes, sorting by CPU%
-      const processList = document.getElementById('htop-process-list');
-      processList.innerHTML = '';
-      
-      // Randomize CPU% for dynamic feel
-      mockProcesses.forEach(p => {
-        if (p.cmd === 'htop') p.cpu = (Math.random() * 3 + 1).toFixed(1);
-        else if (p.cmd.includes('node')) p.cpu = (Math.random() * 15 + 10).toFixed(1);
-        else p.cpu = (Math.random() * 2).toFixed(1);
-      });
+            // We don't append a prompt here, because closing htop usually clears screen or returns to prompt
+            // Let's just return to where we were.
+            scrollToBottom();
+        }
 
-      // Sort
-      const sorted = [...mockProcesses].sort((a, b) => parseFloat(b.cpu) - parseFloat(a.cpu));
+        function updateHtop() {
+            // Randomize CPU bars slightly
+            for (let i = 1; i <= 4; i++) {
+                const u = Math.floor(Math.random() * 60) + 5; // User 5-65%
+                const s = Math.floor(Math.random() * 20) + 1; // Sys 1-21%
 
-      sorted.forEach((p, idx) => {
-        const highlightClass = idx === 0 ? 'highlight' : ''; // highlight top process
-        const tr = document.createElement('tr');
-        tr.className = highlightClass;
-        tr.innerHTML = `
+                document.getElementById(`cpu${i}-user`).style.width = u + '%';
+                document.getElementById(`cpu${i}-sys`).style.width = s + '%';
+                document.getElementById(`cpu${i}-text`).textContent = (u + s).toFixed(1) + '%';
+            }
+
+            // Render processes, sorting by CPU%
+            const processList = document.getElementById('htop-process-list');
+            processList.innerHTML = '';
+
+            // Randomize CPU% for dynamic feel
+            mockProcesses.forEach(p => {
+                if (p.cmd === 'htop') p.cpu = (Math.random() * 3 + 1).toFixed(1);
+                else if (p.cmd.includes('node')) p.cpu = (Math.random() * 15 + 10).toFixed(1);
+                else p.cpu = (Math.random() * 2).toFixed(1);
+            });
+
+            // Sort
+            const sorted = [...mockProcesses].sort((a, b) => parseFloat(b.cpu) - parseFloat(a.cpu));
+
+            sorted.forEach((p, idx) => {
+                const highlightClass = idx === 0 ? 'highlight' : ''; // highlight top process
+                const tr = document.createElement('tr');
+                tr.className = highlightClass;
+                tr.innerHTML = `
           <td>${p.pid}</td>
           <td>${p.user}</td>
           <td>${p.pri}</td>
@@ -467,9 +568,10 @@
           <td>${p.time}</td>
           <td>${p.cmd}</td>
         `;
-        processList.appendChild(tr);
-      });
-    }
-  </script>
+                processList.appendChild(tr);
+            });
+        }
+    </script>
 </body>
+
 </html>
