@@ -1,0 +1,2846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeHub IDE - AI-Powered Web Workspace</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Premium CSS Reset and Variables */
+    :root {
+      --bg-darker: #090a0f;
+      --bg-dark: #0f101a;
+      --bg-sidebar: #131524;
+      --bg-editor: #16182c;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #8b5cf6;
+      --accent-glow: rgba(139, 92, 246, 0.35);
+      --accent-hover: #a78bfa;
+      --text-main: #e2e8f0;
+      --text-muted: #64748b;
+      --terminal-green: #10b981;
+      --error-red: #ef4444;
+      --warning-orange: #f59e0b;
+      --info-blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-darker);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Main App Layout */
+    .app-layout {
+      display: flex;
+      flex: 1;
+      width: 100vw;
+      height: calc(100vh - 24px); /* Subtract Status Bar height */
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Activity Bar (Leftmost panel) */
+    .activity-bar {
+      width: 56px;
+      background-color: var(--bg-darker);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      z-index: 10;
+    }
+
+    .activity-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .activity-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .activity-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .activity-btn.active {
+      color: var(--accent-color);
+      background-color: rgba(139, 92, 246, 0.12);
+    }
+
+    .activity-btn.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 3px;
+      background-color: var(--accent-color);
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    .activity-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* Sidebar Panel */
+    .sidebar {
+      width: 260px;
+      min-width: 180px;
+      max-width: 500px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      overflow: hidden;
+      transition: width 0.05s ease;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-header h2 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .sidebar-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-action-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    /* VFS File Explorer styles */
+    .file-explorer {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .explorer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      color: #94a3b8;
+    }
+
+    .explorer-item:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    .explorer-item.active {
+      background-color: rgba(139, 92, 246, 0.08);
+      color: var(--text-main);
+      border-left: 2px solid var(--accent-color);
+    }
+
+    .item-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      opacity: 0;
+      padding: 2px;
+      border-radius: 4px;
+      transition: opacity 0.15s ease, color 0.15s ease;
+    }
+
+    .explorer-item:hover .file-delete-btn {
+      opacity: 1;
+    }
+
+    .file-delete-btn:hover {
+      color: var(--error-red);
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Agent Chat Sidebar */
+    .agent-chat-sidebar {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .agent-selector-wrapper {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      background-color: rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .agent-selector-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .agent-select {
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .agent-select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 88%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      animation: msgFadeIn 0.25s ease;
+    }
+
+    @keyframes msgFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent-color) 0%, #6366f1 100%);
+      color: white;
+      border-bottom-right-radius: 2px;
+      box-shadow: 0 3px 10px rgba(139, 92, 246, 0.2);
+    }
+
+    .chat-msg.agent {
+      align-self: flex-start;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+
+    .chat-msg.system {
+      align-self: center;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px dashed var(--border-color);
+      color: var(--text-muted);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      max-width: 95%;
+    }
+
+    .agent-name {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .chat-msg.user .agent-name {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .chat-msg.agent .agent-name {
+      color: var(--accent-hover);
+    }
+
+    .chat-input-wrapper {
+      padding: 12px;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--bg-darker);
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: none;
+      max-height: 120px;
+      outline: none;
+    }
+
+    .chat-textarea:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .chat-send-btn {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .chat-send-btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* Markdown styling inside Chat Messages */
+    .chat-msg code.inline-code {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: #38bdf8;
+    }
+
+    .code-block-container {
+      margin: 8px 0;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .code-block-header {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .code-lang {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .code-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .code-action-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .code-action-btn.apply-btn {
+      color: #a855f7;
+    }
+    .code-action-btn.apply-btn:hover {
+      color: #c084fc;
+      background-color: rgba(168, 85, 247, 0.15);
+    }
+    
+    .code-pre {
+      padding: 10px;
+      overflow-x: auto;
+      margin: 0;
+    }
+
+    .code-pre code {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: #f1f5f9;
+      white-space: pre;
+    }
+
+    /* Settings View */
+    .settings-view {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .settings-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .settings-input {
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      padding: 8px 10px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .settings-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .settings-btn {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .settings-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .settings-btn.danger {
+      color: var(--error-red);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .settings-btn.danger:hover {
+      background-color: rgba(239, 68, 68, 0.08);
+    }
+
+    /* Search View */
+    .search-view {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Resize Handles */
+    .resize-handle-x {
+      width: 4px;
+      background-color: transparent;
+      cursor: col-resize;
+      transition: background-color 0.2s;
+      z-index: 15;
+    }
+
+    .resize-handle-x:hover, .resize-handle-x:active {
+      background-color: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    .resize-handle-y {
+      height: 4px;
+      background-color: transparent;
+      cursor: row-resize;
+      transition: background-color 0.2s;
+      z-index: 15;
+    }
+
+    .resize-handle-y:hover, .resize-handle-y:active {
+      background-color: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    /* Main Workspace Panel */
+    .main-workspace-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    /* Tab bar */
+    .editor-tabs-bar {
+      height: 35px;
+      background-color: var(--bg-darker);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none; /* Hide scrollbars for cleaner style */
+    }
+
+    .editor-tabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .editor-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      height: 100%;
+      background-color: var(--bg-darker);
+      border-right: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .editor-tab:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+
+    .editor-tab.active {
+      background-color: var(--bg-editor);
+      color: var(--text-main);
+    }
+
+    .editor-tab.active::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--accent-color);
+      box-shadow: 0 1px 6px var(--accent-color);
+    }
+
+    .tab-close-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .tab-close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--error-red);
+    }
+
+    /* Editor workspace */
+    .editor-workspace {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .editor-body {
+      flex: 1;
+      display: flex;
+      background-color: var(--bg-editor);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Gutter Line Numbers */
+    .line-numbers {
+      width: 46px;
+      background-color: var(--bg-editor);
+      border-right: 1px solid var(--border-color);
+      padding: 12px 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.2);
+      text-align: right;
+      padding-right: 10px;
+      user-select: none;
+      overflow-y: hidden;
+    }
+
+    .line-numbers div {
+      height: 20px;
+      line-height: 20px;
+    }
+
+    /* Text Area Editor */
+    .editor-textarea {
+      flex: 1;
+      background-color: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 20px;
+      padding: 12px;
+      resize: none;
+      outline: none;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .editor-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      background-color: var(--bg-editor);
+      gap: 16px;
+    }
+
+    .editor-placeholder svg {
+      width: 64px;
+      height: 64px;
+      color: rgba(255, 255, 255, 0.05);
+    }
+
+    .editor-placeholder p {
+      font-size: 14px;
+    }
+
+    /* Bottom Panel Container */
+    .bottom-panel {
+      height: 260px;
+      min-height: 80px;
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-sidebar);
+      border-top: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      height: 36px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 12px;
+      background-color: rgba(0, 0, 0, 0.15);
+    }
+
+    .panel-tabs {
+      display: flex;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .panel-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      padding: 0 6px;
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+
+    .panel-tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .panel-tab-btn.active {
+      color: var(--text-main);
+    }
+
+    .panel-tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--accent-color);
+      box-shadow: 0 -1px 6px var(--accent-color);
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .panel-action-btn {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .panel-action-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-body {
+      flex: 1;
+      position: relative;
+      background-color: var(--bg-dark);
+      overflow: hidden;
+    }
+
+    .panel-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .panel-content.active {
+      display: block;
+    }
+
+    /* Preview content */
+    #previewTab {
+      padding: 0;
+    }
+
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: white;
+    }
+
+    /* Terminal output styling */
+    .terminal-view {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+    }
+
+    .terminal-line {
+      margin-bottom: 2px;
+    }
+
+    .terminal-line.error { color: var(--error-red); }
+    .terminal-line.warn { color: var(--warning-orange); }
+    .terminal-line.info { color: var(--info-blue); }
+    .terminal-line.success { color: var(--terminal-green); }
+
+    .terminal-input-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-prompt {
+      color: var(--accent-hover);
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .terminal-input {
+      flex: 1;
+      background-color: transparent;
+      border: none;
+      color: white;
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+    }
+
+    /* Console logs view */
+    .console-view {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 24px;
+      background-color: var(--bg-darker);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .status-bar-left, .status-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .agent-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+      display: inline-block;
+    }
+
+    .agent-status-dot.active {
+      background-color: var(--terminal-green);
+      box-shadow: 0 0 6px var(--terminal-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Toast Container */
+    .toast-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background-color: rgba(22, 24, 44, 0.95);
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 250px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-success { border-left: 4px solid var(--terminal-green); }
+    .toast-error { border-left: 4px solid var(--error-red); }
+    .toast-info { border-left: 4px solid var(--info-blue); }
+
+    /* Typing Loader Indicator */
+    .typing-indicator-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      height: 12px;
+      margin-top: 4px;
+    }
+
+    .typing-indicator-dots span {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-muted);
+      border-radius: 50%;
+      display: inline-block;
+      animation: typingDot 1.4s infinite ease-in-out both;
+    }
+
+    .typing-indicator-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typingDot {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background-color: var(--bg-sidebar);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      transform: translateY(20px);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .modal-input {
+      width: 100%;
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: white;
+      padding: 10px;
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 20px;
+    }
+
+    .modal-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn.primary {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .modal-btn.primary:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .modal-btn.secondary {
+      background-color: transparent;
+      color: var(--text-muted);
+    }
+
+    .modal-btn.secondary:hover {
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Grid Layout -->
+  <div class="app-layout">
+    
+    <!-- Activity Bar (Vertical Left) -->
+    <div class="activity-bar">
+      <div class="activity-group">
+        <!-- Logo -->
+        <div style="font-size: 20px; margin-bottom: 10px; cursor: default; user-select: none;">⚒️</div>
+        
+        <!-- Explorer Toggle -->
+        <button id="activityExplorer" class="activity-btn active" title="Explorer">
+          <svg viewBox="0 0 24 24"><path d="M19 5.5H12L10 3.5H5C3.9 3.5 3 4.4 3 5.5V18.5C3 19.6 3.9 20.5 5 20.5H19C20.1 20.5 21 19.6 21 18.5V7.5C21 6.4 20.1 5.5 19 5.5ZM19 18.5H5V5.5H9.17L11.17 7.5H19V18.5Z"/></svg>
+        </button>
+        
+        <!-- Search Toggle -->
+        <button id="activitySearch" class="activity-btn" title="Search Files">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.5L20.5 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z"/></svg>
+        </button>
+        
+        <!-- Agent Chat Toggle -->
+        <button id="activityChat" class="activity-btn" title="AI Agents Chat">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C10.34 6 9 7.34 9 9C9 9.83 9.34 10.58 9.88 11.12C8.75 11.75 8 12.79 8 14H16C16 12.79 15.25 11.75 14.12 11.12C14.66 10.58 15 9.83 15 9C15 7.34 13.66 6 12 6Z"/></svg>
+        </button>
+      </div>
+      
+      <div class="activity-group">
+        <!-- Settings Toggle -->
+        <button id="activitySettings" class="activity-btn" title="Settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94C19.18 12.63 19.2 12.32 19.2 12C19.2 11.68 19.18 11.37 19.14 11.06L21.16 9.48C21.34 9.33 21.39 9.08 21.28 8.87L19.36 5.55C19.25 5.34 18.99 5.26 18.78 5.34L16.4 6.3C15.91 5.92 15.37 5.61 14.79 5.37L14.43 2.83C14.4 2.61 14.21 2.45 13.99 2.45H10.02C9.79 2.45 9.61 2.61 9.57 2.83L9.21 5.37C8.63 5.61 8.09 5.92 7.6 6.3L5.22 5.34C5.01 5.26 4.75 5.34 4.64 5.55L2.72 8.87C2.61 9.08 2.66 9.33 2.84 9.48L4.86 11.06C4.82 11.37 4.8 11.68 4.8 12C4.8 12.32 4.82 12.63 4.86 12.94L2.84 14.52C2.66 14.67 2.61 14.92 2.72 15.13L4.64 18.45C4.75 18.66 5.01 18.74 5.22 18.66L7.6 17.7C8.09 18.08 8.63 18.39 9.21 18.63L9.57 21.17C9.61 21.39 9.79 21.55 10.02 21.55H13.99C14.21 21.55 14.4 21.39 14.43 21.17L14.79 18.63C15.37 18.39 15.91 18.08 16.4 17.7L18.78 18.66C18.99 18.74 19.25 18.66 19.36 18.45L21.28 15.13C21.39 14.92 21.34 14.67 21.16 14.52L19.14 12.94ZM12 15.6C10.01 15.6 8.4 13.99 8.4 12C8.4 10.01 10.01 8.4 12 8.4C13.99 8.4 15.6 10.01 15.6 12C15.6 13.99 13.99 15.6 12 15.6Z"/></svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Sidebar Panel (Resizable) -->
+    <div id="sidebar" class="sidebar">
+      
+      <!-- Explorer Content -->
+      <div id="sidebarExplorerContent" class="sidebar-view" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="sidebar-header">
+          <h2>Explorer: VFS Workspace</h2>
+          <div class="sidebar-actions">
+            <button id="createNewFileBtn" class="sidebar-action-btn" title="New File...">📄+</button>
+            <button id="resetVfsExplorerBtn" class="sidebar-action-btn" title="Refresh VFS">🔄</button>
+          </div>
+        </div>
+        <div class="sidebar-content">
+          <div id="explorerFileList" class="file-explorer">
+            <!-- Dynamically populated files -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Search Content -->
+      <div id="sidebarSearchContent" class="sidebar-view" style="display: none; padding: 16px; flex-direction: column; gap: 12px;">
+        <div class="sidebar-header" style="padding: 0 0 12px 0;">
+          <h2>Search VFS Files</h2>
+        </div>
+        <div class="search-view">
+          <input type="text" id="searchInput" class="settings-input" placeholder="Search filename or content..." style="width: 100%;">
+          <div id="searchResultsList" class="file-explorer" style="margin-top: 8px;">
+            <!-- Dynamic search results -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Chat Content -->
+      <div id="sidebarChatContent" class="sidebar-view" style="display: none; height: 100%;">
+        <div class="agent-chat-sidebar">
+          <div class="agent-selector-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="agent-selector-label">Select Workspace Agent:</span>
+              <span style="font-size: 11px; color: var(--text-muted); cursor: pointer;" id="clearChatHistoryBtn">🗑️ Clear Chat</span>
+            </div>
+            <select id="agentSelect" class="agent-select">
+              <option value="izt">IZT DEEP (OpenAI Integration)</option>
+              <option value="gemini">GEN 3.5 (Gemini Flash Model)</option>
+            </select>
+          </div>
+          
+          <!-- Conversations -->
+          <div id="chatHistoryContainer" class="chat-history">
+            <div class="chat-msg system">
+              Welcome to the Agent Chat! You are connected to IZT DEEP and GEN 3.5. 
+              Ask them to write code, design layout, or explain functions. They can edit files directly in your VFS!
+            </div>
+          </div>
+          
+          <!-- Text Box Area -->
+          <div class="chat-input-wrapper">
+            <textarea id="chatInput" class="chat-textarea" rows="1" placeholder="Ask agent to write code..."></textarea>
+            <button id="sendChatBtn" class="chat-send-btn" title="Send (Enter)">
+              <span style="font-size: 16px; font-weight: bold;">➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Content -->
+      <div id="sidebarSettingsContent" class="sidebar-view" style="display: none; padding: 16px;">
+        <div class="sidebar-header" style="padding: 0 0 12px 0; margin-bottom: 16px;">
+          <h2>Workspace Settings</h2>
+        </div>
+        <div class="settings-view">
+          <div class="settings-group">
+            <label class="settings-label">Google Gemini API Key</label>
+            <input type="password" id="geminiApiKeyInput" class="settings-input" placeholder="AIzaSy...">
+          </div>
+          <div class="settings-group">
+            <label class="settings-label">Gemini Model Choice</label>
+            <select id="geminiModelSelect" class="agent-select">
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+            </select>
+          </div>
+          <div class="settings-group" style="margin-top: 8px;">
+            <label class="settings-label">IZT DEEP API Key</label>
+            <input type="password" id="iztApiKeyInput" class="settings-input" placeholder="OpenAI Key (Fetched from KEY.txt)" disabled>
+            <span style="font-size: 10px; color: var(--text-muted);">Loaded from Agents/IZT DEEP/KEY.txt</span>
+          </div>
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 8px 0;">
+          <div class="settings-group">
+            <label class="settings-label">VFS Actions</label>
+            <button id="resetVfsSettingsBtn" class="settings-btn danger">Reset VFS to Defaults</button>
+          </div>
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 8px 0;">
+          <div class="settings-group">
+            <label class="settings-label" style="color: #a78bfa;">⚙️ ForgeHub Supporter</label>
+            <button id="supporterStatusBtn" class="settings-btn">📊 View Workspace Status</button>
+            <button id="supporterExportBtn" class="settings-btn">💾 Export Snapshot</button>
+            <button id="supporterImportBtn" class="settings-btn">📂 Load Snapshot</button>
+            <button id="supporterUnloadBtn" class="settings-btn danger" style="margin-top: 6px;">🔌 Unload ForgeHub</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    
+    <!-- Vertical Drag Handler -->
+    <div id="resizeHandleX" class="resize-handle-x"></div>
+
+    <!-- Main Workspace Area -->
+    <div id="editorAndPanelContainer" class="main-workspace-container">
+      
+      <!-- Editor Pane -->
+      <div class="editor-workspace">
+        
+        <!-- Tabs Header -->
+        <div id="tabsBar" class="editor-tabs-bar">
+          <!-- Populated dynamically -->
+        </div>
+        
+        <!-- Code editor body -->
+        <div id="editorBodyContainer" class="editor-body">
+          <div id="lineNumbers" class="line-numbers">
+            <div>1</div>
+          </div>
+          <textarea id="editorTextarea" class="editor-textarea" spellcheck="false" placeholder="Write code here..."></textarea>
+          
+          <!-- Placeholder when no files are open -->
+          <div id="editorPlaceholder" class="editor-placeholder" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 3v9.25l7.25 7.25 1.41-1.41-5.66-5.66V3h-3zm-7.75 3v13.5C4.75 20.6 5.65 21.5 6.75 21.5h9.5c1.1 0 2-.9 2-2V8.5L14 3.5H6.75c-1.1 0-2 .9-2 2zM13 5l4.5 4.5H13V5zM6.75 19.5V5.5h4.25v5.25h5.25v8.75H6.75z"/></svg>
+            <p>Welcome to ForgeHub IDE! Select a file from the explorer or create a new one.</p>
+            <button id="placeholderNewFileBtn" class="settings-btn" style="margin-top: 10px; width: 140px;">New File</button>
+          </div>
+        </div>
+
+      </div>
+      
+      <!-- Horizontal Drag Handler -->
+      <div id="resizeHandleY" class="resize-handle-y"></div>
+
+      <!-- Bottom Panel (Console & Preview) -->
+      <div id="bottomPanel" class="bottom-panel">
+        
+        <!-- Panel Tabs -->
+        <div class="panel-header">
+          <div class="panel-tabs">
+            <button id="tabBtnTerminal" class="panel-tab-btn active">Terminal</button>
+            <button id="tabBtnOutput" class="panel-tab-btn">Console Output</button>
+            <button id="tabBtnPreview" class="panel-tab-btn">Live Preview</button>
+          </div>
+          <div class="panel-actions">
+            <button id="runPreviewBtn" class="panel-action-btn" title="Build and run VFS project">
+              <span style="font-size: 11px;">⚡</span> Run Build
+            </button>
+          </div>
+        </div>
+        
+        <!-- Panel content bodies -->
+        <div class="panel-body">
+          
+          <!-- Terminal tab -->
+          <div id="panelTerminal" class="panel-content active" style="background-color: #0b0c13;">
+            <div class="terminal-view">
+              <div id="terminalOutput" class="terminal-output">
+                <div class="terminal-line success">ForgeHub Terminal v1.0.0 initialized.</div>
+                <div class="terminal-line">Type 'help' to see list of available commands.</div>
+                <div class="terminal-line info">Current directory: /</div>
+              </div>
+              <div class="terminal-input-line">
+                <span class="terminal-prompt">forgehub:~$</span>
+                <input type="text" id="terminalInput" class="terminal-input" autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Output logs tab -->
+          <div id="panelOutput" class="panel-content" style="background-color: #0b0c13;">
+            <div id="consoleView" class="console-view">
+              <div style="color: var(--text-muted);">[System] Output console initialized. Ready.</div>
+            </div>
+          </div>
+          
+          <!-- Preview tab -->
+          <div id="panelPreview" class="panel-content">
+            <iframe id="previewIframe" class="preview-iframe" src="about:blank"></iframe>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Status Bar (Bottommost strip) -->
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <div class="status-item">
+        <span id="activeAgentIndicator" class="agent-status-dot active"></span>
+        <span id="activeAgentNameStatus">Agent Status: Connected</span>
+      </div>
+      <div class="status-item">
+        <span>Tokens: <strong id="tokenCountLabel" style="color: #a855f7;">100</strong></span>
+        <span id="claimTokensLink" style="color: #6366f1; cursor: pointer; text-decoration: underline; font-weight: 600;">(Claim +50)</span>
+      </div>
+    </div>
+    <div class="status-bar-right">
+      <div id="cursorPositionStatus" class="status-item">Ln 1, Col 1</div>
+      <div id="editorFileLanguageStatus" class="status-item">UTF-8</div>
+      <div id="editorActiveFileStatus" class="status-item">No Open File</div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-box">
+      <h3 id="modalTitle" class="modal-title">Create File</h3>
+      <p id="modalDesc" class="modal-desc">Please enter a name for the new file.</p>
+      <input type="text" id="modalInput" class="modal-input" placeholder="e.g. index.html">
+      <div class="modal-buttons">
+        <button id="modalCancelBtn" class="modal-btn secondary">Cancel</button>
+        <button id="modalConfirmBtn" class="modal-btn primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast system -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- IDE Core Script (inlined – works over file://) -->
+  <script>
+    // ─────────────────────────────────────────────────────────────────────────
+    // IZT DEEP – OpenAI Agent Client (inlined from Agents/IZT DEEP/IZT.js)
+    // ─────────────────────────────────────────────────────────────────────────
+    async function getIZTApiKey() {
+      try {
+        const r = await fetch('Agents/IZT DEEP/KEY.txt');
+        if (!r.ok) throw new Error('Key file not found');
+        return (await r.text()).trim();
+      } catch (e) {
+        return localStorage.getItem('ForgeHub_IztKey') || '';
+      }
+    }
+
+    async function sendToIZT(messages, systemInstruction = '', onChunk = null) {
+      const apiKey = await getIZTApiKey();
+      if (!apiKey) throw new Error('API Key for IZT DEEP is missing. Check KEY.txt or Settings.');
+
+      const formatted = [];
+      if (systemInstruction) formatted.push({ role: 'system', content: systemInstruction });
+      formatted.push(...messages);
+
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages: formatted, temperature: 0.7, stream: !!onChunk })
+      });
+      if (!res.ok) throw new Error(`OpenAI API Error (${res.status}): ${await res.text()}`);
+
+      if (onChunk && res.body) {
+        const reader = res.body.getReader();
+        const dec = new TextDecoder('utf-8');
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop();
+          for (const line of lines) {
+            const cl = line.trim();
+            if (!cl || !cl.startsWith('data: ') || cl === 'data: [DONE]') continue;
+            try { const t = JSON.parse(cl.substring(6)).choices?.[0]?.delta?.content || ''; if (t) onChunk(t); } catch {}
+          }
+        }
+      } else {
+        return (await res.json()).choices?.[0]?.message?.content || '';
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GEN 3.5 – Gemini Agent Client (inlined from Agents/GEN 3.5/Gem.js)
+    // ─────────────────────────────────────────────────────────────────────────
+    async function sendToGemini(messages, apiKey, systemInstruction = '', model = 'gemini-2.5-flash', onChunk = null) {
+      if (!apiKey) throw new Error('Gemini API Key is missing. Add it in the Settings panel.');
+
+      const contents = messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }));
+
+      const payload = { contents, generationConfig: { temperature: 0.7 } };
+      if (systemInstruction) payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+
+      const ep = onChunk ? 'streamGenerateContent' : 'generateContent';
+      let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${ep}?key=${apiKey}`;
+      if (onChunk) url += '&alt=sse';
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`Gemini API Error (${res.status}): ${await res.text()}`);
+
+      if (onChunk && res.body) {
+        const reader = res.body.getReader();
+        const dec = new TextDecoder('utf-8');
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop();
+          for (const line of lines) {
+            const cl = line.trim();
+            if (!cl || !cl.startsWith('data: ')) continue;
+            try { const t = JSON.parse(cl.substring(6)).candidates?.[0]?.content?.parts?.[0]?.text || ''; if (t) onChunk(t); } catch {}
+          }
+        }
+      } else {
+        return (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ForgeHub Supporter (inlined from Agents/forgehub-supporter.js)
+    // ─────────────────────────────────────────────────────────────────────────
+    const SUPPORTER_KEYS = {
+      VFS: 'ForgeHub_VFS', CHAT: 'ForgeHub_ChatHistories', TOKENS: 'ForgeHub_Tokens',
+      GEMINI_KEY: 'ForgeHub_GeminiKey', GEMINI_MODEL: 'ForgeHub_GeminiModel', IZT_KEY: 'ForgeHub_IztKey'
+    };
+
+    function unloadForgeHub(keepKeys = false) {
+      const saved = {};
+      if (keepKeys) {
+        ['GEMINI_KEY','GEMINI_MODEL','IZT_KEY'].forEach(k => { saved[SUPPORTER_KEYS[k]] = localStorage.getItem(SUPPORTER_KEYS[k]); });
+      }
+      Object.values(SUPPORTER_KEYS).forEach(k => localStorage.removeItem(k));
+      if (keepKeys) {
+        Object.entries(saved).forEach(([k, v]) => { if (v !== null) localStorage.setItem(k, v); });
+      }
+      console.log('[ForgeHub Supporter] Workspace unloaded.');
+      window.location.reload();
+    }
+
+    function saveSnapshot() {
+      const snap = {
+        version: '1.0.0', savedAt: new Date().toISOString(),
+        vfs:   JSON.parse(localStorage.getItem(SUPPORTER_KEYS.VFS)   || '{}'),
+        chat:  JSON.parse(localStorage.getItem(SUPPORTER_KEYS.CHAT)  || '{}'),
+        tokens: parseInt(localStorage.getItem(SUPPORTER_KEYS.TOKENS) || '100'),
+        geminiModel: localStorage.getItem(SUPPORTER_KEYS.GEMINI_MODEL) || 'gemini-2.5-flash'
+      };
+      const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `forgehub-snapshot-${Date.now()}.json`; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadSnapshot() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json';
+      input.addEventListener('change', e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const snap = JSON.parse(ev.target.result);
+            if (snap.vfs)   localStorage.setItem(SUPPORTER_KEYS.VFS,          JSON.stringify(snap.vfs));
+            if (snap.chat)  localStorage.setItem(SUPPORTER_KEYS.CHAT,         JSON.stringify(snap.chat));
+            if (snap.tokens !== undefined) localStorage.setItem(SUPPORTER_KEYS.TOKENS, String(snap.tokens));
+            if (snap.geminiModel) localStorage.setItem(SUPPORTER_KEYS.GEMINI_MODEL, snap.geminiModel);
+            window.location.reload();
+          } catch(err) { alert('Failed to load snapshot: ' + err.message); }
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    }
+
+    function getWorkspaceStatus() {
+      const vfs  = JSON.parse(localStorage.getItem(SUPPORTER_KEYS.VFS)  || '{}');
+      const chat = JSON.parse(localStorage.getItem(SUPPORTER_KEYS.CHAT) || '{}');
+      return {
+        fileCount:      Object.keys(vfs).length,
+        iztMessages:    (chat.izt    || []).length,
+        geminiMessages: (chat.gemini || []).length,
+        tokens:         parseInt(localStorage.getItem(SUPPORTER_KEYS.TOKENS) || '100'),
+        geminiModel:    localStorage.getItem(SUPPORTER_KEYS.GEMINI_MODEL) || 'gemini-2.5-flash',
+        hasIztKey:      !!localStorage.getItem(SUPPORTER_KEYS.IZT_KEY),
+        hasGeminiKey:   !!localStorage.getItem(SUPPORTER_KEYS.GEMINI_KEY),
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ForgeHub IDE Core
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Virtual File System Starter Template
+    const DEFAULT_VFS = {
+      "/index.html": {
+        type: "file",
+        content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeHub Live Sandbox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="glow-container">
+    <div class="ide-icon">⚒️</div>
+    <h1>Hello from ForgeHub VFS!</h1>
+    <p>Your web layout is successfully compiled from the virtual filesystem.</p>
+    <button id="interactBtn">Interact with App</button>
+    <div id="clickDisplay" class="counter">Clicks: 0</div>
+  </div>
+
+  <script src="app.js"><\/script>
+</body>
+</html>`
+      },
+      "/style.css": {
+        type: "file",
+        content: `body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at center, #1b1c2b 0%, #0c0d16 100%);
+  color: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.glow-container {
+  text-align: center;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 3rem 4rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  max-width: 480px;
+}
+.ide-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  color: #c084fc;
+}
+p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+button {
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.5);
+}
+.counter {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: #38bdf8;
+  font-family: monospace;
+}`
+      },
+      "/app.js": {
+        type: "file",
+        content: `// Dynamic script attached to VFS
+let clicks = 0;
+const btn = document.getElementById('interactBtn');
+const display = document.getElementById('clickDisplay');
+
+btn.addEventListener('click', () => {
+  clicks++;
+  display.textContent = 'Clicks: ' + clicks;
+  console.log('[App] Button clicked! Clicks: ' + clicks);
+});
+
+console.log('[App] Core script initialized successfully!');`
+      }
+    };
+
+    // State Variables
+    let vfs = {};
+    let openTabs = [];
+    let currentFile = null;
+    let tokens = 100;
+    let agentHistories = {
+      izt: [],
+      gemini: []
+    };
+
+    // DOM Elements
+    const explorerFileList = document.getElementById('explorerFileList');
+    const searchResultsList = document.getElementById('searchResultsList');
+    const searchInput = document.getElementById('searchInput');
+    const tabsBar = document.getElementById('tabsBar');
+    const editorTextarea = document.getElementById('editorTextarea');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const editorPlaceholder = document.getElementById('editorPlaceholder');
+    const editorBodyContainer = document.getElementById('editorBodyContainer');
+    const previewIframe = document.getElementById('previewIframe');
+    
+    const terminalOutput = document.getElementById('terminalOutput');
+    const terminalInput = document.getElementById('terminalInput');
+    const consoleView = document.getElementById('consoleView');
+    
+    const tokenCountLabel = document.getElementById('tokenCountLabel');
+    const claimTokensLink = document.getElementById('claimTokensLink');
+    const activeAgentNameStatus = document.getElementById('activeAgentNameStatus');
+    const cursorPositionStatus = document.getElementById('cursorPositionStatus');
+    const editorActiveFileStatus = document.getElementById('editorActiveFileStatus');
+    const editorFileLanguageStatus = document.getElementById('editorFileLanguageStatus');
+    
+    // Sidebar toggle buttons
+    const activityExplorer = document.getElementById('activityExplorer');
+    const activitySearch = document.getElementById('activitySearch');
+    const activityChat = document.getElementById('activityChat');
+    const activitySettings = document.getElementById('activitySettings');
+    
+    // Sidebar panes
+    const sidebarExplorerContent = document.getElementById('sidebarExplorerContent');
+    const sidebarSearchContent = document.getElementById('sidebarSearchContent');
+    const sidebarChatContent = document.getElementById('sidebarChatContent');
+    const sidebarSettingsContent = document.getElementById('sidebarSettingsContent');
+    
+    // Settings inputs
+    const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+    const geminiModelSelect = document.getElementById('geminiModelSelect');
+    const iztApiKeyInput = document.getElementById('iztApiKeyInput');
+    const resetVfsSettingsBtn = document.getElementById('resetVfsSettingsBtn');
+    
+    // Modals
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalInput = document.getElementById('modalInput');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    
+    // Chat UI elements
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const chatHistoryContainer = document.getElementById('chatHistoryContainer');
+    const agentSelect = document.getElementById('agentSelect');
+    const clearChatHistoryBtn = document.getElementById('clearChatHistoryBtn');
+
+    // Bottom Resizing logic variables
+    const sidebar = document.getElementById('sidebar');
+    const resizeHandleX = document.getElementById('resizeHandleX');
+    const bottomPanel = document.getElementById('bottomPanel');
+    const resizeHandleY = document.getElementById('resizeHandleY');
+    const editorAndPanelContainer = document.getElementById('editorAndPanelContainer');
+
+    let isResizingX = false;
+    let isResizingY = false;
+
+    // Toast Manager
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <span style="font-size:16px;">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 20);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Console logs redirect in system output
+    function logToOutput(message, type = 'info') {
+      const logLine = document.createElement('div');
+      logLine.style.fontSize = '12px';
+      logLine.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+      logLine.style.padding = '4px 0';
+      
+      let color = 'var(--text-muted)';
+      if (type === 'error') color = 'var(--error-red)';
+      if (type === 'warn') color = 'var(--warning-orange)';
+      if (type === 'info') color = 'var(--info-blue)';
+      if (type === 'success') color = 'var(--terminal-green)';
+      
+      logLine.style.color = color;
+      logLine.textContent = `[${new Date().toLocaleTimeString()}] [${type.toUpperCase()}] ${message}`;
+      consoleView.appendChild(logLine);
+      consoleView.scrollTop = consoleView.scrollHeight;
+    }
+
+    // Initialize IDE
+    async function initializeIDE() {
+      logToOutput('Starting ForgeHub workspace workspace compiler...', 'info');
+      
+      // Load keys
+      try {
+        const iztKeyResponse = await fetch('Agents/IZT DEEP/KEY.txt');
+        if (iztKeyResponse.ok) {
+          const key = await iztKeyResponse.text();
+          const cleanKey = key.trim();
+          iztApiKeyInput.value = '•'.repeat(24) + cleanKey.substring(cleanKey.length - 8);
+          localStorage.setItem('ForgeHub_IztKey', cleanKey);
+          logToOutput('Loaded IZT DEEP API Key from file KEY.txt', 'success');
+        } else {
+          throw new Error('Key file response status ' + iztKeyResponse.status);
+        }
+      } catch (err) {
+        logToOutput('Could not load OpenAI key from file Agents/IZT DEEP/KEY.txt: ' + err.message, 'warn');
+      }
+
+      const savedGeminiKey = localStorage.getItem('ForgeHub_GeminiKey') || '';
+      geminiApiKeyInput.value = savedGeminiKey;
+      
+      const savedGeminiModel = localStorage.getItem('ForgeHub_GeminiModel') || 'gemini-2.5-flash';
+      geminiModelSelect.value = savedGeminiModel;
+
+      // Load Tokens
+      const savedTokens = localStorage.getItem('ForgeHub_Tokens');
+      if (savedTokens !== null) {
+        tokens = parseInt(savedTokens);
+        tokenCountLabel.textContent = tokens;
+      }
+
+      // Load VFS
+      const savedVFS = localStorage.getItem('ForgeHub_VFS');
+      if (savedVFS) {
+        try {
+          vfs = JSON.parse(savedVFS);
+          logToOutput(`Loaded workspace directory tree containing ${Object.keys(vfs).length} file(s).`, 'success');
+        } catch (e) {
+          vfs = Object.assign({}, DEFAULT_VFS);
+          logToOutput('Failed to parse VFS from localStorage. Initialized default VFS.', 'error');
+        }
+      } else {
+        vfs = Object.assign({}, DEFAULT_VFS);
+        localStorage.setItem('ForgeHub_VFS', JSON.stringify(vfs));
+        logToOutput('Virtual file system initialized with defaults.', 'success');
+      }
+
+      // Load Chat Histories
+      const savedHistory = localStorage.getItem('ForgeHub_ChatHistories');
+      if (savedHistory) {
+        try {
+          agentHistories = JSON.parse(savedHistory);
+          renderChatMessages();
+        } catch(e) {}
+      }
+
+      setupLayoutHandlers();
+      setupSidebarTabs();
+      setupEditorHandlers();
+      setupTerminalHandlers();
+      setupSettingsHandlers();
+      setupExplorerHandlers();
+      setupChatHandlers();
+      setupModalSystem();
+
+      // Open initial file
+      if (vfs["/index.html"]) {
+        openFile("/index.html");
+      } else {
+        renderExplorer();
+      }
+
+      // Initial Live Preview Build
+      compilePreview();
+
+      showToast('ForgeHub workspace loaded successfully!', 'success');
+    }
+
+    // Setup drag layout resizers
+    function setupLayoutHandlers() {
+      // Horizontal resize (X) of sidebar
+      resizeHandleX.addEventListener('mousedown', (e) => {
+        isResizingX = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      });
+
+      // Vertical resize (Y) of bottom panel
+      resizeHandleY.addEventListener('mousedown', (e) => {
+        isResizingY = true;
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isResizingX) {
+          const sidebarRect = sidebar.getBoundingClientRect();
+          const newWidth = e.clientX - sidebarRect.left;
+          if (newWidth > 180 && newWidth < 500) {
+            sidebar.style.width = newWidth + 'px';
+          }
+        }
+
+        if (isResizingY) {
+          const containerRect = editorAndPanelContainer.getBoundingClientRect();
+          const newHeight = containerRect.bottom - e.clientY;
+          if (newHeight > 80 && newHeight < containerRect.height - 100) {
+            bottomPanel.style.height = newHeight + 'px';
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizingX || isResizingY) {
+          isResizingX = false;
+          isResizingY = false;
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+      });
+    }
+
+    // Sidebar view switches
+    function setupSidebarTabs() {
+      const tabs = [
+        { btn: activityExplorer, view: sidebarExplorerContent },
+        { btn: activitySearch, view: sidebarSearchContent },
+        { btn: activityChat, view: sidebarChatContent },
+        { btn: activitySettings, view: sidebarSettingsContent }
+      ];
+
+      tabs.forEach(tab => {
+        tab.btn.addEventListener('click', () => {
+          tabs.forEach(t => {
+            t.btn.classList.remove('active');
+            t.view.style.display = 'none';
+          });
+          tab.btn.classList.add('active');
+          tab.view.style.display = 'flex';
+          
+          if (tab.view === sidebarSearchContent) {
+            searchInput.focus();
+          } else if (tab.view === sidebarChatContent) {
+            chatInput.focus();
+          }
+        });
+      });
+    }
+
+    // VFS Operations
+    function saveVFSToLocalStorage() {
+      localStorage.setItem('ForgeHub_VFS', JSON.stringify(vfs));
+    }
+
+    function renderExplorer() {
+      explorerFileList.innerHTML = '';
+      const files = Object.keys(vfs).sort();
+      
+      files.forEach(filepath => {
+        const item = document.createElement('div');
+        item.className = `explorer-item ${currentFile === filepath ? 'active' : ''}`;
+        
+        let icon = '📄';
+        if (filepath.endsWith('.html')) icon = '🌐';
+        if (filepath.endsWith('.css')) icon = '🎨';
+        if (filepath.endsWith('.js')) icon = '⚙️';
+
+        const displayLabel = filepath.startsWith('/') ? filepath.substring(1) : filepath;
+
+        item.innerHTML = `
+          <div class="item-label">
+            <span>${icon}</span>
+            <span>${displayLabel}</span>
+          </div>
+          <button class="file-delete-btn" title="Delete file" data-path="${filepath}">×</button>
+        `;
+
+        // Switch to file on item click
+        item.addEventListener('click', (e) => {
+          if (e.target.classList.contains('file-delete-btn')) return;
+          openFile(filepath);
+        });
+
+        // Delete button listener
+        item.querySelector('.file-delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const path = e.target.getAttribute('data-path');
+          if (confirm(`Delete file "${path}"? This cannot be undone.`)) {
+            deleteFile(path);
+          }
+        });
+
+        explorerFileList.appendChild(item);
+      });
+    }
+
+    window.openFile = function(filepath) {
+      if (!vfs[filepath]) return;
+      currentFile = filepath;
+
+      // Add to open tabs if not present
+      if (!openTabs.includes(filepath)) {
+        openTabs.push(filepath);
+      }
+
+      // Hide placeholder, show editor text area
+      editorPlaceholder.style.display = 'none';
+      editorTextarea.style.display = 'block';
+      lineNumbers.style.display = 'block';
+
+      editorTextarea.value = vfs[filepath].content;
+      
+      // Update sidebar Explorer state
+      document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('active'));
+      renderExplorer();
+
+      // Render Tabs
+      renderTabs();
+
+      // Update Line numbers
+      updateLineNumbers();
+      
+      // Status bar updates
+      let lang = 'Plain Text';
+      if (filepath.endsWith('.html')) lang = 'HTML';
+      if (filepath.endsWith('.css')) lang = 'CSS';
+      if (filepath.endsWith('.js')) lang = 'JavaScript';
+      editorFileLanguageStatus.textContent = lang;
+      editorActiveFileStatus.textContent = filepath;
+
+      logToOutput(`Opened active editor tab: ${filepath}`, 'info');
+    };
+
+    function deleteFile(filepath) {
+      if (!vfs[filepath]) return;
+      delete vfs[filepath];
+      saveVFSToLocalStorage();
+      
+      // Remove from tabs
+      openTabs = openTabs.filter(tab => tab !== filepath);
+      
+      if (currentFile === filepath) {
+        if (openTabs.length > 0) {
+          openFile(openTabs[openTabs.length - 1]);
+        } else {
+          currentFile = null;
+          editorTextarea.style.display = 'none';
+          lineNumbers.style.display = 'none';
+          editorPlaceholder.style.display = 'flex';
+          editorActiveFileStatus.textContent = 'No Open File';
+          editorFileLanguageStatus.textContent = 'N/A';
+        }
+      } else {
+        renderExplorer();
+        renderTabs();
+      }
+
+      showToast(`Deleted ${filepath}`, 'info');
+      logToOutput(`Deleted file ${filepath} from VFS`, 'warn');
+      compilePreview();
+    }
+
+    function createNewFile(filepath) {
+      // Ensure path format
+      const formattedPath = filepath.startsWith('/') ? filepath : '/' + filepath;
+      if (vfs[formattedPath]) {
+        showToast('A file with this name already exists.', 'error');
+        return;
+      }
+
+      let starterCode = '';
+      if (formattedPath.endsWith('.html')) {
+        starterCode = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="utf-8">\n  <title>New Page</title>\n</head>\n<body>\n  <h1>New VFS Page</h1>\n</body>\n</html>`;
+      } else if (formattedPath.endsWith('.css')) {
+        starterCode = `/* CSS Document */\nbody {\n  background: #111;\n  color: #fff;\n}`;
+      } else if (formattedPath.endsWith('.js')) {
+        starterCode = `// JS Document\nconsole.log('Script loaded.');`;
+      }
+
+      vfs[formattedPath] = {
+        type: 'file',
+        content: starterCode
+      };
+
+      saveVFSToLocalStorage();
+      renderExplorer();
+      openFile(formattedPath);
+      showToast(`Created file ${formattedPath}`, 'success');
+      logToOutput(`Created new file ${formattedPath} in workspace.`, 'success');
+    }
+
+    // Modal Manager
+    let modalAction = null;
+    function openModalDialog(title, desc, placeholder, callback) {
+      modalTitle.textContent = title;
+      modalDesc.textContent = desc;
+      modalInput.placeholder = placeholder;
+      modalInput.value = '';
+      modalOverlay.classList.add('active');
+      modalInput.focus();
+      modalAction = callback;
+    }
+
+    function setupModalSystem() {
+      modalCancelBtn.addEventListener('click', () => {
+        modalOverlay.classList.remove('active');
+        modalAction = null;
+      });
+
+      modalConfirmBtn.addEventListener('click', () => {
+        const val = modalInput.value.trim();
+        if (val && modalAction) {
+          modalAction(val);
+        }
+        modalOverlay.classList.remove('active');
+        modalAction = null;
+      });
+
+      modalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          modalConfirmBtn.click();
+        }
+      });
+    }
+
+    function setupExplorerHandlers() {
+      document.getElementById('createNewFileBtn').addEventListener('click', () => {
+        openModalDialog('New File', 'Enter name for your new file (e.g. contact.html):', 'contact.html', (fileName) => {
+          createNewFile(fileName);
+        });
+      });
+
+      document.getElementById('placeholderNewFileBtn').addEventListener('click', () => {
+        openModalDialog('New File', 'Enter name for your new file:', 'about.html', (fileName) => {
+          createNewFile(fileName);
+        });
+      });
+
+      document.getElementById('resetVfsExplorerBtn').addEventListener('click', () => {
+        renderExplorer();
+        showToast('Refreshed explorer tree list', 'info');
+      });
+    }
+
+    // Tab Bar Rendering
+    function renderTabs() {
+      tabsBar.innerHTML = '';
+      openTabs.forEach(filepath => {
+        const tab = document.createElement('div');
+        tab.className = `editor-tab ${currentFile === filepath ? 'active' : ''}`;
+        
+        let icon = '📄';
+        if (filepath.endsWith('.html')) icon = '🌐';
+        if (filepath.endsWith('.css')) icon = '🎨';
+        if (filepath.endsWith('.js')) icon = '⚙️';
+
+        const displayLabel = filepath.startsWith('/') ? filepath.substring(1) : filepath;
+
+        tab.innerHTML = `
+          <span>${icon}</span>
+          <span>${displayLabel}</span>
+          <span class="tab-close-btn" data-path="${filepath}">×</span>
+        `;
+
+        // Switch to tab on label click
+        tab.addEventListener('click', (e) => {
+          if (e.target.classList.contains('tab-close-btn')) return;
+          openFile(filepath);
+        });
+
+        // Close button click
+        tab.querySelector('.tab-close-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const path = e.target.getAttribute('data-path');
+          openTabs = openTabs.filter(t => t !== path);
+          
+          if (currentFile === path) {
+            if (openTabs.length > 0) {
+              openFile(openTabs[openTabs.length - 1]);
+            } else {
+              currentFile = null;
+              editorTextarea.style.display = 'none';
+              lineNumbers.style.display = 'none';
+              editorPlaceholder.style.display = 'flex';
+              editorActiveFileStatus.textContent = 'No Open File';
+              editorFileLanguageStatus.textContent = 'N/A';
+            }
+          } else {
+            renderTabs();
+          }
+        });
+
+        tabsBar.appendChild(tab);
+      });
+    }
+
+    // Code Editor handlers
+    function setupEditorHandlers() {
+      editorTextarea.addEventListener('input', () => {
+        if (currentFile) {
+          vfs[currentFile].content = editorTextarea.value;
+          saveVFSToLocalStorage();
+          updateLineNumbers();
+          
+          // Debounce preview update (e.g. 500ms)
+          debouncedCompile();
+        }
+      });
+
+      // Synchronize editor scroll and line numbers
+      editorTextarea.addEventListener('scroll', () => {
+        lineNumbers.scrollTop = editorTextarea.scrollTop;
+      });
+
+      // Tracking line/col cursor
+      function updateCursorStatus() {
+        const text = editorTextarea.value;
+        const pos = editorTextarea.selectionStart;
+        const lines = text.substring(0, pos).split('\n');
+        const row = lines.length;
+        const col = lines[lines.length - 1].length + 1;
+        cursorPositionStatus.textContent = `Ln ${row}, Col ${col}`;
+      }
+
+      editorTextarea.addEventListener('keyup', updateCursorStatus);
+      editorTextarea.addEventListener('click', updateCursorStatus);
+      editorTextarea.addEventListener('input', updateCursorStatus);
+    }
+
+    let debounceTimeout = null;
+    function debouncedCompile() {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        compilePreview();
+      }, 750);
+    }
+
+    function updateLineNumbers() {
+      const text = editorTextarea.value;
+      const lines = text.split('\n');
+      const count = lines.length;
+      let html = '';
+      for (let i = 1; i <= count; i++) {
+        html += `<div>${i}</div>`;
+      }
+      lineNumbers.innerHTML = html;
+    }
+
+    // Dynamic Live Preview Compiler (Virtual bundler)
+    window.compilePreview = function() {
+      logToOutput('Compiling project VFS bundle...', 'info');
+      
+      const indexFile = vfs["/index.html"];
+      if (!indexFile) {
+        previewIframe.srcdoc = `<body style="background:#111;color:#ff6b6b;padding:30px;font-family:sans-serif;"><h3>Build Error</h3><p>/index.html not found in virtual filesystem.</p></body>`;
+        logToOutput('/index.html is missing. Cannot build project bundle.', 'error');
+        return;
+      }
+
+      let compiledHtml = indexFile.content;
+
+      // 1. Resolve and Bundle CSS Stylesheets
+      // Replaces matches of <link rel="stylesheet" href="style.css"> with raw <style>[style.css content]</style>
+      const cssLinkRegex = /<link\s+[^>]*href=["']\/?([^"']+\.css)["'][^>]*>/gi;
+      compiledHtml = compiledHtml.replace(cssLinkRegex, (match, cssPath) => {
+        const vfsPath = cssPath.startsWith('/') ? cssPath : '/' + cssPath;
+        const cssFile = vfs[vfsPath];
+        if (cssFile) {
+          logToOutput(`Bundled CSS style: ${vfsPath}`, 'success');
+          return `<style data-vfs="${vfsPath}">${cssFile.content}</style>`;
+        } else {
+          logToOutput(`Failed to resolve CSS stylesheet: ${vfsPath} (Missing in VFS)`, 'warn');
+          return `<!-- Missing VFS Resource: ${cssPath} -->`;
+        }
+      });
+
+      // 2. Resolve and Bundle JS Script Files
+      // Replaces matches of <script src="app.js"></script> with raw <script>[app.js content]</script>
+      const scriptSrcRegex = /<script\s+[^>]*src=["']\/?([^"']+\.js)["'][^>]*>\s*<\/script>/gi;
+      compiledHtml = compiledHtml.replace(scriptSrcRegex, (match, jsPath) => {
+        const vfsPath = jsPath.startsWith('/') ? jsPath : '/' + jsPath;
+        const jsFile = vfs[vfsPath];
+        if (jsFile) {
+          logToOutput(`Bundled Script: ${vfsPath}`, 'success');
+          return `<script data-vfs="${vfsPath}">${jsFile.content}<\/script>`;
+        } else {
+          logToOutput(`Failed to resolve Script resource: ${vfsPath} (Missing in VFS)`, 'warn');
+          return `<!-- Missing VFS Resource: ${jsPath} -->`;
+        }
+      });
+
+      // 3. Inject Iframe Console Interceptor Log Hook
+      const hookScript = `
+        <script>
+          (function() {
+            const _log = console.log;
+            const _error = console.error;
+            const _warn = console.warn;
+            
+            function postToIDE(type, args) {
+              window.parent.postMessage({
+                type: 'CONSOLE_LOG',
+                logType: type,
+                message: Array.from(args).map(arg => {
+                  if (typeof arg === 'object') {
+                    try { return JSON.stringify(arg); } catch(e) { return String(arg); }
+                  }
+                  return String(arg);
+                }).join(' ')
+              }, '*');
+            }
+
+            console.log = function() {
+              postToIDE('log', arguments);
+              _log.apply(console, arguments);
+            };
+            console.error = function() {
+              postToIDE('error', arguments);
+              _error.apply(console, arguments);
+            };
+            console.warn = function() {
+              postToIDE('warn', arguments);
+              _warn.apply(console, arguments);
+            };
+
+            window.addEventListener('error', function(e) {
+              window.parent.postMessage({
+                type: 'CONSOLE_LOG',
+                logType: 'error',
+                message: 'Uncaught Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno
+              }, '*');
+            });
+          })();
+        <\/script>
+      `;
+
+      // Inject hook before head closing or after opening body
+      if (compiledHtml.includes('</head>')) {
+        compiledHtml = compiledHtml.replace('</head>', `${hookScript}\n</head>`);
+      } else {
+        compiledHtml = hookScript + compiledHtml;
+      }
+
+      // Update Iframe srcdoc
+      previewIframe.srcdoc = compiledHtml;
+      logToOutput('VFS Project successfully compiled and running in sandbox preview.', 'success');
+    }
+
+    // Intercept Console logs from Sandbox Preview
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'CONSOLE_LOG') {
+        let typeClass = 'info';
+        if (event.data.logType === 'error') typeClass = 'error';
+        if (event.data.logType === 'warn') typeClass = 'warn';
+        
+        appendTerminalOutput(`[Sandbox Console] ${event.data.message}`, typeClass);
+        logToOutput(`[Sandbox] ${event.data.message}`, event.data.logType);
+      }
+    });
+
+    // Console output tab switches
+    const tabBtnTerminal = document.getElementById('tabBtnTerminal');
+    const tabBtnOutput = document.getElementById('tabBtnOutput');
+    const tabBtnPreview = document.getElementById('tabBtnPreview');
+    const runPreviewBtn = document.getElementById('runPreviewBtn');
+    
+    const panelTerminal = document.getElementById('panelTerminal');
+    const panelOutput = document.getElementById('panelOutput');
+    const panelPreview = document.getElementById('panelPreview');
+
+    const panelTabs = [
+      { btn: tabBtnTerminal, pane: panelTerminal },
+      { btn: tabBtnOutput, pane: panelOutput },
+      { btn: tabBtnPreview, pane: panelPreview }
+    ];
+
+    panelTabs.forEach(tab => {
+      tab.btn.addEventListener('click', () => {
+        panelTabs.forEach(t => {
+          t.btn.classList.remove('active');
+          t.pane.classList.remove('active');
+        });
+        tab.btn.classList.add('active');
+        tab.pane.classList.add('active');
+      });
+    });
+
+    // Run Preview Trigger
+    runPreviewBtn.addEventListener('click', () => {
+      compilePreview();
+      // Switch active bottom panel to Preview view
+      tabBtnPreview.click();
+    });
+
+    // Interactive Terminal CLI Simulators
+    function appendTerminalOutput(line, type = '') {
+      const el = document.createElement('div');
+      el.className = `terminal-line ${type}`;
+      el.textContent = line;
+      terminalOutput.appendChild(el);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    function setupTerminalHandlers() {
+      terminalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const commandLine = terminalInput.value.trim();
+          terminalInput.value = '';
+          if (!commandLine) return;
+
+          appendTerminalOutput(`forgehub:~$ ${commandLine}`);
+          executeTerminalCommand(commandLine);
+        }
+      });
+      
+      // Auto focus terminal when clicking terminal background
+      panelTerminal.addEventListener('click', () => {
+        terminalInput.focus();
+      });
+    }
+
+    function executeTerminalCommand(cmdString) {
+      const parts = cmdString.split(/\s+/);
+      const command = parts[0].toLowerCase();
+      const args = parts.slice(1);
+
+      switch (command) {
+        case 'help':
+          appendTerminalOutput('Available CLI Commands:');
+          appendTerminalOutput('  help                - Show details of available operations');
+          appendTerminalOutput('  ls                  - List files in current VFS directory');
+          appendTerminalOutput('  cat <file>          - Print contents of file');
+          appendTerminalOutput('  touch <file>        - Create a new file in VFS');
+          appendTerminalOutput('  rm <file>           - Delete a VFS file');
+          appendTerminalOutput('  run                 - Build and compile VFS index project');
+          appendTerminalOutput('  clear               - Clear screen output logs');
+          appendTerminalOutput('  theme <theme>       - Switch system themes (dark, monokai)');
+          appendTerminalOutput('  tokens              - View details of current tokens');
+          break;
+        case 'ls':
+          const files = Object.keys(vfs);
+          if (files.length === 0) {
+            appendTerminalOutput('Workspace directory is empty.');
+          } else {
+            files.forEach(f => {
+              appendTerminalOutput(`  📄  ${f.substring(1)} (${vfs[f].content.length} B)`);
+            });
+          }
+          break;
+        case 'cat':
+          if (args.length === 0) {
+            appendTerminalOutput('Usage: cat <filename>', 'error');
+            break;
+          }
+          const catPath = args[0].startsWith('/') ? args[0] : '/' + args[0];
+          if (vfs[catPath]) {
+            appendTerminalOutput(vfs[catPath].content);
+          } else {
+            appendTerminalOutput(`cat: ${args[0]}: No such file`, 'error');
+          }
+          break;
+        case 'touch':
+          if (args.length === 0) {
+            appendTerminalOutput('Usage: touch <filename>', 'error');
+            break;
+          }
+          const touchPath = args[0].startsWith('/') ? args[0] : '/' + args[0];
+          if (vfs[touchPath]) {
+            appendTerminalOutput(`touch: ${args[0]}: File already exists`, 'warn');
+          } else {
+            vfs[touchPath] = { type: 'file', content: `// ${args[0]}` };
+            saveVFSToLocalStorage();
+            renderExplorer();
+            appendTerminalOutput(`touch: Created file ${touchPath}`, 'success');
+          }
+          break;
+        case 'rm':
+          if (args.length === 0) {
+            appendTerminalOutput('Usage: rm <filename>', 'error');
+            break;
+          }
+          const rmPath = args[0].startsWith('/') ? args[0] : '/' + args[0];
+          if (vfs[rmPath]) {
+            deleteFile(rmPath);
+            appendTerminalOutput(`rm: Removed ${args[0]}`, 'success');
+          } else {
+            appendTerminalOutput(`rm: ${args[0]}: File not found`, 'error');
+          }
+          break;
+        case 'run':
+          compilePreview();
+          appendTerminalOutput('VFS build finished. Live Preview refreshed.', 'success');
+          tabBtnPreview.click();
+          break;
+        case 'clear':
+          terminalOutput.innerHTML = '';
+          break;
+        case 'tokens':
+          appendTerminalOutput(`Current Token Balance: ${tokens} tokens.`);
+          appendTerminalOutput('AI questions cost 5 tokens each. You can claim bonus tokens in the bottom status bar.');
+          break;
+        case 'theme':
+          if (args.length === 0) {
+            appendTerminalOutput('Usage: theme <dark|monokai>', 'error');
+            break;
+          }
+          const choice = args[0].toLowerCase();
+          if (choice === 'monokai') {
+            document.documentElement.style.setProperty('--bg-editor', '#272822');
+            document.documentElement.style.setProperty('--accent-color', '#f92672');
+            appendTerminalOutput('Switched theme to Monokai', 'success');
+          } else if (choice === 'dark') {
+            document.documentElement.style.setProperty('--bg-editor', '#16182c');
+            document.documentElement.style.setProperty('--accent-color', '#8b5cf6');
+            appendTerminalOutput('Switched theme to VS Code Dark', 'success');
+          } else {
+            appendTerminalOutput(`theme: ${args[0]}: Theme not supported`, 'error');
+          }
+          break;
+        default:
+          appendTerminalOutput(`forgehub: command not found: ${command}. Type 'help' to see list of commands.`, 'error');
+      }
+    }
+
+    // Settings Configuration Panel
+    function setupSettingsHandlers() {
+      geminiApiKeyInput.addEventListener('input', () => {
+        const val = geminiApiKeyInput.value.trim();
+        localStorage.setItem('ForgeHub_GeminiKey', val);
+      });
+
+      geminiModelSelect.addEventListener('change', () => {
+        const val = geminiModelSelect.value;
+        localStorage.setItem('ForgeHub_GeminiModel', val);
+        logToOutput(`Selected Gemini Model: ${val}`, 'info');
+      });
+
+      resetVfsSettingsBtn.addEventListener('click', () => {
+        if (confirm('Reset your virtual workspace? All custom files will be overwritten.')) {
+          vfs = Object.assign({}, DEFAULT_VFS);
+          saveVFSToLocalStorage();
+          
+          openTabs = [];
+          currentFile = null;
+          editorTextarea.value = '';
+          
+          openFile('/index.html');
+          compilePreview();
+          showToast('VFS reset to template defaults', 'info');
+          logToOutput('User reset VFS workspace to factory default configurations', 'warn');
+        }
+      });
+
+      // ── ForgeHub Supporter Handlers ──────────────────────────────────
+      document.getElementById('supporterStatusBtn').addEventListener('click', () => {
+        const status = getWorkspaceStatus();
+        const msg = [
+          `📁 Files in VFS:    ${status.fileCount}`,
+          `💬 IZT messages:    ${status.iztMessages}`,
+          `💬 Gemini messages: ${status.geminiMessages}`,
+          `🪙 Tokens:          ${status.tokens}`,
+          `🧠 Gemini Model:    ${status.geminiModel}`,
+          `🔑 IZT Key loaded:    ${status.hasIztKey ? 'Yes' : 'No'}`,
+          `🔑 Gemini Key set:    ${status.hasGeminiKey ? 'Yes' : 'No'}`,
+        ].join('\n');
+        logToOutput('Workspace Status Report:\n' + msg, 'info');
+        appendTerminalOutput('[Supporter] Workspace Status:\n' + msg, 'info');
+        showToast('Status printed to Output & Terminal', 'info');
+      });
+
+      document.getElementById('supporterExportBtn').addEventListener('click', () => {
+        saveSnapshot();
+        showToast('Snapshot exported to your Downloads folder!', 'success');
+        logToOutput('Workspace snapshot exported via ForgeHub Supporter.', 'success');
+      });
+
+      document.getElementById('supporterImportBtn').addEventListener('click', () => {
+        loadSnapshot();
+        logToOutput('Loading workspace snapshot via ForgeHub Supporter...', 'info');
+      });
+
+      document.getElementById('supporterUnloadBtn').addEventListener('click', () => {
+        if (confirm('Unload ForgeHub workspace? This will clear the VFS, chat history, and tokens, then reload the IDE.\n\nAPI keys will be preserved.')) {
+          logToOutput('[Supporter] Unloading workspace...', 'warn');
+          appendTerminalOutput('[Supporter] Unloading ForgeHub workspace...', 'warn');
+          showToast('Unloading workspace…', 'info');
+          setTimeout(() => unloadForgeHub(true), 600); // Small delay so toast is visible
+        }
+      });
+
+      // Search File inputs
+      searchInput.addEventListener('input', () => {
+        const val = searchInput.value.trim().toLowerCase();
+        searchResultsList.innerHTML = '';
+        if (!val) return;
+
+        const matches = Object.keys(vfs).filter(path => {
+          return path.toLowerCase().includes(val) || vfs[path].content.toLowerCase().includes(val);
+        });
+
+        if (matches.length === 0) {
+          searchResultsList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No matching files found.</div>';
+          return;
+        }
+
+        matches.forEach(filepath => {
+          const item = document.createElement('div');
+          item.className = 'explorer-item';
+          
+          const displayLabel = filepath.startsWith('/') ? filepath.substring(1) : filepath;
+          item.innerHTML = `
+            <div class="item-label">
+              <span>📄</span>
+              <span>${displayLabel}</span>
+            </div>
+          `;
+          
+          item.addEventListener('click', () => {
+            openFile(filepath);
+          });
+          
+          searchResultsList.appendChild(item);
+        });
+      });
+    }
+
+    // AI Agents Messaging Panel & Chat handlers
+    function setupChatHandlers() {
+      sendChatBtn.addEventListener('click', handleChatSubmit);
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleChatSubmit();
+        }
+      });
+
+      clearChatHistoryBtn.addEventListener('click', () => {
+        if (confirm('Clear chat history?')) {
+          agentHistories.izt = [];
+          agentHistories.gemini = [];
+          localStorage.removeItem('ForgeHub_ChatHistories');
+          chatHistoryContainer.innerHTML = '';
+          appendTerminalOutput('[Chat] Chat histories cleared.', 'info');
+          logToOutput('Cleared agent conversations.', 'info');
+        }
+      });
+
+      agentSelect.addEventListener('change', () => {
+        renderChatMessages();
+      });
+
+      claimTokensLink.addEventListener('click', () => {
+        tokens += 50;
+        localStorage.setItem('ForgeHub_Tokens', tokens);
+        tokenCountLabel.textContent = tokens;
+        showToast('Claimed 50 bonus tokens!', 'success');
+        appendTerminalOutput('Recharged: +50 Tokens added successfully!', 'success');
+      });
+    }
+
+    function renderChatMessages() {
+      // Clear container but keep the system introduction message if empty
+      chatHistoryContainer.innerHTML = '';
+      
+      const activeAgent = agentSelect.value;
+      const history = activeAgent === 'izt' ? agentHistories.izt : agentHistories.gemini;
+
+      if (history.length === 0) {
+        const welcome = document.createElement('div');
+        welcome.className = 'chat-msg system';
+        welcome.textContent = activeAgent === 'izt' 
+          ? 'Connected to IZT DEEP (OpenAI integration). I have access to your open file code. Let me review your code!'
+          : 'Connected to GEN 3.5 (Gemini Flash). Ask me to create scripts, design templates, or customize HTML layouts!';
+        chatHistoryContainer.appendChild(welcome);
+        return;
+      }
+
+      history.forEach(msg => {
+        appendMessageBubble(msg.role, msg.content, activeAgent);
+      });
+      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+    }
+
+    function appendMessageBubble(role, content, agentType) {
+      const bubble = document.createElement('div');
+      bubble.className = `chat-msg ${role}`;
+      
+      let nameLabel = 'YOU';
+      if (role === 'assistant') {
+        nameLabel = agentType === 'izt' ? 'IZT DEEP' : 'GEN 3.5';
+      }
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'agent-name';
+      nameEl.textContent = nameLabel;
+      bubble.appendChild(nameEl);
+
+      const bodyEl = document.createElement('div');
+      bodyEl.className = 'msg-body';
+      bodyEl.innerHTML = formatMarkdown(content);
+      bubble.appendChild(bodyEl);
+
+      chatHistoryContainer.appendChild(bubble);
+      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+    }
+
+    // Markdown Parser (converts markdown block contents into active code blocks with IDE options)
+    function formatMarkdown(text) {
+      let escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+      escaped = escaped.replace(codeBlockRegex, (match, lang, code) => {
+        lang = lang || 'text';
+        return `
+          <div class="code-block-container">
+            <div class="code-block-header">
+              <span class="code-lang">${lang}</span>
+              <div class="code-actions">
+                <button class="code-action-btn apply-btn" onclick="applyCodeToActive(this)">Apply to Active</button>
+                <button class="code-action-btn create-btn" onclick="createFileFromCode(this)">Create File</button>
+                <button class="code-action-btn copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+            </div>
+            <pre class="code-pre"><code>${code.trim()}</code></pre>
+          </div>
+        `;
+      });
+
+      escaped = escaped
+        .replace(/\*\*([\s\S]*?)\*\*/g, "<strong>$1</strong>") // Bold
+        .replace(/`([^`\n]+)`/g, "<code class='inline-code'>$1</code>") // Inline code
+        .replace(/\n/g, "<br>"); // Line breaks
+
+      return escaped;
+    }
+
+    // Global Code Actions inside code block containers
+    window.copyCode = function(btn) {
+      const container = btn.closest('.code-block-container');
+      const code = container.querySelector('code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('Code copied to clipboard!', 'success');
+      }).catch(err => {
+        showToast('Failed to copy: ' + err, 'error');
+      });
+    };
+
+    window.applyCodeToActive = function(btn) {
+      const container = btn.closest('.code-block-container');
+      const code = container.querySelector('code').textContent;
+      if (currentFile) {
+        vfs[currentFile].content = code;
+        saveVFSToLocalStorage();
+        editorTextarea.value = code;
+        updateLineNumbers();
+        compilePreview();
+        showToast(`Applied code changes to ${currentFile}!`, 'success');
+        appendTerminalOutput(`[Editor] Applied AI generated code to ${currentFile}`, 'info');
+      } else {
+        showToast('Please open a file from the explorer first!', 'error');
+      }
+    };
+
+    window.createFileFromCode = function(btn) {
+      const container = btn.closest('.code-block-container');
+      const code = container.querySelector('code').textContent;
+      openModalDialog('Create File', 'Enter filename for new resource:', 'app.js', (fileName) => {
+        const path = fileName.startsWith('/') ? fileName : '/' + fileName;
+        vfs[path] = { type: 'file', content: code };
+        saveVFSToLocalStorage();
+        renderExplorer();
+        openFile(path);
+        compilePreview();
+        showToast(`Created & opened new file: ${path}`, 'success');
+        appendTerminalOutput(`[VFS] Created new file ${path} from chat suggestion`, 'info');
+      });
+    };
+
+    // System instruction prompt template
+    function getSystemInstruction() {
+      const fileList = Object.keys(vfs).join(', ');
+      const activeContent = currentFile && vfs[currentFile] ? vfs[currentFile].content : '[No active file]';
+      return `You are a skilled coding assistant inside the ForgeHub IDE.
+You can help the user write, debug, and explain web code.
+The workspace contains these virtual files: ${fileList}
+
+Active file contents of the open tab (${currentFile}):
+\`\`\`
+${activeContent}
+\`\`\`
+
+When writing code, wrap it in standard markdown code blocks with the correct language tag.
+If you suggest changes, provide the complete updated file content so the user can easily click "Apply to Active File" or "Create File" from the UI.
+Keep your text concise, helpful, and professional.`;
+    }
+
+    // Submit user prompt to selected Agent
+    async function handleChatSubmit() {
+      const prompt = chatInput.value.trim();
+      if (!prompt) return;
+
+      if (tokens < 5) {
+        showToast('Insufficient tokens! Please claim bonus tokens.', 'error');
+        appendTerminalOutput('[Chat] Error: Out of query tokens. Claim +50 in status bar.', 'error');
+        return;
+      }
+
+      chatInput.value = '';
+      
+      const activeAgent = agentSelect.value;
+      const history = activeAgent === 'izt' ? agentHistories.izt : agentHistories.gemini;
+
+      // Add user message to state
+      history.push({ role: 'user', content: prompt });
+      appendMessageBubble('user', prompt, activeAgent);
+      
+      // Deduct Tokens
+      tokens -= 5;
+      localStorage.setItem('ForgeHub_Tokens', tokens);
+      tokenCountLabel.textContent = tokens;
+
+      // Render streaming message bubble placeholder
+      const streamBubble = document.createElement('div');
+      streamBubble.className = 'chat-msg assistant';
+      
+      const streamName = document.createElement('div');
+      streamName.className = 'agent-name';
+      streamName.textContent = activeAgent === 'izt' ? 'IZT DEEP' : 'GEN 3.5';
+      streamBubble.appendChild(streamName);
+
+      const streamBody = document.createElement('div');
+      streamBody.className = 'msg-body';
+      streamBody.innerHTML = '<div class="typing-indicator-dots"><span></span><span></span><span></span></div>';
+      streamBubble.appendChild(streamBody);
+      chatHistoryContainer.appendChild(streamBubble);
+      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+
+      logToOutput(`Querying AI agent [${activeAgent.toUpperCase()}]... (Cost: 5 Tokens)`, 'info');
+      appendTerminalOutput(`[Chat] Deducted 5 tokens. Querying agent [${activeAgent.toUpperCase()}]...`);
+
+      let fullResponseText = '';
+
+      try {
+        const systemPrompt = getSystemInstruction();
+
+        if (activeAgent === 'izt') {
+          // Call OpenAI Agent
+          await sendToIZT(history, systemPrompt, (chunk) => {
+            if (fullResponseText === '') {
+              streamBody.innerHTML = '';
+            }
+            fullResponseText += chunk;
+            streamBody.innerHTML = formatMarkdown(fullResponseText);
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+          });
+        } else {
+          // Call Gemini Agent (GEN 3.5)
+          const key = localStorage.getItem('ForgeHub_GeminiKey') || '';
+          if (!key) {
+            throw new Error("Gemini API Key is missing. Please add it in the Settings panel (gear icon).");
+          }
+          const model = localStorage.getItem('ForgeHub_GeminiModel') || 'gemini-2.5-flash';
+          await sendToGemini(history, key, systemPrompt, model, (chunk) => {
+            if (fullResponseText === '') {
+              streamBody.innerHTML = '';
+            }
+            fullResponseText += chunk;
+            streamBody.innerHTML = formatMarkdown(fullResponseText);
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+          });
+        }
+
+        // Store assistant response in history
+        history.push({ role: 'assistant', content: fullResponseText });
+        localStorage.setItem('ForgeHub_ChatHistories', JSON.stringify(agentHistories));
+        
+        logToOutput(`Agent [${activeAgent.toUpperCase()}] response finished successfully.`, 'success');
+        appendTerminalOutput(`[Chat] Response from agent [${activeAgent.toUpperCase()}] completed.`);
+
+      } catch (err) {
+        console.error(err);
+        streamBody.innerHTML = `<span style="color:var(--error-red);">Error: ${err.message}</span>`;
+        logToOutput(`Agent Query Error: ${err.message}`, 'error');
+        appendTerminalOutput(`[Chat] [ERROR] ${err.message}`, 'error');
+        
+        // Remove partial user entry if failed
+        history.pop();
+      }
+    }
+
+    // Start UI
+    initializeIDE();
+  </script>
+</body>
+</html>

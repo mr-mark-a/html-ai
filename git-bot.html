@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>ForgeHub - Code & Share</title>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Toastr CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
   <!-- Toastr JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,28 +23,33 @@
       height: 100vh;
       overflow: hidden;
     }
+
     .container {
       display: flex;
       height: 100vh;
     }
+
     .sidebar {
       width: 300px;
       background: white;
       border-right: 2px solid #f0f0f0;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     .header-section {
       padding: 20px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border-bottom: 2px solid #f0f0f0;
     }
+
     .header-section h1 {
       margin: 0 0 10px 0;
       font-size: 22px;
     }
+
     .header-section p {
       margin: 0;
       font-size: 12px;
@@ -52,6 +61,7 @@
       overflow-y: auto;
       padding: 15px;
     }
+
     .tool-btn {
       display: block;
       width: 100%;
@@ -67,38 +77,56 @@
       transition: all 0.3s;
       font-weight: 500;
     }
+
     .tool-btn:hover {
       background: #e8e8ff;
       border-left-color: #764ba2;
       padding-left: 14px;
     }
+
     .tool-btn.active {
       background: #667eea;
       color: white;
       border-left-color: #764ba2;
     }
+
+    .tool-btn.gemini-btn {
+      background: #eebf001a;
+      border-left-color: #f59e0b;
+    }
+
+    .tool-btn.gemini-btn:hover {
+      background: #fef3c7;
+      border-left-color: #d97706;
+    }
+
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: white;
     }
+
     .editor-wrapper {
       display: flex;
       flex: 1;
     }
+
     .editor-section {
       flex: 1;
       display: flex;
       flex-direction: column;
     }
+
     .preview-section {
       flex: 1;
       display: flex;
       flex-direction: column;
       border-left: 2px solid #f0f0f0;
     }
-    .editor-header, .preview-header {
+
+    .editor-header,
+    .preview-header {
       padding: 15px;
       background: #f9f9f9;
       border-bottom: 1px solid #e0e0e0;
@@ -108,11 +136,13 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .editor-area {
       flex: 1;
       padding: 15px;
       overflow-y: auto;
     }
+
     textarea {
       width: 100%;
       height: 100%;
@@ -124,6 +154,7 @@
       resize: none;
       background: #fafafa;
     }
+
     .preview-frame {
       flex: 1;
       border: none;
@@ -137,6 +168,7 @@
       display: flex;
       gap: 8px;
     }
+
     .btn {
       padding: 8px 16px;
       border: none;
@@ -146,22 +178,27 @@
       font-weight: 500;
       transition: all 0.3s;
     }
+
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
+
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
+
     .btn-secondary {
       background: #f5f5f5;
       color: #333;
       border: 1px solid #ddd;
     }
+
     .btn-secondary:hover {
       background: #efefef;
     }
+
     .modal {
       display: none;
       position: fixed;
@@ -169,23 +206,26 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.5);
       z-index: 2000;
       justify-content: center;
       align-items: center;
     }
+
     .modal-content {
       background: white;
       padding: 30px;
       border-radius: 12px;
       max-width: 600px;
       width: 90%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
+
     .modal-content h2 {
       margin-top: 0;
       color: #333;
     }
+
     .modal-content textarea {
       width: 100%;
       height: 200px;
@@ -197,6 +237,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <!-- Sidebar with Tools -->
@@ -209,6 +250,7 @@
         <button class="tool-btn active" onclick="selectTool('html')">📄 HTML</button>
         <button class="tool-btn" onclick="selectTool('css')">🎨 CSS</button>
         <button class="tool-btn" onclick="selectTool('javascript')">⚙️ JavaScript</button>
+        <button class="tool-btn gemini-btn" onclick="openGeminiAgent()">🤖 Gemini Agent</button>
         <button class="tool-btn" onclick="selectTool('template')">📦 Templates</button>
         <button class="tool-btn" onclick="selectTool('components')">🧩 Components</button>
         <button class="tool-btn" onclick="saveProject()">💾 Save & Share</button>
@@ -253,6 +295,28 @@
 
   </div>
 
+  <!-- Modal for Gemini Agent -->
+  <div id="geminiAgentModal" class="modal">
+    <div class="modal-content">
+      <h2>🤖 Gemini AI Coding Assistant</h2>
+      <p>Describe what you want to build or generate, and Gemini will assist you:</p>
+      <input type="text" id="geminiPrompt" placeholder="e.g. Build a responsive navbar with a dark mode toggle"
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin: 10px 0;">
+      
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button class="btn btn-primary" onclick="generateGeminiCode()" style="flex: 1;">✨ Generate Code</button>
+      </div>
+
+      <p style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 12px; color: #555;">Generated Output:</p>
+      <textarea id="geminiOutput" placeholder="Gemini's code response will appear here..." style="height: 150px;"></textarea>
+
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn btn-primary" onclick="applyGeminiCode()" style="flex: 1; background: #4caf50;">📥 Insert into Editor</button>
+        <button class="btn btn-secondary" onclick="closeModal('geminiAgentModal')" style="flex: 1;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for help -->
   <div id="helpModal" class="modal">
     <div class="modal-content">
@@ -270,6 +334,7 @@
         <li>📝 HTML - Write HTML structure</li>
         <li>🎨 CSS - Write stylesheets</li>
         <li>⚙️ JavaScript - Write scripts</li>
+        <li>🤖 Gemini Agent - AI Assistant for generating code</li>
         <li>📋 Templates - Browse template examples</li>
         <li>🧩 Components - Browse reusable components</li>
         <li>💾 Save & Share - Generate shareable shortened link</li>
@@ -285,8 +350,10 @@
     <div class="modal-content">
       <h2>Save Project</h2>
       <p>Enter your project name:</p>
-      <input type="text" id="projectName" placeholder="My Awesome Website" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin: 10px 0;">
-      <p style="font-size: 12px; color: #666;">Your project will be saved in: <strong>AI-builded-webs/[project-name]/</strong></p>
+      <input type="text" id="projectName" placeholder="My Awesome Website"
+        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin: 10px 0;">
+      <p style="font-size: 12px; color: #666;">Your project will be saved in:
+        <strong>AI-builded-webs/[project-name]/</strong></p>
       <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button class="btn btn-primary" onclick="confirmSaveProject()" style="flex: 1;">Save Project</button>
         <button class="btn btn-secondary" onclick="closeModal('saveProjectModal')" style="flex: 1;">Cancel</button>
@@ -298,20 +365,25 @@
   <div id="shortenedUrlModal" class="modal">
     <div class="modal-content">
       <h2>✅ Project Saved! 🎉</h2>
-      
+
       <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; margin: 15px 0; border: 3px solid #4caf50;">
-        <p style="margin: 0 0 10px 0; font-size: 12px; color: #2e7d32; font-weight: bold;">🌐 VIEW YOUR LIVE WEBSITE:</p>
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: #2e7d32; font-weight: bold;">🌐 VIEW YOUR LIVE WEBSITE:
+        </p>
         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-          <input type="text" id="viewLinkInput" readonly style="flex: 1; padding: 10px; border: 1px solid #4caf50; border-radius: 6px; font-family: monospace; font-size: 13px; background: white;">
-          <button class="btn btn-primary" onclick="copyViewLink()" style="padding: 10px 15px; background: #4caf50;">📋 Copy</button>
-          <button class="btn btn-primary" onclick="openViewLink()" style="padding: 10px 15px; background: #2196F3;">🔗 Open</button>
+          <input type="text" id="viewLinkInput" readonly
+            style="flex: 1; padding: 10px; border: 1px solid #4caf50; border-radius: 6px; font-family: monospace; font-size: 13px; background: white;">
+          <button class="btn btn-primary" onclick="copyViewLink()" style="padding: 10px 15px; background: #4caf50;">📋
+            Copy</button>
+          <button class="btn btn-primary" onclick="openViewLink()" style="padding: 10px 15px; background: #2196F3;">🔗
+            Open</button>
         </div>
       </div>
 
       <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin: 15px 0; border: 2px solid #667eea;">
         <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">📤 Share via Short Link:</p>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" id="shortenedUrlInput" readonly style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px;">
+          <input type="text" id="shortenedUrlInput" readonly
+            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px;">
           <button class="btn btn-primary" onclick="copyShortenedUrl()" style="padding: 10px 15px;">📋 Copy</button>
         </div>
       </div>
@@ -319,13 +391,15 @@
       <div style="background: #f0f0f0; padding: 15px; border-radius: 6px; margin: 15px 0;">
         <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">📋 Full Project Link (Edit Mode):</p>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" id="fullUrlInput" readonly style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px;">
+          <input type="text" id="fullUrlInput" readonly
+            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 13px;">
           <button class="btn btn-primary" onclick="copyFullUrl()" style="padding: 10px 15px;">📋 Copy</button>
         </div>
       </div>
 
       <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn btn-primary" onclick="closeModal('shortenedUrlModal')" style="flex: 1; background: #667eea;">Done</button>
+        <button class="btn btn-primary" onclick="closeModal('shortenedUrlModal')"
+          style="flex: 1; background: #667eea;">Done</button>
       </div>
     </div>
   </div>
@@ -339,11 +413,56 @@
     // Ensure toastr is available, otherwise create a fallback
     if (typeof toastr === 'undefined') {
       window.toastr = {
-        success: function(msg) { console.log('✅ ' + msg); alert(msg); },
-        error: function(msg) { console.error('❌ ' + msg); alert(msg); },
-        warning: function(msg) { console.warn('⚠️ ' + msg); alert(msg); },
-        info: function(msg) { console.info('ℹ️ ' + msg); }
+        success: function (msg) { console.log('✅ ' + msg); alert(msg); },
+        error: function (msg) { console.error('❌ ' + msg); alert(msg); },
+        warning: function (msg) { console.warn('⚠️ ' + msg); alert(msg); },
+        info: function (msg) { console.info('ℹ️ ' + msg); }
       };
+    }
+
+    // Gemini AI Agent Functions
+    function openGeminiAgent() {
+      document.getElementById('geminiAgentModal').style.display = 'flex';
+      toastr.info('🤖 Gemini AI Coding Agent activated!');
+    }
+
+    function generateGeminiCode() {
+      const prompt = document.getElementById('geminiPrompt').value.trim();
+      const outputArea = document.getElementById('geminiOutput');
+
+      if (!prompt) {
+        toastr.warning('Please enter a prompt for Gemini.');
+        return;
+      }
+
+      toastr.info('🤖 Gemini is generating code...');
+      outputArea.value = 'Generating...';
+
+      // Simulated Gemini Agent response logic
+      setTimeout(() => {
+        let generatedCode = `<!-- Generated by Gemini Agent for prompt: "${prompt}" -->\n`;
+        generatedCode += `<div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; background: #f4f4f9; border-radius: 8px;">\n`;
+        generatedCode += `  <h2 style="color: #4a5568;">✨ AI Generated Component</h2>\n`;
+        generatedCode += `  <p style="color: #718096;">Request: ${prompt}</p>\n`;
+        generatedCode += `  <button onclick="alert('Hello from Gemini Agent!')" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Click Me</button>\n`;
+        generatedCode += `</div>`;
+
+        outputArea.value = generatedCode;
+        toastr.success('✨ Code generated successfully!');
+      }, 1000);
+    }
+
+    function applyGeminiCode() {
+      const outputCode = document.getElementById('geminiOutput').value;
+      if (!outputCode || outputCode === 'Generating...') {
+        toastr.warning('No generated code available to insert.');
+        return;
+      }
+
+      editor.value += (editor.value ? '\n\n' : '') + outputCode;
+      updatePreview();
+      closeModal('geminiAgentModal');
+      toastr.success('📥 Gemini code added to editor!');
     }
 
     // Initialize when DOM is ready
@@ -358,7 +477,7 @@
 
       // Initialize with empty editor and blank preview
       editor.value = currentCode;
-      
+
       // Show empty state in preview
       previewFrame.srcdoc = `
         <!DOCTYPE html>
@@ -396,25 +515,25 @@
     function selectTool(tool) {
       document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      
+
       let message = '';
-      switch(tool) {
+      switch (tool) {
         case 'html': message = 'HTML editor active - Add structure to your page'; break;
         case 'css': message = 'CSS editor active - Style your website'; break;
         case 'javascript': message = 'JavaScript active - Add interactivity'; break;
         case 'template': message = 'Loading templates...'; loadTemplates(); break;
         case 'components': message = 'Loading components...'; loadComponents(); break;
       }
-      if(message) toastr.info(message);
+      if (message) toastr.info(message);
     }
 
     function togglePreviewMode() {
       const editorWrapper = document.querySelector('.editor-wrapper');
       const editorSection = document.querySelector('.editor-section');
       const previewSection = document.querySelector('.preview-section');
-      
+
       editorWrapper.classList.toggle('preview-mode');
-      
+
       if (editorWrapper.classList.contains('preview-mode')) {
         editorSection.style.display = 'none';
         previewSection.style.flex = '1';
@@ -568,7 +687,7 @@
         // Generate unique project ID and create shareable link
         const projectId = generateProjectId();
         generateShortenedUrl(projectName, projectId, fullCode);
-        
+
         closeModal('saveProjectModal');
         document.getElementById('projectName').value = '';
         toastr.success('✅ Project saved! Share the link with others.');
@@ -601,11 +720,11 @@
         // Create full project view URL
         const baseUrl = window.location.origin + window.location.pathname;
         const fullUrl = `${baseUrl}?view=${projectId}`;
-        
+
         // For now, use the projectId as a simple short code
         // This avoids external API dependency issues
         const shortenedUrl = `${window.location.origin + window.location.pathname}?v=${projectId}`;
-        
+
         // Display the shortened URL modal
         displayShortenedUrl(shortenedUrl, fullUrl, projectId);
         toastr.success('🔗 Project saved & URL generated!');
@@ -621,7 +740,7 @@
         const shortenedInput = document.getElementById('shortenedUrlInput');
         const fullInput = document.getElementById('fullUrlInput');
         const modal = document.getElementById('shortenedUrlModal');
-        
+
         if (!viewLinkInput || !shortenedInput || !fullInput || !modal) {
           console.error('Missing URL modal elements', { viewLinkInput, shortenedInput, fullInput, modal });
           toastr.error('Error displaying shared link modal');
@@ -631,14 +750,14 @@
         // Create view link (viewer URL that shows the rendered website)
         const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         const viewLink = `${baseUrl}view-project.html?id=${projectId}`;
-        
+
         viewLinkInput.value = viewLink;
         shortenedInput.value = shortenedUrl;
         fullInput.value = fullUrl;
-        
+
         // Store current projectId for view functions
         window.currentProjectId = projectId;
-        
+
         modal.style.display = 'flex';
       } catch (error) {
         console.error('Error in displayShortenedUrl:', error);
@@ -727,7 +846,7 @@
     function loadSharedProject() {
       const urlParams = new URLSearchParams(window.location.search);
       const projectId = urlParams.get('view') || urlParams.get('v'); // Support both ?view= and ?v=
-      
+
       if (projectId) {
         const projects = JSON.parse(localStorage.getItem('ForgeHubProjects') || '{}');
         if (projects[projectId]) {
@@ -783,4 +902,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -1,24 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GBT Chat</title>
-  <meta name="description" content="Premium dark‑mode chat interface powered by GBT‑0.5 model." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthQR - Unified Authentication</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Html5-QRCode -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Make the camera preview rounded */
+    #reader {
+      border: none !important;
+      border-radius: 1rem;
+      background: #0f172a;
+    }
+    #reader video {
+      border-radius: 1rem;
+      object-fit: cover;
+    }
+  </style>
 </head>
-<body>
-  <main class="chat-container">
-    <section id="messages" class="messages" aria-live="polite"></section>
-    <form id="chat-form" class="chat-input" autocomplete="off">
-      <textarea id="user-input" rows="1" placeholder="Type a message…" required></textarea>
-      <button type="submit" aria-label="Send message">▶</button>
-    </form>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased flex flex-col relative overflow-x-hidden">
+  
+  <!-- Background Glows -->
+  <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-600/20 blur-[120px] pointer-events-none"></div>
+  <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-center">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            AuthQR
+          </h1>
+          <p class="text-xs text-slate-400">Unified Access Protocol</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-lg mx-auto p-4 flex flex-col justify-center items-center z-10">
+
+    <!-- MAIN SCREEN: EMAIL & ACTIONS -->
+    <div id="screen_main" class="w-full glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl relative">
+      <div class="w-16 h-16 bg-brand-500/10 text-brand-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl border border-brand-500/20">
+        <i class="fa-solid fa-fingerprint"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-white text-center mb-1">Identity Verification</h2>
+      <p class="text-slate-400 text-xs text-center mb-8">Enter your email address to begin the secure handshake.</p>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">Account Email</label>
+          <div class="relative group">
+            <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-500 text-sm group-focus-within:text-brand-400 transition-colors"></i>
+            <input type="email" id="txtEmail" required placeholder="name@domain.com"
+              class="w-full bg-slate-950/80 border border-slate-700 focus:border-brand-500 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-brand-500 transition-all shadow-inner">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <button onclick="handleGenerate()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500/50 text-white font-semibold py-3 px-4 rounded-xl transition-all flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-qrcode text-brand-400 text-xl group-hover:scale-110 transition-transform"></i>
+            <span class="text-xs mt-1">Generate Token</span>
+          </button>
+          
+          <button onclick="handleScan()" class="w-full bg-gradient-to-tr from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-brand-500/25 transition-all flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-camera text-white text-xl group-hover:scale-110 transition-transform"></i>
+            <span class="text-xs mt-1">Scan Token</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="mt-6 pt-5 border-t border-slate-800/60 text-center text-[10px] text-slate-500">
+        You can use any device to scan or generate the QR token.
+      </div>
+    </div>
+
+    <!-- SHOW QR SCREEN (Generated Token) -->
+    <div id="screen_show_qr" class="hidden w-full glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl flex flex-col items-center">
+      <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border border-emerald-500/20">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white text-center mb-1">Token Active</h2>
+      <p class="text-slate-400 text-xs text-center mb-8">Show this code to the scanning device's camera.</p>
+      
+      <div class="p-6 bg-white rounded-2xl shadow-[0_0_40px_rgba(79,70,229,0.15)] mb-6">
+        <div id="qrContainer"></div>
+      </div>
+      
+      <div class="text-xs text-slate-500 flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 mb-6">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        Awaiting verification...
+      </div>
+      
+      <button onclick="resetApp()" class="text-xs text-slate-400 hover:text-white transition py-2 px-4 rounded-lg hover:bg-slate-800 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i> Cancel Handshake
+      </button>
+    </div>
+
+    <!-- SCAN QR SCREEN (Camera Scanner) -->
+    <div id="screen_scan_qr" class="hidden w-full glass-card rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl flex flex-col items-center">
+      <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border border-indigo-500/20">
+        <i class="fa-solid fa-expand"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white text-center mb-1">Scanning Device</h2>
+      <p class="text-slate-400 text-xs text-center mb-6">Hold the generated QR token up to this camera.</p>
+      
+      <div id="reader" class="w-full max-w-[300px] rounded-2xl bg-slate-950 border border-slate-700 flex flex-col justify-center items-center mb-6 shadow-inner">
+         <i class="fa-solid fa-camera text-slate-600 text-4xl mb-3"></i>
+         <span class="text-xs text-slate-500">Initializing Camera...</span>
+      </div>
+      
+      <button onclick="resetApp()" class="text-xs text-slate-400 hover:text-white transition py-2 px-4 rounded-lg hover:bg-slate-800 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i> Cancel Scanner
+      </button>
+    </div>
+
   </main>
-  <script type="module" src="script.js"></script>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm pointer-events-none">
+    <div class="glass-card bg-slate-900/95 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+      <div id="toastIcon" class="text-brand-400 text-lg"><i class="fa-solid fa-circle-info"></i></div>
+      <div class="text-xs">
+        <div id="toastTitle" class="font-bold">Notification</div>
+        <div id="toastMsg" class="text-slate-300">Message description</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let expectedEmail = '';
+    let html5QrcodeScanner = null;
+    let qrObj = null;
+
+    function showScreen(id) {
+      ['screen_main', 'screen_show_qr', 'screen_scan_qr'].forEach(screen => {
+        document.getElementById(screen).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function getEmail() {
+      const email = document.getElementById('txtEmail').value.trim();
+      if (!email) {
+        showToast('Email Required', 'Please enter your email first.', 'error');
+        return null;
+      }
+      return email;
+    }
+
+    // --- Action: Generate Token ---
+    function handleGenerate() {
+      const email = getEmail();
+      if (!email) return;
+      
+      showScreen('screen_show_qr');
+      
+      const payload = JSON.stringify({ email: email });
+      
+      const qrContainer = document.getElementById('qrContainer');
+      qrContainer.innerHTML = '';
+      qrObj = new QRCode(qrContainer, {
+        text: payload,
+        width: 220,
+        height: 220,
+        colorDark : "#0f172a",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+      });
+      
+      showToast('Token Ready', 'Scan this with your other device.', 'success');
+    }
+
+    // --- Action: Scan Token ---
+    function handleScan() {
+      const email = getEmail();
+      if (!email) return;
+      
+      expectedEmail = email;
+      showScreen('screen_scan_qr');
+      
+      // Clear previous instance just in case
+      document.getElementById('reader').innerHTML = '';
+      
+      if (!html5QrcodeScanner) {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+          fps: 10, 
+          qrbox: {width: 250, height: 250},
+          aspectRatio: 1.0,
+          showTorchButtonIfSupported: true
+        }, false);
+      }
+      
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      try {
+        const payload = JSON.parse(decodedText);
+        if (payload.email && payload.email.toLowerCase() === expectedEmail.toLowerCase()) {
+          // Success!
+          html5QrcodeScanner.clear();
+          showToast('Authentication Successful', 'Emails match. Redirecting...', 'success');
+          
+          setTimeout(() => {
+            window.location.href = 'marks-games.html';
+          }, 1500);
+        } else {
+          showToast('Verification Failed', 'The scanned email does not match.', 'error');
+        }
+      } catch (e) {
+        showToast('Invalid QR', 'Unrecognized QR code format.', 'error');
+      }
+    }
+
+    function onScanFailure(error) {
+      // Ignore background noise failures
+    }
+
+    // --- Utility ---
+    function resetApp() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+      }
+      showScreen('screen_main');
+    }
+
+    function showToast(title, msg, type = 'info') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toastIcon');
+      document.getElementById('toastTitle').innerText = title;
+      document.getElementById('toastMsg').innerText = msg;
+
+      if (type === 'error') {
+        icon.className = "text-rose-400 text-lg";
+        icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+      } else if (type === 'success') {
+        icon.className = "text-emerald-400 text-lg";
+        icon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+      } else {
+        icon.className = "text-brand-400 text-lg";
+        icon.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
