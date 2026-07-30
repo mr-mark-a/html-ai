@@ -362,6 +362,18 @@
     </div>
 
     <script>
+        // --- DYNAMIC FAVICON ---
+        const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path d="M10,20 L50,5 L90,20 L90,70 L50,95 L10,70 Z" fill="#1a202c" stroke="#4ade80" stroke-width="4"/>
+          <text x="50" y="35" font-family="monospace" font-size="24" font-weight="bold" fill="red" text-anchor="middle">CLI</text>
+          <text x="50" y="65" font-family="monospace" font-size="28" font-weight="bold" fill="#4ade80" text-anchor="middle">&gt;_</text>
+        </svg>`;
+        const faviconUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faviconSvg);
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = faviconUrl;
+        document.head.appendChild(link);
+
         // --- TERMINAL LOGIC ---
         const inputHidden = document.getElementById('command-input-hidden');
         const commandText = document.getElementById('command-text');
@@ -372,6 +384,10 @@
         const commandHistory = [];
         let historyIndex = -1;
         let isHtopActive = false;
+        let currentUser = 'admin';
+        
+        let currentProject = null;
+        let projectCode = '';
 
         // Focus input to start
         inputHidden.focus();
@@ -380,6 +396,10 @@
         inputHidden.addEventListener('input', () => {
             commandText.textContent = inputHidden.value;
         });
+
+        function updatePromptDisplay() {
+            document.querySelectorAll('.prompt-user').forEach(el => el.textContent = `${currentUser}@server`);
+        }
 
         // Handle keys
         inputHidden.addEventListener('keydown', (e) => {
@@ -393,7 +413,7 @@
                 const cmd = cmdRaw.trim();
 
                 // Print prompt + command
-                appendOutput(`<span class="prompt"><span class="prompt-user">admin@server</span>:<span class="prompt-path">~</span><span class="prompt-char">$</span> </span>${escapeHtml(cmdRaw)}`);
+                appendOutput(`<span class="prompt"><span class="prompt-user">${escapeHtml(currentUser)}@server</span>:<span class="prompt-path">~</span><span class="prompt-char">$</span> </span>${escapeHtml(cmdRaw)}`);
 
                 if (cmd !== '') {
                     commandHistory.push(cmd);
@@ -403,6 +423,7 @@
 
                 inputHidden.value = '';
                 commandText.textContent = '';
+                updatePromptDisplay();
                 scrollToBottom();
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -437,23 +458,54 @@
         function processCommand(cmd) {
             const args = cmd.split(' ');
             const mainCmd = args[0].toLowerCase();
+            const fullCmd = cmd;
+
+            if (mainCmd.startsWith('wohami')) {
+                const newUser = cmd.substring(6).trim();
+                if (newUser) {
+                    currentUser = newUser;
+                    appendOutput(`User changed to <span class="text-blue-400">${escapeHtml(currentUser)}</span>`);
+                } else {
+                    appendOutput(escapeHtml(currentUser));
+                }
+                return;
+            }
+
+            if (fullCmd.startsWith('add/code ~ ')) {
+                const code = fullCmd.substring(11).trim();
+                projectCode += code + '\n';
+                appendOutput(`Code added to buffer.`);
+                return;
+            }
+
+            if (fullCmd.startsWith('finals/publish ~ ;:')) {
+                const projName = fullCmd.substring(19).trim();
+                appendOutput(`Publishing project <span class="text-blue-400">${escapeHtml(projName)}</span>... Done!`);
+                return;
+            }
 
             switch (mainCmd) {
                 case 'help':
                     appendOutput(`Available commands:
-  <span class="text-blue-400">help</span>     - Show this help message
-  <span class="text-blue-400">clear</span>    - Clear the terminal screen
-  <span class="text-blue-400">whoami</span>   - Print current user
-  <span class="text-blue-400">date</span>     - Print current date and time
-  <span class="text-blue-400">echo</span>     - Print text to terminal
-  <span class="text-blue-400">htop</span>     - Launch interactive system monitor
-  <span class="text-blue-400">pk</span>       - Package manager (audio player)`);
+  <span class="text-blue-400">help</span>                   - Show this help message
+  <span class="text-blue-400">clear</span>                  - Clear the terminal screen
+  <span class="text-blue-400">wohami&lt;name&gt;</span>           - Change user
+  <span class="text-blue-400">date</span>                   - Print current date and time
+  <span class="text-blue-400">echo</span>                   - Print text to terminal
+  <span class="text-blue-400">htop</span>                   - Launch interactive system monitor
+  <span class="text-blue-400">pk</span>                     - Package manager
+  <span class="text-blue-400">Newproject</span>             - Create a new project
+  <span class="text-blue-400">add/code ~ &lt;code&gt;</span>      - Add code to current project
+  <span class="text-blue-400">save/code</span>              - Save current code buffer
+  <span class="text-blue-400">edit / code</span>            - Edit current code
+  <span class="text-blue-400">edit/name</span>              - Edit project name
+  <span class="text-blue-400">finals/publish ~ ;:&lt;name&gt;</span> - Publish project`);
                     break;
                 case 'clear':
                     outputContainer.innerHTML = '';
                     break;
                 case 'whoami':
-                    appendOutput('admin');
+                    appendOutput(escapeHtml(currentUser));
                     break;
                 case 'date':
                     appendOutput(new Date().toString());
@@ -464,88 +516,51 @@
                 case 'htop':
                     launchHtop();
                     break;
+                case 'newproject':
+                    currentProject = 'Untitled';
+                    projectCode = '';
+                    appendOutput(`New project created.`);
+                    break;
+                case 'save/code':
+                    appendOutput(`Code saved successfully.`);
+                    break;
+                case 'edit':
+                    if (args[1] === '/' && args[2] === 'code') {
+                         appendOutput(`Opening code editor for current project...`);
+                    } else {
+                         appendOutput(`bash: edit: invalid usage`);
+                    }
+                    break;
+                case 'edit/name':
+                    if (args[1]) {
+                        currentProject = args.slice(1).join(' ');
+                        appendOutput(`Project name changed to <span class="text-blue-400">${escapeHtml(currentProject)}</span>`);
+                    } else {
+                        appendOutput(`Usage: edit/name <new_name>`);
+                    }
+                    break;
                 case 'pk':
-                    if (args[1] === 'install' && args[2] === 'select' && args[3]) {
-                        const pkgName = args[3];
-                        let input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'audio/*';
-                        input.onchange = e => {
-                            const file = e.target.files[0];
-                            if (file) {
-                                window.pkFiles = window.pkFiles || {};
-                                window.pkFiles[pkgName] = file;
-                                appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> source selected. Now write 'pk brew install ${escapeHtml(pkgName)}' to install it.`);
-                                scrollToBottom();
-                            }
-                        };
-                        input.click();
-                        appendOutput(`Selecting source for <span class="text-blue-400">${escapeHtml(pkgName)}</span>...`);
-                    } else if (args[1] === 'brew' && args[2] === 'install' && args[3]) {
-                        const pkgName = args[3];
-                        window.pkFiles = window.pkFiles || {};
-                        window.pkBrewed = window.pkBrewed || {};
-                        if (window.pkFiles[pkgName]) {
-                            window.pkBrewed[pkgName] = true;
-                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> installed successfully.`);
+                    if (args[1] === 'install' && args[2] === 'tbuilds') {
+                        appendOutput(`Package <span class="text-blue-400">tbuilds</span> autoselected for installation.`);
+                        window.pkTbuildsSelected = true;
+                    } else if (args[1] === 'brew' && args[2] === 'install' && args[3] === 'tbuilds') {
+                        if (window.pkTbuildsSelected) {
+                            window.pkTbuildsInstalled = true;
+                            appendOutput(`Package <span class="text-blue-400">tbuilds</span> installed successfully.`);
                         } else {
-                            appendOutput(`Error: No source selected for <span class="text-blue-400">${escapeHtml(pkgName)}</span>. Run 'pk install select ${escapeHtml(pkgName)}' first.`);
+                            appendOutput(`Error: Run 'pk install tbuilds' first to autoselect.`);
                         }
-                    } else if (args[1] === 'stop') {
-                        if (window.currentAudio) {
-                            window.currentAudio.pause();
-                            window.currentAudio.currentTime = 0;
-                            appendOutput(`Playback stopped.`);
-                        }
-                    } else if (args[1] === 'uninstall' && args[2]) {
-                        const pkgName = args[2];
-                        window.pkBrewed = window.pkBrewed || {};
-                        if (window.pkBrewed[pkgName]) {
-                            // The user requested NOT to mark it as uninstalled
-                            // delete window.pkBrewed[pkgName];
-                            if (window.currentAudio) {
-                                window.currentAudio.pause();
-                                window.currentAudio.currentTime = 0;
-                            }
-                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> playback stopped.`);
+                    } else if (args[1] === 'tbuilds') {
+                        if (window.pkTbuildsInstalled) {
+                            appendOutput(`Opening <span class="text-blue-400">tbuilds</span>... Welcome to tbuilds!`);
                         } else {
-                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> is not installed.`);
-                        }
-                    } else if (args[1] === 'forget' && args[2]) {
-                        const pkgName = args[2];
-                        window.pkFiles = window.pkFiles || {};
-                        window.pkBrewed = window.pkBrewed || {};
-                        delete window.pkBrewed[pkgName];
-                        if (window.pkFiles[pkgName]) {
-                            delete window.pkFiles[pkgName];
-                            if (window.currentAudio) {
-                                window.currentAudio.pause();
-                                window.currentAudio.currentTime = 0;
-                            }
-                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> forgotten.`);
-                        } else {
-                            appendOutput(`Package <span class="text-blue-400">${escapeHtml(pkgName)}</span> not found.`);
-                        }
-                    } else if (args[1]) {
-                        const pkgName = args[1];
-                        window.pkFiles = window.pkFiles || {};
-                        window.pkBrewed = window.pkBrewed || {};
-                        if (window.pkBrewed[pkgName] && window.pkFiles[pkgName]) {
-                            appendOutput(`Running <span class="text-blue-400">${escapeHtml(pkgName)}</span>...`);
-                            if (window.currentAudio) window.currentAudio.pause();
-                            window.currentAudio = new Audio(URL.createObjectURL(window.pkFiles[pkgName]));
-                            window.currentAudio.play();
-                        } else {
-                            appendOutput(`bash: pk: ${escapeHtml(pkgName)}: package not found or not installed.`);
+                            appendOutput(`bash: pk: tbuilds: package not found or not installed.`);
                         }
                     } else {
                         appendOutput(`Usage:
-  <span class="text-blue-400">pk install select &lt;name&gt;</span> - Select source file
-  <span class="text-blue-400">pk brew install &lt;name&gt;</span>   - Install package
-  <span class="text-blue-400">pk &lt;name&gt;</span>                - Run package (play audio)
-  <span class="text-blue-400">pk uninstall &lt;name&gt;</span>      - Uninstall package and stop playback
-  <span class="text-blue-400">pk forget &lt;name&gt;</span>         - Forget package source completely
-  <span class="text-blue-400">pk stop</span>                  - Stop playback`);
+  <span class="text-blue-400">pk install tbuilds</span>       - Autoselect tbuilds
+  <span class="text-blue-400">pk brew install tbuilds</span>  - Install tbuilds
+  <span class="text-blue-400">pk tbuilds</span>               - Open tbuilds`);
                     }
                     break;
                 default:
@@ -604,39 +619,32 @@
             htopContainer.style.display = 'none';
             terminalContainer.style.display = 'flex';
             inputHidden.focus();
-
-            // We don't append a prompt here, because closing htop usually clears screen or returns to prompt
-            // Let's just return to where we were.
             scrollToBottom();
         }
 
         function updateHtop() {
-            // Randomize CPU bars slightly
             for (let i = 1; i <= 4; i++) {
-                const u = Math.floor(Math.random() * 60) + 5; // User 5-65%
-                const s = Math.floor(Math.random() * 20) + 1; // Sys 1-21%
+                const u = Math.floor(Math.random() * 60) + 5;
+                const s = Math.floor(Math.random() * 20) + 1;
 
                 document.getElementById(`cpu${i}-user`).style.width = u + '%';
                 document.getElementById(`cpu${i}-sys`).style.width = s + '%';
                 document.getElementById(`cpu${i}-text`).textContent = (u + s).toFixed(1) + '%';
             }
 
-            // Render processes, sorting by CPU%
             const processList = document.getElementById('htop-process-list');
             processList.innerHTML = '';
 
-            // Randomize CPU% for dynamic feel
             mockProcesses.forEach(p => {
                 if (p.cmd === 'htop') p.cpu = (Math.random() * 3 + 1).toFixed(1);
                 else if (p.cmd.includes('node')) p.cpu = (Math.random() * 15 + 10).toFixed(1);
                 else p.cpu = (Math.random() * 2).toFixed(1);
             });
 
-            // Sort
             const sorted = [...mockProcesses].sort((a, b) => parseFloat(b.cpu) - parseFloat(a.cpu));
 
             sorted.forEach((p, idx) => {
-                const highlightClass = idx === 0 ? 'highlight' : ''; // highlight top process
+                const highlightClass = idx === 0 ? 'highlight' : ''; 
                 const tr = document.createElement('tr');
                 tr.className = highlightClass;
                 tr.innerHTML = `
