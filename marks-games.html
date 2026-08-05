@@ -332,6 +332,7 @@
     <div id="apiKeySection" style="margin-top:10px; text-align:center;">
       <input type="password" id="apiKeyInput" placeholder="Enter API Key" style="padding:5px;" />
       <button onclick="verifyApiKey()" style="margin-left:5px; padding:5px;">Download Site</button>
+      <button onclick="downloadFile()" style="margin-left:5px; padding:5px;">Download Zipper For VS Code</button>
       <button onclick="window.location.href='Download/download.html'" style="margin-left:5px; padding:5px;">Download
         App</button>
       <span id="apiKeyMessage" style="color:red; margin-left:10px;"></span>
@@ -591,14 +592,20 @@
       const entered = document.getElementById('apiKeyInput').value;
       if (entered === API_KEY) {
         const link = document.createElement('a');
-        link.href = 'My Website.zip';
-        link.download = 'My Website.zip';
+        link.href = 'Unzip File in VSCode Repository and in agent selct setup(0000).zip';
+        link.download = 'Unzip File in VSCode Repository and in agent selct setup(0000).zip';
         link.click();
         document.getElementById('apiKeyMessage').textContent = '';
       } else {
         document.getElementById('apiKeyMessage').textContent = 'Invalid API Key';
       }
-      <iframe frameborder="0" src="https://itch.io/embed/4838960?border_width=2&amp;bg_color=f1f1f2&amp;fg_color=e530aa&amp;link_color=e5e7ea&amp;border_color=d4c9c9" width="554" height="169"><a href="https://cheetah-family-games.itch.io/music-against-the-great-gate">Against The Great Gate by Cheetah Family Games</a></iframe>
+    }
+
+    function downloadFile() {
+      const link = document.createElement('a');
+      link.href = 'Unzip File in VSCode Repository and in agent selct setup(0000).zip';
+      link.download = 'Unzip File in VSCode Repository and in agent selct setup(0000).zip';
+      link.click();
     }
 
   </script>
