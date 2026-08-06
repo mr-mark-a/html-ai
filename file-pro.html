@@ -183,6 +183,23 @@
             font-size: 14px;
         }
 
+        .compression-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .archive-preview {
+            margin-top: 10px;
+            color: #495057;
+            font-size: 0.95em;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
         .editor-area { position: relative; }
         #textEditor {
             width: 100%;
@@ -399,23 +416,32 @@
             <div class="zipbig-panel">
                 <div class="zipbig-title">📦 ZipBig Super Compression Manager</div>
                 <div class="form-group">
-                    <label>Select Compression Format:</label>
-                    <select id="zipbigFormatSelect">
-                        <option value="zip">Standard ZIP (.zip)</option>
-                        <option value="89Cat">89Cat Ultra High-Density Container (.89cat)</option>
+                    <label>Compression Preset:</label>
+                    <select id="compressionPresetSelect" onchange="updateCompressionPresetInfo()">
+                        <option value="75Cat">75Cat</option>
+                        <option value="89Cat">89Cat</option>
+                        <option value="12Cat">12Cat</option>
+                        <option value="27Cat">27Cat</option>
+                        <option value="33Cat">33Cat</option>
+                        <option value="41Cat">41Cat</option>
+                        <option value="56Cat">56Cat</option>
+                        <option value="63Cat">63Cat</option>
+                        <option value="74Cat">74Cat</option>
                     </select>
+                    <div class="archive-preview" id="compressionPresetInfo">Using 75Cat • Hard compression</div>
+                </div>
+                <div class="form-group">
+                    <label>Browse Existing Compression:</label>
+                    <div class="compression-actions">
+                        <input type="file" id="archiveBrowseInput" accept=".zip,.89cat,.cat,.7z,.rar" style="display:none">
+                        <button class="btn btn-secondary" onclick="document.getElementById('archiveBrowseInput').click()">📂 Browse Compressions</button>
+                        <span id="archiveBrowseStatus" class="toolbar-label">No archive selected</span>
+                    </div>
+                    <div class="archive-preview" id="archivePreview">Choose a file to inspect its metadata and filename.</div>
                 </div>
                 <div class="form-group">
                     <label>Archive Name:</label>
                     <input type="text" id="zipbigArchiveName" value="my_archive" placeholder="Enter archive filename">
-                </div>
-                <div class="form-group">
-                    <label>Compression Level:</label>
-                    <select id="zipbigLevelSelect">
-                        <option value="fast">Fast (Lower Compression)</option>
-                        <option value="normal" selected>Normal</option>
-                        <option value="ultra">Ultra (Maximum Compression)</option>
-                    </select>
                 </div>
                 <div style="margin-top: 25px; text-align: center;">
                     <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="executeZipBig()">⚡ Compress & Download Archive</button>
@@ -488,6 +514,31 @@
     </div>
 
     <script>
+        function getStoredTokens() {
+            const value = parseFloat(localStorage.getItem('tokens') || '0');
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function setStoredTokens(amount) {
+            localStorage.setItem('tokens', Number(amount).toFixed(2));
+        }
+
+        function addTokens(amount) {
+            const nextTotal = getStoredTokens() + amount;
+            setStoredTokens(nextTotal);
+            return nextTotal;
+        }
+
+        function spendTokens(amount) {
+            const current = getStoredTokens();
+            if (current < amount) {
+                alert(`Not enough tokens. You need ${amount} token${amount === 1 ? '' : 's'} to continue.`);
+                return false;
+            }
+            setStoredTokens(current - amount);
+            return true;
+        }
+
         function switchMode(mode) {
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('uploadSection').style.display = 'none';
@@ -673,26 +724,191 @@
             renderDisks();
         }
 
-        function executeZipBig() {
-            const format = document.getElementById('zipbigFormatSelect').value;
-            const archiveName = document.getElementById('zipbigArchiveName').value || 'archive';
-            const level = document.getElementById('zipbigLevelSelect').value;
-            
-            const extension = format === 'zip' ? 'zip' : '89cat';
-            const blob = new Blob([`ZipBig Container Data - Format: ${format.toUpperCase()}, Level: ${level}`], { type: 'application/octet-stream' });
+        function getSelectedCompressionFormat() {
+            const select = document.getElementById('compressionPresetSelect');
+            return select ? select.value : '75Cat';
+        }
+
+        function getCompressionLevelForFormat(format) {
+            if (format === 'zip') return 'normal';
+            const digits = String(format).match(/\d+/);
+            const value = digits ? parseInt(digits[0], 10) : 0;
+            if (value % 5 === 0) return 'hardest';
+            if (value % 4 === 0) return 'ultra';
+            if (value % 3 === 0) return 'hard';
+            if (value % 2 === 0) return 'normal';
+            return 'fast';
+        }
+
+        function getCompressionLevelLabel(level) {
+            return level.charAt(0).toUpperCase() + level.slice(1);
+        }
+
+        function updateCompressionPresetInfo() {
+            const presetInfo = document.getElementById('compressionPresetInfo');
+            if (!presetInfo) return;
+            const format = getSelectedCompressionFormat();
+            const level = getCompressionLevelForFormat(format);
+            presetInfo.textContent = `Using ${format} • ${getCompressionLevelLabel(level)} compression`;
+        }
+
+        function buildCustomCatArchive(rawText, format, level) {
+            const payload = rawText || 'No data supplied';
+            const complexityMap = { fast: 4, normal: 8, hard: 14, ultra: 22, hardest: 36 };
+            const complexity = complexityMap[level] || 8;
+            const seed = `${format}:${level}:${payload.length}`;
+            const tokens = [];
+            for (let i = 0; i < complexity; i += 1) {
+                const chunk = `${seed}|${i.toString(36)}|${payload.slice(i % Math.max(1, payload.length), (i % 7) + 24 + i)}|${'█'.repeat(6 + (i % 9))}`;
+                tokens.push(chunk);
+            }
+            const archiveBody = `#${format}\n#level=${level}\n#complexity=${complexity}\n${tokens.join('\n')}\n#end`;
+            return new Blob([archiveBody], { type: 'application/octet-stream' });
+        }
+
+        function addZipBytes(bytes, value, length) {
+            for (let i = 0; i < length; i += 1) {
+                bytes.push((value >> (i * 8)) & 0xff);
+            }
+        }
+
+        function crc32(buffer) {
+            let crc = 0xffffffff;
+            for (let i = 0; i < buffer.length; i += 1) {
+                crc ^= buffer[i];
+                for (let bit = 0; bit < 8; bit += 1) {
+                    crc = (crc & 1) ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
+                }
+            }
+            return (crc ^ 0xffffffff) >>> 0;
+        }
+
+        async function createRealZipArchive(archiveName, text, level) {
+            if (typeof CompressionStream === 'undefined') {
+                throw new Error('CompressionStream is not supported in this browser.');
+            }
+            const encoder = new TextEncoder();
+            const contentBytes = encoder.encode(text);
+            const stream = new Blob([contentBytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+            const compressedBuffer = await new Response(stream).arrayBuffer();
+            const compressedBytes = new Uint8Array(compressedBuffer);
+            const fileNameBytes = encoder.encode(`${archiveName}.txt`);
+            const crc = crc32(contentBytes);
+            const bytes = [];
+            const fileNameLength = fileNameBytes.length;
+            const localHeaderOffset = 0;
+
+            bytes.push(0x50, 0x4b, 0x03, 0x04);
+            addZipBytes(bytes, 20, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 8, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, crc, 4);
+            addZipBytes(bytes, compressedBytes.length, 4);
+            addZipBytes(bytes, contentBytes.length, 4);
+            addZipBytes(bytes, fileNameLength, 2);
+            addZipBytes(bytes, 0, 2);
+            fileNameBytes.forEach(byte => bytes.push(byte));
+            compressedBytes.forEach(byte => bytes.push(byte));
+
+            const centralDirectoryOffset = bytes.length;
+            bytes.push(0x50, 0x4b, 0x01, 0x02);
+            addZipBytes(bytes, 20, 2);
+            addZipBytes(bytes, 20, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 8, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, crc, 4);
+            addZipBytes(bytes, compressedBytes.length, 4);
+            addZipBytes(bytes, contentBytes.length, 4);
+            addZipBytes(bytes, fileNameLength, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, localHeaderOffset, 4);
+            fileNameBytes.forEach(byte => bytes.push(byte));
+
+            const endOfCentralDirectoryOffset = bytes.length;
+            bytes.push(0x50, 0x4b, 0x05, 0x06);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 1, 2);
+            addZipBytes(bytes, 1, 2);
+            addZipBytes(bytes, 0, 4);
+            addZipBytes(bytes, 0, 4);
+            addZipBytes(bytes, fileNameLength, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, 0, 2);
+            addZipBytes(bytes, centralDirectoryOffset, 4);
+            addZipBytes(bytes, endOfCentralDirectoryOffset, 4);
+
+            return new Blob([new Uint8Array(bytes)], { type: 'application/zip' });
+        }
+
+        function downloadBlob(blob, fileName) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${archiveName}.${extension}`;
+            a.download = fileName;
             a.click();
-            
-            alert(`Successfully compressed and packed into ${archiveName}.${extension} using ZipBig!`);
+            URL.revokeObjectURL(url);
+        }
+
+        async function executeZipBig() {
+            const archiveName = document.getElementById('zipbigArchiveName').value || 'archive';
+            const rawText = document.getElementById('textEditor').value || 'Archive payload generated from File Pro';
+            let format = getSelectedCompressionFormat();
+            let level = getCompressionLevelForFormat(format);
+
+            if (confirm('Use ZIP archive? This costs 10 tokens.')) {
+                format = 'zip';
+                level = getCompressionLevelForFormat(format);
+            }
+
+            if (format === 'zip') {
+                if (!spendTokens(10)) {
+                    return;
+                }
+                try {
+                    const blob = await createRealZipArchive(archiveName, rawText, level);
+                    downloadBlob(blob, `${archiveName}.zip`);
+                    alert(`Created a real ZIP archive named ${archiveName}.zip.`);
+                } catch (error) {
+                    alert(`ZIP creation failed: ${error.message}`);
+                }
+                return;
+            }
+
+            if (!spendTokens(0.5)) {
+                return;
+            }
+
+            const extension = 'cat';
+            const blob = buildCustomCatArchive(rawText, format, level);
+            downloadBlob(blob, `${archiveName}.${extension}`);
+            alert(`Created ${format} archive named ${archiveName}.${extension} with ${level} compression.`);
+        }
+
+        function handleArchiveBrowse(event) {
+            const file = event.target.files[0];
+            const status = document.getElementById('archiveBrowseStatus');
+            const preview = document.getElementById('archivePreview');
+            if (!file) return;
+            status.textContent = `Loaded ${file.name}`;
+            preview.textContent = `Size: ${Math.round(file.size / 1024)} KB • Type: ${file.type || 'archive'}`;
         }
 
         // Basic File Input Handler
         const uploadZone = document.getElementById('uploadZone');
         const fileInput = document.getElementById('fileInput');
+        const archiveBrowseInput = document.getElementById('archiveBrowseInput');
         uploadZone.addEventListener('click', () => fileInput.click());
+        archiveBrowseInput.addEventListener('change', handleArchiveBrowse);
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
@@ -706,6 +922,8 @@
             }
         });
 
+        updateCompressionPresetInfo();
+
         function undo() { document.execCommand('undo'); }
         function redo() { document.execCommand('redo'); }
         function clearText() { document.getElementById('textEditor').value = ''; }
@@ -715,6 +933,9 @@
             document.getElementById('textEditor').value = '';
         }
         function downloadFile() {
+            if (!spendTokens(0.5)) {
+                return;
+            }
             const text = document.getElementById('textEditor').value;
             const blob = new Blob([text], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);

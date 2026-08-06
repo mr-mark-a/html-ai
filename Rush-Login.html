@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #d2b48c;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -61,6 +61,22 @@
     </div>
 
     <script>
+        function getStoredTokens() {
+            const value = parseFloat(localStorage.getItem('tokens') || '0');
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function setStoredTokens(amount) {
+            localStorage.setItem('tokens', Number(amount).toFixed(2));
+        }
+
+        function awardRushLoginBonus() {
+            if (localStorage.getItem('rushLoginBonusAwarded') !== '1') {
+                setStoredTokens(getStoredTokens() + 50);
+                localStorage.setItem('rushLoginBonusAwarded', '1');
+            }
+        }
+
         function verifyKey() {
             const enteredKey = document.getElementById('rushKeyInput').value;
             const savedKey = localStorage.getItem('rushKey');
@@ -72,10 +88,12 @@
             }
 
             if (enteredKey === savedKey) {
+                awardRushLoginBonus();
                 // Redirect to marks-games.html in the same folder
                 window.location.href = 'marks-games.html';
             } else {
-                errorMsg.textContent = "Incorrect Rush Key. Try again.";
+                localStorage.removeItem('rushKey');
+                window.location.href = 'https://elli-ai.my.canva.site/millions-of-tools-all-in-one-place';
             }
         }
     </script>

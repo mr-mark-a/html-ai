@@ -61,6 +61,22 @@
     </div>
 
     <script>
+        function getStoredTokens() {
+            const value = parseFloat(localStorage.getItem('tokens') || '0');
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function setStoredTokens(amount) {
+            localStorage.setItem('tokens', Number(amount).toFixed(2));
+        }
+
+        function awardRushLoginBonus() {
+            if (localStorage.getItem('rushLoginBonusAwarded') !== '1') {
+                setStoredTokens(getStoredTokens() + 50);
+                localStorage.setItem('rushLoginBonusAwarded', '1');
+            }
+        }
+
         function saveKey() {
             const newKey = document.getElementById('newRushKey').value;
             const errorMsg = document.getElementById('errorMsg');
@@ -70,9 +86,11 @@
                 return;
             }
 
-            // Save the PIN to browser local storage
+            // Replace any previously stored Rush key before saving the new one
+            localStorage.removeItem('rushKey');
             localStorage.setItem('rushKey', newKey);
 
+            awardRushLoginBonus();
             // Open marks-games.html afterwards
             window.location.href = 'marks-games.html';
         }
