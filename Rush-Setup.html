@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Rush Key</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Setup Rush Key</h2>
+        <input type="password" id="newRushKey" placeholder="Create a PIN code">
+        <button onclick="saveKey()">Save & Open</button>
+        <div id="errorMsg" class="error"></div>
+    </div>
+
+    <script>
+        function saveKey() {
+            const newKey = document.getElementById('newRushKey').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (newKey.trim() === "") {
+                errorMsg.textContent = "PIN code cannot be empty!";
+                return;
+            }
+
+            // Save the PIN to browser local storage
+            localStorage.setItem('rushKey', newKey);
+
+            // Open marks-games.html afterwards
+            window.location.href = 'marks-games.html';
+        }
+    </script>
+
+</body>
+</html>
