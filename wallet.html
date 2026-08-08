@@ -313,6 +313,7 @@ function renderUI(){
       <h3>${c.name || 'Unnamed Card'}</h3>
       <div class="details">
         ${c.info ? `<p>${c.info}</p>` : ''}
+        ${c.type === 'navigo' ? `<p><strong>Navigo #:</strong> ${c.navigoNumber || ''}</p>` : ''}
         ${c.code ? `<p>Code: ${c.code}</p>` : ''}
         ${c.cvs ? `<p>CVV: ${c.cvs}</p>` : ''}
         ${c.exp ? `<p>Expiry: ${c.exp}</p>` : ''}
@@ -320,6 +321,15 @@ function renderUI(){
         <button class="btn deleteBtn">Delete Card</button>
       </div>
     `;
+    // If card has an attached image, use it as the card background (instead of chip)
+    if (c.image) {
+      d.style.background = `url("${c.image}") center/cover no-repeat`;
+      d.style.backgroundSize = 'cover';
+      d.style.backgroundPosition = 'center';
+      d.style.color = '#fff';
+      // subtle dark overlay to keep text readable
+      d.style.boxShadow = 'inset 0 0 0 1000px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.18)';
+    }
     d.addEventListener('click', e => {
       if (e.target.classList.contains('payBtn') || e.target.classList.contains('deleteBtn')) return;
       expandedId = expandedId === c.id ? null : c.id;
@@ -389,32 +399,57 @@ addCardBtn.onclick = function() {
   modal.style.zIndex = '9999';
   modal.innerHTML = `<div style="background:#222;padding:30px;border-radius:10px;min-width:320px;text-align:center;">
     <h3>Add Card</h3>
-    <input id="modalNameInput" type="text" placeholder="Card name" style="width:90%;margin:8px 0;padding:8px" required><br>
-    <input id="modalNumberInput" type="text" placeholder="Card number" style="width:90%;margin:8px 0;padding:8px" maxlength="19"><br>
-    <input id="modalExpInput" type="text" placeholder="Expiry date (MM/YY)" style="width:90%;margin:8px 0;padding:8px" maxlength="5"><br>
-    <input id="modalCvsInput" type="text" placeholder="CVV" style="width:90%;margin:8px 0;padding:8px" maxlength="4"><br>
-    <input id="modalHolderInput" type="text" placeholder="Name on card" style="width:90%;margin:8px 0;padding:8px"><br>
+    <label style="display:block;text-align:left;margin:6px 0;color:#ccc">Type</label>
+    <select id="modalTypeSelect" style="width:90%;margin:8px 0;padding:8px">
+      <option value="bank">Bank Card</option>
+      <option value="navigo">Navigo Metro Paris Card</option>
+    </select>
+    <input id="modalNameInput" type="text" placeholder="How you will call it (nickname)" style="width:90%;margin:8px 0;padding:8px" required><br>
+    <div id="bankFields">
+      <input id="modalNumberInput" type="text" placeholder="Card number" style="width:90%;margin:8px 0;padding:8px" maxlength="19"><br>
+      <input id="modalExpInput" type="text" placeholder="Expiry date (MM/YY)" style="width:90%;margin:8px 0;padding:8px" maxlength="5"><br>
+      <input id="modalCvsInput" type="text" placeholder="CVV" style="width:90%;margin:8px 0;padding:8px" maxlength="4"><br>
+      <input id="modalHolderInput" type="text" placeholder="Name on card" style="width:90%;margin:8px 0;padding:8px"><br>
+    </div>
+    <div id="navigoFields" style="display:none;">
+      <input id="modalNavigoNumber" type="text" placeholder="Navigo number" style="width:90%;margin:8px 0;padding:8px" maxlength="32">
+    </div>
     <button id="modalAddBtn" class="btn">Add Card</button>
     <button id="modalCancelBtn" class="btn">Cancel</button>
   </div>`;
   document.body.appendChild(modal);
-  document.getElementById('modalAddBtn').onclick = function() {
+
+  // Toggle fields based on type
+  const modalType = modal.querySelector('#modalTypeSelect');
+  const navigoFields = modal.querySelector('#navigoFields');
+  const bankFields = modal.querySelector('#bankFields');
+  modalType.onchange = function() {
+    if (this.value === 'navigo') { navigoFields.style.display = 'block'; bankFields.style.display = 'none'; }
+    else { navigoFields.style.display = 'none'; bankFields.style.display = 'block'; }
+  };
+
+  document.getElementById('modalAddBtn').onclick = async function() {
+    const type = document.getElementById('modalTypeSelect').value;
     const name = document.getElementById('modalNameInput').value.trim();
+    if (!name) { alert('Please provide a name for the card.'); return; }
+    if (type === 'navigo') {
+      const number = document.getElementById('modalNavigoNumber').value.trim();
+      if (!number) { alert('Please fill in Navigo number.'); return; }
+      const imageData = 'images on webpage/MetroParis.jpg';
+      const c = { id: Date.now(), type: 'navigo', name, navigoNumber: number, info: name, image: imageData };
+      cards.unshift(c); saveCards(); renderUI(); document.body.removeChild(modal);
+      return;
+    }
+    // bank card
     const code = document.getElementById('modalNumberInput').value.trim();
     const exp = document.getElementById('modalExpInput').value.trim();
     const cvs = document.getElementById('modalCvsInput').value.trim();
     const holder = document.getElementById('modalHolderInput').value.trim();
-    if (!name || !code || !exp || !cvs || !holder) {
-      alert('Please fill in all fields.'); return;
-    }
-    const c = { id: Date.now(), name, code, exp, cvs, info: holder };
-    cards.unshift(c); saveCards();
-    renderUI();
-    document.body.removeChild(modal);
+    if (!code || !exp || !cvs || !holder) { alert('Please fill in all fields.'); return; }
+    const c = { id: Date.now(), type: 'bank', name, code, exp, cvs, info: holder };
+    cards.unshift(c); saveCards(); renderUI(); document.body.removeChild(modal);
   };
-  document.getElementById('modalCancelBtn').onclick = function() {
-    document.body.removeChild(modal);
-  };
+  document.getElementById('modalCancelBtn').onclick = function() { document.body.removeChild(modal); };
 };
 
 searchBar.addEventListener('input', renderUI);
