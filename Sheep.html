@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barnaby's Great Escape: Sheep Simulator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0f0d;
+            --primary: #4ade80; /* emerald-400 */
+            --primary-dark: #166534; /* emerald-800 */
+            --accent: #f59e0b; /* amber-500 */
+            --accent-red: #ef4444; /* red-500 */
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ambient background glow */
+        .bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(74, 222, 128, 0.08) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-glow-1 { top: -10%; left: -10%; }
+        .bg-glow-2 { bottom: -10%; right: -10%; }
+
+        /* Game Layout Container */
+        .game-container {
+            position: relative;
+            z-index: 1;
+            width: 96vw;
+            height: 94vh;
+            max-width: 1400px;
+            max-height: 850px;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            padding: 10px;
+        }
+
+        /* Left Side: Canvas & Overlays */
+        .canvas-area {
+            position: relative;
+            background-color: #1b2e1e; /* Deep grass color */
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #1e3a22; /* Lush green */
+            cursor: crosshair;
+        }
+
+        /* Glassmorphic Panel Design */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Right Side: Sidebar Controls and Stats */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Header / Logo */
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 5px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 24px;
+        }
+
+        .logo-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #a7f3d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Status Bars */
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .status-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .status-label span.val {
+            color: var(--text-light);
+        }
+
+        .bar-outer {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .bar-inner {
+            height: 100%;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bar-hunger { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .bar-fluff { background: linear-gradient(90deg, #e2e8f0, #ffffff); }
+        .bar-mischief { background: linear-gradient(90deg, #818cf8, #c084fc); }
+
+        /* Quest Objectives */
+        .quest-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .quest-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .quest-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .quest-item.completed {
+            color: var(--primary);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .quest-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            color: transparent;
+        }
+
+        .quest-item.completed .quest-checkbox {
+            border-color: var(--primary);
+            background-color: rgba(74, 222, 128, 0.2);
+            color: var(--primary);
+        }
+
+        /* Controls Summary Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .control-key {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .control-key span {
+            display: block;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: monospace;
+            margin-bottom: 2px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 13px;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* Audio & System Configs */
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        /* Switch UI */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .3s;
+            border-radius: 34px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Custom buttons styling */
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #052e16;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 222, 128, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Game Over / HUD Overlays */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 15, 13, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            transition: opacity 0.5s ease;
+            opacity: 1;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .overlay-title {
+            font-size: 38px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #ffffff, #86efac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .overlay-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        /* Stats display in game over */
+        .stat-badge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .stat-badge {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .stat-badge-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-badge-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Action feed notification overlay */
+        .hud-notifications {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            z-index: 50;
+            max-width: 320px;
+        }
+
+        .notification {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border-left: 4px solid var(--primary);
+            border-top: 1px solid var(--glass-border);
+            border-right: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .notification.alert {
+            border-left-color: var(--accent-red);
+        }
+
+        .notification.mischief {
+            border-left-color: var(--accent);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Action Prompts Overlay (Floating key hints in Canvas) */
+        .action-prompt {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .action-prompt-key {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-weight: 800;
+            font-family: monospace;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Screen shake animation class */
+        .shake {
+            animation: shakeAnim 0.3s ease;
+        }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 90% { transform: translate(-2px, 2px); }
+            20%, 80% { transform: translate(2px, -2px); }
+            30%, 70% { transform: translate(-3px, -1px); }
+            40%, 60% { transform: translate(3px, 1px); }
+            50% { transform: translate(-1px, 3px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="game-container">
+        
+        <!-- CANVAS AREA -->
+        <div class="canvas-area" id="canvasArea">
+            <canvas id="gameCanvas" width="950" height="750"></canvas>
+            
+            <!-- Float-in HUD Notifications -->
+            <div class="hud-notifications" id="hudNotifications"></div>
+
+            <!-- Contextual action overlay hints -->
+            <div class="action-prompt">
+                <span>Move: <span class="action-prompt-key">WASD</span> or <span class="action-prompt-key">Arrows</span></span>
+                <span style="color: rgba(255,255,255,0.3)">|</span>
+                <span>Baa (Distract): <span class="action-prompt-key">Space</span></span>
+                <span style="color: rgba(255,255,255,0.3)">|</span>
+                <span>Headbutt (Dash): <span class="action-prompt-key">Shift</span></span>
+                <span style="color: rgba(255,255,255,0.3)">|</span>
+                <span>Roll (Mud/Grass): <span class="action-prompt-key">R</span></span>
+            </div>
+
+            <!-- Start Game / Onboarding Overlay -->
+            <div class="overlay" id="startOverlay">
+                <div class="logo-icon" style="font-size: 36px; width: 68px; height: 68px; margin-bottom: 16px;">🐑</div>
+                <div class="overlay-title">Barnaby's Great Escape</div>
+                <div class="overlay-desc">
+                    You play as <strong>Barnaby</strong>, a mischievous sheep trapped in an animal pen. 
+                    Eat lush grass to grow fluffy, roll in mud to trick the farmer, and build momentum to headbutt your way to freedom! 
+                    Watch out for <strong>Farmer Clive</strong>—he wants to shear your beautiful wool and sweep away your chaos.
+                </div>
+                <button class="btn" style="padding: 14px 40px; font-size: 16px;" onclick="startGame()">Start Simulator</button>
+            </div>
+
+            <!-- Game Over / Capture Screen -->
+            <div class="overlay hidden" id="gameOverOverlay">
+                <div class="logo-icon" style="font-size: 36px; width: 68px; height: 68px; margin-bottom: 16px; background: linear-gradient(135deg, #ef4444, #7f1d1d);">✂️</div>
+                <div class="overlay-title" id="gameOverTitle" style="background: linear-gradient(to right, #ffffff, #fca5a5);">Caught & Sheared!</div>
+                <div class="overlay-desc" id="gameOverDesc">
+                    Farmer Clive caught you with 100% fluffiness and gave you a nice trim. You're clean and bald now, but your escape dreams live on!
+                </div>
+                
+                <div class="stat-badge-grid">
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Mischief Score</div>
+                        <div class="stat-badge-value" id="statMischief">0</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Grass Eaten</div>
+                        <div class="stat-badge-value" id="statGrass">0</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Time Surviving</div>
+                        <div class="stat-badge-value" id="statTime">0s</div>
+                    </div>
+                </div>
+                
+                <button class="btn" style="padding: 14px 40px; font-size: 16px;" onclick="restartGame()">Try Again</button>
+            </div>
+
+            <!-- Victory Screen -->
+            <div class="overlay hidden" id="victoryOverlay">
+                <div class="logo-icon" style="font-size: 36px; width: 68px; height: 68px; margin-bottom: 16px; background: linear-gradient(135deg, #4ade80, #064e3b);">🌻</div>
+                <div class="overlay-title" style="background: linear-gradient(to right, #ffffff, #86efac);">Freedom Reached!</div>
+                <div class="overlay-desc">
+                    Barnaby smashed through the gate and escaped into the endless green hills! Farmer Clive can only look on in astonishment as his fluffy companion drifts away.
+                </div>
+
+                <div class="stat-badge-grid">
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Escape Time</div>
+                        <div class="stat-badge-value" id="vicTime">0s</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Clive Stunned</div>
+                        <div class="stat-badge-value" id="vicStun">0</div>
+                    </div>
+                    <div class="stat-badge">
+                        <div class="stat-badge-label">Prize Flowers Eaten</div>
+                        <div class="stat-badge-value" id="vicFlowers">0</div>
+                    </div>
+                </div>
+
+                <button class="btn" style="padding: 14px 40px; font-size: 16px; background: linear-gradient(135deg, #a7f3d0 0%, #059669 100%);" onclick="restartGame()">Play Sandbox Mode</button>
+            </div>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            
+            <!-- Logo area -->
+            <div class="logo-area glass-panel">
+                <div class="logo-icon">🐑</div>
+                <div class="logo-text">
+                    <h1>Barnaby</h1>
+                    <p>Sheep Simulator</p>
+                </div>
+            </div>
+
+            <!-- Status HUD -->
+            <div class="glass-panel status-container">
+                <h3 class="quest-title" style="color: var(--text-light)">Barnaby's Stats</h3>
+                
+                <!-- Hunger -->
+                <div class="status-item">
+                    <div class="status-label">
+                        <span>Energy / Hunger</span>
+                        <span class="val" id="hudHungerVal">100%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-hunger" id="hudHungerBar" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- Fluffiness -->
+                <div class="status-item">
+                    <div class="status-label">
+                        <span>Fluffiness Size</span>
+                        <span class="val" id="hudFluffVal">10%</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-fluff" id="hudFluffBar" style="width: 10%"></div>
+                    </div>
+                </div>
+
+                <!-- Mischief -->
+                <div class="status-item">
+                    <div class="status-label">
+                        <span>Mischief Meter</span>
+                        <span class="val" id="hudMischiefVal">0</span>
+                    </div>
+                    <div class="bar-outer">
+                        <div class="bar-inner bar-mischief" id="hudMischiefBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Status tag -->
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; font-size: 12px; font-weight: 600;">
+                    <span style="color: var(--text-muted);">Status:</span>
+                    <span id="hudStatusTag" style="padding: 2px 8px; border-radius: 4px; background: rgba(74, 222, 128, 0.15); color: var(--primary);">Clean</span>
+                </div>
+            </div>
+
+            <!-- Game Objectives -->
+            <div class="glass-panel">
+                <h3 class="quest-title">Pen Mischief Quests</h3>
+                <div class="quest-list">
+                    <div class="quest-item" id="qFluffy">
+                        <div class="quest-checkbox">✓</div>
+                        <span>Grow Fluffy (Eat Grass to reach 100% size)</span>
+                    </div>
+                    <div class="quest-item" id="qFlowers">
+                        <div class="quest-checkbox">✓</div>
+                        <span>Eat Clive's prize flowers (Garden area)</span>
+                    </div>
+                    <div class="quest-item" id="qDirty">
+                        <div class="quest-checkbox">✓</div>
+                        <span>Get muddy! (Roll in a Mud Puddle)</span>
+                    </div>
+                    <div class="quest-item" id="qStun">
+                        <div class="quest-checkbox">✓</div>
+                        <span>Headbutt Clive (Sprint with Shift to stun)</span>
+                    </div>
+                    <div class="quest-item" id="qEscape">
+                        <div class="quest-checkbox">✓</div>
+                        <span>Escape the Pen! (Slam the weak fence)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings & Configuration -->
+            <div class="glass-panel config-panel">
+                <h3 class="quest-title" style="color: var(--text-light)">Sandbox Settings</h3>
+                
+                <!-- Audio Enable -->
+                <div class="config-row">
+                    <span>Synthesizer Audio</span>
+                    <label class="switch">
+                        <input type="checkbox" id="audioToggle" checked onchange="toggleAudio(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Simulation Speed -->
+                <div class="config-row">
+                    <span>Time Cycle (Day/Night)</span>
+                    <select id="timeSpeedSelect" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px; color: var(--text-light); font-family: inherit; font-size: 12px; outline: none; cursor: pointer;">
+                        <option value="normal" selected>Normal Cycle</option>
+                        <option value="fast">Rapid Cycle</option>
+                        <option value="alwaysDay">Always Day</option>
+                        <option value="alwaysNight">Always Night</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Keyboard Layout Panel -->
+            <div class="glass-panel">
+                <h3 class="quest-title" style="color: var(--text-light); margin-bottom: 8px;">Sheep Actions</h3>
+                <div class="controls-grid">
+                    <div class="control-key">
+                        <span>Space</span>
+                        Baa / Distract
+                    </div>
+                    <div class="control-key">
+                        <span>Shift</span>
+                        Ram Dash
+                    </div>
+                    <div class="control-key">
+                        <span>R Key</span>
+                        Roll around
+                    </div>
+                    <div class="control-key">
+                        <span>WASD</span>
+                        Walk & Run
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- GAME ENGINE CODE -->
+    <script>
+        // --- SOUND EFFECTS SYNTHESIZER ENGINE (Web Audio API) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    this.ctx = new AudioContextClass();
+                }
+            }
+
+            playBaa(pitchMultiplier = 1.0) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                
+                const now = this.ctx.currentTime;
+                
+                // Carrier Oscillator (sawtooth + square for complex timbres of sheep voice)
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                const gain2 = this.ctx.createGain();
+                
+                // Modulator LFO for the distinct 'sheep wavering bleat' (vibrato)
+                const vibrato = this.ctx.createOscillator();
+                const vibratoGain = this.ctx.createGain();
+
+                const masterGain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+
+                // Frequencies around a standard sheep pitch (150Hz - 180Hz)
+                const baseFreq = (165 + Math.random() * 20) * pitchMultiplier;
+
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(baseFreq, now);
+                // Pitch dip at the end of the baa
+                osc1.frequency.linearRampToValueAtTime(baseFreq * 0.85, now + 0.55);
+
+                osc2.type = 'square';
+                osc2.frequency.setValueAtTime(baseFreq * 1.01, now);
+                osc2.frequency.linearRampToValueAtTime(baseFreq * 0.85 * 1.01, now + 0.55);
+
+                // Quick vibrato setting
+                vibrato.type = 'sine';
+                vibrato.frequency.setValueAtTime(26, now); // 26Hz tremor
+                vibratoGain.gain.setValueAtTime(14, now); // pitch depth in Hz
+
+                // High formant peak around 800-1100 Hz gives it a sheep nasal sound
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1000, now);
+                filter.frequency.exponentialRampToValueAtTime(750, now + 0.6);
+                filter.Q.setValueAtTime(1.8, now);
+
+                // Volume envelope
+                masterGain.gain.setValueAtTime(0.001, now);
+                masterGain.gain.linearRampToValueAtTime(0.2, now + 0.05); // sharp build
+                masterGain.gain.linearRampToValueAtTime(0.18, now + 0.2); // plateau
+                masterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6); // smooth decay
+
+                // Routing
+                vibrato.connect(vibratoGain);
+                vibratoGain.connect(osc1.frequency);
+                vibratoGain.connect(osc2.frequency);
+
+                osc1.connect(gain1);
+                osc2.connect(gain2);
+                
+                gain1.gain.setValueAtTime(0.15, now);
+                gain2.gain.setValueAtTime(0.08, now);
+
+                gain1.connect(filter);
+                gain2.connect(filter);
+                
+                filter.connect(masterGain);
+                masterGain.connect(this.ctx.destination);
+
+                // Start / Stop
+                vibrato.start(now);
+                osc1.start(now);
+                osc2.start(now);
+
+                vibrato.stop(now + 0.6);
+                osc1.stop(now + 0.6);
+                osc2.stop(now + 0.6);
+            }
+
+            playMunch() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.08; // Very short crunch
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Fill buffer with noise
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noiseNode = this.ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(600, now);
+                filter.Q.setValueAtTime(4.0, now);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noiseNode.start(now);
+                noiseNode.stop(now + 0.08);
+            }
+
+            playDash() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.exponentialRampToValueAtTime(280, now + 0.15); // Fast sweep up
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.18);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playCrash() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                
+                // White noise crash
+                const bufferSize = this.ctx.sampleRate * 0.4;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noiseNode = this.ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(250, now);
+                filter.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(30, now + 0.3);
+
+                const oscGain = this.ctx.createGain();
+                oscGain.gain.setValueAtTime(0.25, now);
+                oscGain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.35, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                const master = this.ctx.createGain();
+                master.gain.setValueAtTime(0.5, now);
+
+                noiseNode.connect(filter);
+                filter.connect(noiseGain);
+                osc.connect(oscGain);
+
+                noiseGain.connect(master);
+                oscGain.connect(master);
+                master.connect(this.ctx.destination);
+
+                noiseNode.start(now);
+                osc.start(now);
+                noiseNode.stop(now + 0.45);
+                osc.stop(now + 0.45);
+            }
+
+            playStun() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                
+                // Playful staggered high pitch chime notes
+                const playNote = (time, freq) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, time);
+                    
+                    gain.gain.setValueAtTime(0.12, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(time);
+                    osc.stop(time + 0.2);
+                };
+
+                playNote(now, 880);
+                playNote(now + 0.08, 988);
+                playNote(now + 0.16, 1046);
+            }
+
+            playSplash() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.25;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noiseNode = this.ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(300, now);
+                filter.frequency.exponentialRampToValueAtTime(1400, now + 0.12);
+                filter.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+                filter.Q.setValueAtTime(3.0, now);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noiseNode.start(now);
+                noiseNode.stop(now + 0.26);
+            }
+
+            playShear() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                
+                const playSnip = (time) => {
+                    const bufferSize = this.ctx.sampleRate * 0.05;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(3000, time);
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.08, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    noise.start(time);
+                    noise.stop(time + 0.05);
+                };
+
+                playSnip(now);
+                playSnip(now + 0.1);
+            }
+
+            playAlert() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.18);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.22);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // Mute / Unmute
+        function toggleAudio(enabled) {
+            sound.muted = !enabled;
+            if (enabled) {
+                sound.init();
+            }
+        }
+
+
+        // --- MATH UTILITIES ---
+        class Vector2D {
+            constructor(x = 0, y = 0) {
+                this.x = x;
+                this.y = y;
+            }
+            set(x, y) { this.x = x; this.y = y; return this; }
+            add(v) { this.x += v.x; this.y += v.y; return this; }
+            sub(v) { this.x -= v.x; this.y -= v.y; return this; }
+            mult(n) { this.x *= n; this.y *= n; return this; }
+            div(n) { this.x /= n; this.y /= n; return this; }
+            mag() { return Math.sqrt(this.x * this.x + this.y * this.y); }
+            normalize() { const m = this.mag(); if (m !== 0) this.div(m); return this; }
+            dist(v) { return Math.sqrt((this.x - v.x) ** 2 + (this.y - v.y) ** 2); }
+            copy() { return new Vector2D(this.x, this.y); }
+            limit(max) {
+                if (this.mag() > max) {
+                    this.normalize().mult(max);
+                }
+                return this;
+            }
+        }
+
+
+        // --- PARTICLE EFFECT CLASS ---
+        class Particle {
+            constructor(x, y, color, type = 'generic') {
+                this.pos = new Vector2D(x, y);
+                this.vel = new Vector2D((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
+                if (type === 'smoke') {
+                    this.vel.set((Math.random() - 0.5) * 1.5, -Math.random() * 1.5);
+                }
+                this.color = color;
+                this.radius = type === 'smoke' ? Math.random() * 12 + 6 : Math.random() * 4 + 2;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.03 + 0.015;
+                this.type = type;
+                this.angle = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.2;
+            }
+
+            update() {
+                this.pos.add(this.vel);
+                this.alpha -= this.decay;
+                this.angle += this.rotSpeed;
+                if (this.type === 'smoke') {
+                    this.radius += 0.15; // clouds expansion
+                    this.vel.mult(0.96); // drag
+                } else if (this.type === 'star') {
+                    this.vel.y += 0.08; // gravity on stars
+                } else if (this.type === 'dirt') {
+                    this.vel.y += 0.12; // gravel falls
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                
+                if (this.type === 'star') {
+                    // Draw mini 4-point star
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.rotate(this.angle);
+                    ctx.beginPath();
+                    for (let i = 0; i < 4; i++) {
+                        ctx.lineTo(0, -this.radius * 1.8);
+                        ctx.lineTo(this.radius * 0.5, -this.radius * 0.5);
+                        ctx.rotate(Math.PI / 2);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (this.type === 'leaf') {
+                    // Draw leaf shape
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.rotate(this.angle);
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.radius * 1.6, this.radius * 0.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Simple circle
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+
+        // --- FENCE / BOUNDARY OBJECTS ---
+        class Fence {
+            constructor(x, y, w, h, isBreakable = false) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+                this.h = h;
+                this.isBreakable = isBreakable;
+                this.maxHealth = 100;
+                this.health = 100;
+                this.isDestroyed = false;
+            }
+
+            getBounds() {
+                return {
+                    left: this.x,
+                    right: this.x + this.w,
+                    top: this.y,
+                    bottom: this.y + this.h
+                };
+            }
+
+            damage(amount) {
+                if (!this.isBreakable || this.isDestroyed) return false;
+                this.health -= amount;
+                if (this.health <= 0) {
+                    this.health = 0;
+                    this.isDestroyed = true;
+                    sound.playCrash();
+                    return true; // Broke!
+                }
+                return false;
+            }
+
+            draw(ctx) {
+                if (this.isDestroyed) return;
+
+                ctx.save();
+                // Draw shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+                ctx.fillRect(this.x + 4, this.y + 6, this.w, this.h);
+
+                // Draw wooden posts
+                ctx.fillStyle = this.isBreakable ? '#a16207' : '#78350f'; // lighter brown for gate
+                ctx.strokeStyle = '#451a03';
+                ctx.lineWidth = 2;
+
+                ctx.fillRect(this.x, this.y, this.w, this.h);
+                ctx.strokeRect(this.x, this.y, this.w, this.h);
+
+                // Wooden slats details
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.beginPath();
+                if (this.w > this.h) {
+                    // Horizontal fence
+                    ctx.moveTo(this.x, this.y + this.h * 0.3);
+                    ctx.lineTo(this.x + this.w, this.y + this.h * 0.3);
+                    ctx.moveTo(this.x, this.y + this.h * 0.7);
+                    ctx.lineTo(this.x + this.w, this.y + this.h * 0.7);
+                    
+                    // Vertical posts
+                    ctx.fillStyle = '#451a03';
+                    for (let px = this.x; px <= this.x + this.w; px += 40) {
+                        ctx.fillRect(px, this.y - 2, 8, this.h + 4);
+                    }
+                } else {
+                    // Vertical fence
+                    ctx.moveTo(this.x + this.w * 0.3, this.y);
+                    ctx.lineTo(this.x + this.w * 0.3, this.y + this.h);
+                    ctx.moveTo(this.x + this.w * 0.7, this.y);
+                    ctx.lineTo(this.x + this.w * 0.7, this.y + this.h);
+
+                    // Horizontal posts
+                    ctx.fillStyle = '#451a03';
+                    for (let py = this.y; py <= this.y + this.h; py += 40) {
+                        ctx.fillRect(this.x - 2, py, this.w + 4, 8);
+                    }
+                }
+                ctx.stroke();
+
+                // If breakable and damaged, draw warning stripes or cracks
+                if (this.isBreakable && this.health < 100) {
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    // Draw random cracks
+                    const cx = this.x + this.w / 2;
+                    const cy = this.y + this.h / 2;
+                    ctx.moveTo(cx - 10, cy - 5);
+                    ctx.lineTo(cx + 10, cy + 5);
+                    ctx.moveTo(cx + 5, cy - 8);
+                    ctx.lineTo(cx - 5, cy + 8);
+                    ctx.stroke();
+
+                    // Tiny health bar
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                    ctx.fillRect(this.x + this.w/2 - 15, this.y - 12, 30, 5);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(this.x + this.w/2 - 15, this.y - 12, 30 * (this.health / 100), 5);
+                }
+
+                ctx.restore();
+            }
+        }
+
+
+        // --- INTERACTIVE MAP ELEMENTS (Grass, Mud, Trough, Flowers, Hay) ---
+        class InteractiveObject {
+            constructor(x, y, type, radius = 25) {
+                this.pos = new Vector2D(x, y);
+                this.type = type; // 'grass', 'mud', 'trough', 'flowers', 'hay'
+                this.radius = radius;
+                this.isEaten = false;
+                this.cooldown = 0;
+                
+                // Graphics detail variants
+                this.scale = 1.0;
+                this.angle = Math.random() * Math.PI * 2;
+                
+                // Hay bale specific properties
+                if (type === 'hay') {
+                    this.radius = 24;
+                    this.vel = new Vector2D(0, 0);
+                    this.mass = 3.0;
+                }
+            }
+
+            update(dt) {
+                if (this.cooldown > 0) {
+                    this.cooldown -= dt;
+                    if (this.cooldown <= 0) {
+                        this.cooldown = 0;
+                        this.isEaten = false;
+                    }
+                }
+
+                if (this.type === 'hay') {
+                    // Apply heavy friction/deceleration to pushed hay bales
+                    this.pos.add(this.vel);
+                    this.vel.mult(0.85); // fast decay
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.pos.x, this.pos.y);
+
+                if (this.type === 'grass') {
+                    if (!this.isEaten) {
+                        // Draw tuft of grass
+                        ctx.rotate(this.angle);
+                        ctx.fillStyle = '#4ade80'; // Lush neon green
+                        ctx.strokeStyle = '#15803d'; // Dark green details
+                        ctx.lineWidth = 1.5;
+                        
+                        // Draw 3 blades
+                        for (let i = -1; i <= 1; i++) {
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            ctx.quadraticCurveTo(i * 12, -18, i * 16, -22);
+                            ctx.quadraticCurveTo(i * 6, -10, 0, 0);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+                    } else {
+                        // Nibbled dirt circle
+                        ctx.fillStyle = '#854d0e';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } 
+                else if (this.type === 'flowers') {
+                    if (!this.isEaten) {
+                        ctx.rotate(this.angle);
+                        
+                        // Leaves
+                        ctx.fillStyle = '#16a34a';
+                        ctx.beginPath();
+                        ctx.ellipse(-6, 2, 8, 4, Math.PI/4, 0, Math.PI*2);
+                        ctx.ellipse(6, -2, 8, 4, Math.PI/4, 0, Math.PI*2);
+                        ctx.fill();
+
+                        // Flower bulb
+                        ctx.fillStyle = '#f43f5e'; // Bright rose pink
+                        ctx.beginPath();
+                        ctx.arc(0, -6, 9, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = '#fbbf24'; // Yellow center
+                        ctx.beginPath();
+                        ctx.arc(0, -6, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Stems bitten
+                        ctx.strokeStyle = '#15803d';
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 5);
+                        ctx.lineTo(0, -3);
+                        ctx.stroke();
+                    }
+                } 
+                else if (this.type === 'mud') {
+                    // Large muddy puddle - irregular shape using path points
+                    ctx.restore(); // cancel translation to draw static shape or keep context
+                    ctx.save();
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.fillStyle = '#78350f'; // Dark muddy brown
+                    
+                    ctx.beginPath();
+                    // Draw an organic blob
+                    ctx.arc(0, 0, this.radius * 1.1, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Shiny mud highlights
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                    ctx.beginPath();
+                    ctx.arc(-8, -8, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                } 
+                else if (this.type === 'trough') {
+                    // Water trough
+                    ctx.fillStyle = '#475569'; // metal structure
+                    ctx.fillRect(-this.radius, -this.radius/2, this.radius*2, this.radius);
+                    ctx.strokeRect(-this.radius, -this.radius/2, this.radius*2, this.radius);
+
+                    // Water surface
+                    ctx.fillStyle = '#38bdf8'; // sky blue
+                    ctx.fillRect(-this.radius + 4, -this.radius/2 + 4, this.radius*2 - 8, this.radius - 8);
+
+                    // Shimmer wave detail
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.fillRect(-this.radius + 4 + Math.sin(Date.now()*0.005)*6, -this.radius/2 + 6, 8, this.radius - 12);
+                } 
+                else if (this.type === 'hay') {
+                    // Hay bale shadow
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.fillRect(-this.radius + 3, -this.radius * 0.7 + 5, this.radius * 2, this.radius * 1.4);
+
+                    // Yellow hay bale rectangle
+                    ctx.fillStyle = '#eab308'; // golden straw yellow
+                    ctx.strokeStyle = '#a16207';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(-this.radius, -this.radius * 0.7, this.radius * 2, this.radius * 1.4, 6);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Ropes tied around
+                    ctx.strokeStyle = '#78350f';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    // Rope 1
+                    ctx.moveTo(-this.radius * 0.4, -this.radius * 0.7);
+                    ctx.lineTo(-this.radius * 0.4, this.radius * 0.7);
+                    // Rope 2
+                    ctx.moveTo(this.radius * 0.4, -this.radius * 0.7);
+                    ctx.lineTo(this.radius * 0.4, this.radius * 0.7);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+
+        // --- PLAYER (SHEEP) ENGINE ---
+        class Sheep {
+            constructor(x, y) {
+                this.pos = new Vector2D(x, y);
+                this.vel = new Vector2D(0, 0);
+                this.acc = new Vector2D(0, 0);
+                
+                // Movement physics configurations
+                this.maxSpeed = 3.6;
+                this.accelerationForce = 0.5;
+                this.friction = 0.88; // ground grip
+                
+                this.radius = 16;
+                this.angle = 0; // facing direction
+                
+                // Stats
+                this.hunger = 100.0;
+                this.fluffiness = 10.0;
+                this.isMuddy = false;
+                this.mischief = 0;
+
+                // Abilities states
+                this.dashCooldown = 0;
+                this.dashTime = 0; // remaining active frames
+                this.isDashing = false;
+                this.rollTime = 0; // duration of rolling animation
+
+                // Visual helpers
+                this.walkCycle = 0;
+                this.eyeBlinkTimer = Math.random() * 200;
+                this.eyeOpen = true;
+            }
+
+            update(keys, dt, interactiveObjects, fences, addParticles, addMischief) {
+                // Update cooldowns
+                if (this.dashCooldown > 0) this.dashCooldown -= dt;
+                if (this.dashTime > 0) {
+                    this.dashTime -= dt;
+                    if (this.dashTime <= 0) {
+                        this.isDashing = false;
+                        this.maxSpeed = 3.6; // restore speed
+                    }
+                }
+                if (this.rollTime > 0) {
+                    this.rollTime -= dt;
+                    // While rolling, Barnaby is static, kicking up dust/mud
+                    this.vel.set(0, 0);
+                    
+                    const particleColor = this.isMuddy ? '#78350f' : '#86efac';
+                    const pType = this.isMuddy ? 'dirt' : 'leaf';
+                    if (Math.random() < 0.3) {
+                        addParticles(new Particle(this.pos.x, this.pos.y + 10, particleColor, pType));
+                    }
+                }
+
+                // Handle commands
+                if (this.rollTime <= 0) {
+                    this.handleInput(keys);
+                }
+
+                // Stamina / Hunger drain over time
+                if (this.vel.mag() > 0.5) {
+                    this.hunger -= 0.04;
+                } else {
+                    this.hunger -= 0.01;
+                }
+                if (this.hunger < 0) this.hunger = 0;
+
+                // Sluggish physics if starving
+                const hungerMultiplier = this.hunger < 20 ? 0.6 : 1.0;
+                
+                // Muddy slipperiness (slipping reduces friction, accelerates slower)
+                const groundFriction = this.isMuddy ? 0.95 : this.friction;
+                const forceMag = this.isMuddy ? (this.accelerationForce * 0.4) : this.accelerationForce;
+
+                if (this.isDashing) {
+                    // Dash acceleration overrides standard input movement
+                    const dashForce = new Vector2D(Math.cos(this.angle), Math.sin(this.angle)).mult(1.8);
+                    this.acc.add(dashForce);
+                    if (Math.random() < 0.4) {
+                        addParticles(new Particle(this.pos.x, this.pos.y + 10, '#f8fafc', 'smoke'));
+                    }
+                }
+
+                // Physics Solver
+                this.vel.add(this.acc);
+                this.vel.mult(groundFriction);
+                
+                const speedCap = (this.isDashing ? 8.5 : this.maxSpeed) * hungerMultiplier;
+                this.vel.limit(speedCap);
+                this.pos.add(this.vel);
+                this.acc.set(0, 0);
+
+                // Set facing angle based on velocity vector
+                if (this.vel.mag() > 0.15 && !this.isDashing) {
+                    const targetAngle = Math.atan2(this.vel.y, this.vel.x);
+                    // Smooth turn interpolation
+                    let angleDiff = targetAngle - this.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    this.angle += angleDiff * 0.25;
+
+                    this.walkCycle += this.vel.mag() * 0.15;
+                }
+
+                // Blink timing
+                this.eyeBlinkTimer -= dt;
+                if (this.eyeBlinkTimer <= 0) {
+                    this.eyeOpen = !this.eyeOpen;
+                    this.eyeBlinkTimer = this.eyeOpen ? Math.random() * 180 + 40 : 10;
+                }
+
+                // Collisions against fences & gates
+                fences.forEach(fence => {
+                    if (fence.isDestroyed) return;
+                    this.resolveFenceCollision(fence);
+                });
+
+                // Collisions & pushing Hay Bales
+                interactiveObjects.forEach(obj => {
+                    if (obj.type === 'hay') {
+                        const dist = this.pos.dist(obj.pos);
+                        const minDist = this.radius + obj.radius;
+                        if (dist < minDist) {
+                            // Push calculation
+                            const pushVec = obj.pos.copy().sub(this.pos).normalize();
+                            const overlap = minDist - dist;
+                            
+                            // Adjust sheep out of overlap
+                            this.pos.sub(pushVec.copy().mult(overlap * 0.4));
+                            
+                            // Accelerate hay bale
+                            const pushForce = this.isDashing ? 3.5 : 1.2;
+                            obj.vel.add(pushVec.mult(overlap * pushForce * 0.3));
+                        }
+                    }
+                });
+            }
+
+            handleInput(keys) {
+                // Direction commands
+                let dirX = 0;
+                let dirY = 0;
+                if (keys['w'] || keys['arrowup']) dirY = -1;
+                if (keys['s'] || keys['arrowdown']) dirY = 1;
+                if (keys['a'] || keys['arrowleft']) dirX = -1;
+                if (keys['d'] || keys['arrowright']) dirX = 1;
+
+                if (dirX !== 0 || dirY !== 0) {
+                    const inputVec = new Vector2D(dirX, dirY).normalize().mult(this.accelerationForce);
+                    this.acc.add(inputVec);
+                }
+
+                // Special ability bindings: Ram Headbutt Dash
+                if (keys['shift'] && this.dashCooldown <= 0 && this.hunger > 15) {
+                    this.isDashing = true;
+                    this.dashTime = 20; // 20 frames / ~0.3s
+                    this.dashCooldown = 90; // ~1.5s
+                    sound.playDash();
+                }
+
+                // Roll binding
+                if (keys['r'] && this.rollTime <= 0 && this.vel.mag() < 0.8) {
+                    this.rollTime = 40; // ~0.7s roll animation
+                }
+            }
+
+            resolveFenceCollision(fence) {
+                const bounds = fence.getBounds();
+                
+                // Sheep boundaries
+                const sLeft = this.pos.x - this.radius;
+                const sRight = this.pos.x + this.radius;
+                const sTop = this.pos.y - this.radius;
+                const sBottom = this.pos.y + this.radius;
+
+                // Check overlap
+                if (sRight > bounds.left && sLeft < bounds.right &&
+                    sBottom > bounds.top && sTop < bounds.bottom) {
+                    
+                    // Collision detected! Solve displacement
+                    const overlapX1 = sRight - bounds.left;
+                    const overlapX2 = bounds.right - sLeft;
+                    const overlapY1 = sBottom - bounds.top;
+                    const overlapY2 = bounds.bottom - sTop;
+
+                    const minOverlap = Math.min(overlapX1, overlapX2, overlapY1, overlapY2);
+
+                    if (this.isDashing && fence.isBreakable) {
+                        // Impact deal damage
+                        const broke = fence.damage(40);
+                        this.isDashing = false;
+                        
+                        // Rebound bounce velocity
+                        const bounceDir = this.vel.copy().normalize().mult(-1);
+                        this.vel.set(bounceDir.x * 2.5, bounceDir.y * 2.5);
+                        
+                        // Shake screen trigger
+                        document.getElementById('canvasArea').classList.add('shake');
+                        setTimeout(() => {
+                            document.getElementById('canvasArea').classList.remove('shake');
+                        }, 300);
+                        return;
+                    }
+
+                    // Displacement vector
+                    if (minOverlap === overlapX1) {
+                        this.pos.x -= overlapX1;
+                        this.vel.x = 0;
+                    } else if (minOverlap === overlapX2) {
+                        this.pos.x += overlapX2;
+                        this.vel.x = 0;
+                    } else if (minOverlap === overlapY1) {
+                        this.pos.y -= overlapY1;
+                        this.vel.y = 0;
+                    } else if (minOverlap === overlapY2) {
+                        this.pos.y += overlapY2;
+                        this.vel.y = 0;
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.pos.x, this.pos.y);
+                
+                // Roll animation rotation adjustment
+                if (this.rollTime > 0) {
+                    const progress = (40 - this.rollTime) / 40;
+                    ctx.rotate(progress * Math.PI * 4);
+                } else {
+                    ctx.rotate(this.angle);
+                }
+
+                const fluffScale = 0.5 + (this.fluffiness / 100) * 0.6; // fluff increases body radius
+                const dynamicBodyRad = this.radius * fluffScale;
+
+                // Draw tiny shadow below legs
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, 5, dynamicBodyRad * 1.1, dynamicBodyRad * 0.7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 1. Draw stubby legs
+                ctx.fillStyle = '#0f172a'; // charcoal black
+                const legOffset = dynamicBodyRad * 0.45;
+                const swing = Math.sin(this.walkCycle) * 6;
+                const rSwing = Math.sin(this.walkCycle + Math.PI) * 6;
+
+                ctx.save();
+                // Leg 1 (Top Left)
+                ctx.translate(-legOffset, -legOffset);
+                ctx.rotate(swing * Math.PI / 180);
+                ctx.fillRect(-2, 0, 4, 10);
+                ctx.restore();
+
+                ctx.save();
+                // Leg 2 (Top Right)
+                ctx.translate(legOffset, -legOffset);
+                ctx.rotate(rSwing * Math.PI / 180);
+                ctx.fillRect(-2, 0, 4, 10);
+                ctx.restore();
+
+                ctx.save();
+                // Leg 3 (Bottom Left)
+                ctx.translate(-legOffset, legOffset);
+                ctx.rotate(rSwing * Math.PI / 180);
+                ctx.fillRect(-2, 0, 4, 10);
+                ctx.restore();
+
+                ctx.save();
+                // Leg 4 (Bottom Right)
+                ctx.translate(legOffset, legOffset);
+                ctx.rotate(swing * Math.PI / 180);
+                ctx.fillRect(-2, 0, 4, 10);
+                ctx.restore();
+
+                // 2. Draw fluffy cloud-like body
+                ctx.fillStyle = this.isMuddy ? '#b45309' : '#f8fafc'; // Muddy brown vs white wool
+                if (this.isMuddy && Math.sin(Date.now()*0.005) > 0.4) {
+                    ctx.fillStyle = '#78350f'; // dynamic muddy spots flickering
+                }
+
+                ctx.beginPath();
+                // We draw multiple overlapping circles around center to form a fluffy cloud
+                const segments = 8;
+                for (let i = 0; i < segments; i++) {
+                    const theta = (i / segments) * Math.PI * 2;
+                    const cx = Math.cos(theta) * (dynamicBodyRad * 0.6);
+                    const cy = Math.sin(theta) * (dynamicBodyRad * 0.6);
+                    ctx.arc(cx, cy, dynamicBodyRad * 0.55, 0, Math.PI * 2);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                // 3. Draw head
+                ctx.save();
+                ctx.translate(dynamicBodyRad * 0.75, -2); // head shifts to the front
+                
+                // Head base
+                ctx.fillStyle = '#1e293b'; // charcoal face
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 8, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Floppy ears
+                ctx.beginPath();
+                ctx.ellipse(-2, -6, 2, 6, -Math.PI / 6, 0, Math.PI * 2);
+                ctx.ellipse(-2, 6, 2, 6, Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Big cute white eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(2, -3, 2.5, 0, Math.PI * 2);
+                ctx.arc(2, 3, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Black pupils
+                if (this.eyeOpen) {
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(3.2, -3, 1, 0, Math.PI * 2);
+                    ctx.arc(3.2, 3, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Closed blinking eyes line
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(1.5, -3); ctx.lineTo(3.2, -3);
+                    ctx.moveTo(1.5, 3); ctx.lineTo(3.2, 3);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // Headbutt/Dash wind indicators
+                if (this.isDashing) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-dynamicBodyRad * 1.5, -4);
+                    ctx.lineTo(-dynamicBodyRad * 1.1, -4);
+                    ctx.moveTo(-dynamicBodyRad * 1.6, 2);
+                    ctx.lineTo(-dynamicBodyRad * 1.2, 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+
+        // --- FARMER (CLIVE) AI SYSTEM ---
+        class Farmer {
+            constructor(x, y) {
+                this.pos = new Vector2D(x, y);
+                this.vel = new Vector2D(0, 0);
+                
+                // Waypoint navigation targets
+                this.patrolNodes = [
+                    new Vector2D(120, 120),  // top left pen
+                    new Vector2D(820, 120),  // top right pen
+                    new Vector2D(820, 600),  // bottom right
+                    new Vector2D(480, 520),  // center trough
+                    new Vector2D(150, 480)   // bottom left garden
+                ];
+                this.currentNodeIndex = 0;
+                this.targetPos = this.patrolNodes[0].copy();
+
+                // State Machine Configuration
+                // States: 'patrol', 'inspect', 'chase', 'shear', 'clean', 'repair', 'stunned'
+                this.state = 'patrol';
+                
+                this.maxSpeed = 2.0;
+                this.chaseSpeed = 3.1;
+                this.accMag = 0.22;
+                this.radius = 18;
+                
+                this.angle = 0;
+                this.stateTimer = 0;
+                this.walkCycle = 0;
+
+                // Alert parameters
+                this.visionRange = 210;
+                this.visionAngle = Math.PI / 3; // 60 degrees cone
+
+                // Objects to repair tracker
+                this.repairTarget = null;
+            }
+
+            update(dt, sheep, fences, interactiveObjects, addParticles, triggerShear, triggerClean, addNotification) {
+                // State duration timer countdown
+                if (this.stateTimer > 0) {
+                    this.stateTimer -= dt;
+                }
+
+                // State Machine Engine
+                switch (this.state) {
+                    case 'patrol':
+                        this.patrolBehavior(dt, sheep);
+                        break;
+                    
+                    case 'inspect':
+                        this.inspectBehavior(dt, sheep);
+                        break;
+
+                    case 'chase':
+                        this.chaseBehavior(dt, sheep, addParticles, triggerShear, triggerClean);
+                        break;
+
+                    case 'repair':
+                        this.repairBehavior(dt, fences, addParticles);
+                        break;
+
+                    case 'stunned':
+                        this.stunnedBehavior(dt, addParticles);
+                        break;
+                }
+
+                // Solve physics steering
+                if (this.state !== 'stunned' && this.state !== 'repair') {
+                    // Steer towards targeted destination
+                    const desired = this.targetPos.copy().sub(this.pos);
+                    const dist = desired.mag();
+
+                    if (dist > 5) {
+                        desired.normalize();
+                        const speed = (this.state === 'chase') ? this.chaseSpeed : this.maxSpeed;
+                        desired.mult(speed);
+
+                        // Simple steering force (desired - velocity)
+                        const steer = desired.sub(this.vel);
+                        steer.limit(this.accMag);
+                        this.vel.add(steer);
+                    } else {
+                        this.vel.mult(0.6); // damp down at node
+                    }
+
+                    // Move pos
+                    this.pos.add(this.vel);
+
+                    // Slide along boundaries & obstacles
+                    fences.forEach(fence => {
+                        if (!fence.isDestroyed) this.resolveFenceCollision(fence);
+                    });
+                    interactiveObjects.forEach(obj => {
+                        if (obj.type === 'hay') {
+                            this.resolveHayCollision(obj);
+                        }
+                    });
+
+                    // Set angle
+                    if (this.vel.mag() > 0.15) {
+                        this.angle = Math.atan2(this.vel.y, this.vel.x);
+                        this.walkCycle += this.vel.mag() * 0.12;
+                    }
+                } else {
+                    this.vel.set(0, 0);
+                }
+
+                // Periodic check: Clive inspects if he hears a Broken Fence
+                if (this.state !== 'chase' && this.state !== 'stunned' && this.state !== 'repair') {
+                    const brokenFence = fences.find(f => f.isBreakable && f.isDestroyed);
+                    if (brokenFence && this.repairTarget !== brokenFence) {
+                        this.alertToRepair(brokenFence, addNotification);
+                    }
+                }
+            }
+
+            alertToRepair(brokenFence, addNotification) {
+                this.state = 'repair';
+                this.repairTarget = brokenFence;
+                this.targetPos.set(brokenFence.x + brokenFence.w / 2, brokenFence.y + brokenFence.h / 2);
+                this.stateTimer = 180; // 3 seconds repair duration
+                sound.playAlert();
+                addNotification("Farmer noticed the broken fence and is going to repair it!", true);
+            }
+
+            patrolBehavior(dt, sheep) {
+                // Walk along waypoints
+                const distanceToNode = this.pos.dist(this.targetPos);
+                if (distanceToNode < 25) {
+                    this.currentNodeIndex = (this.currentNodeIndex + 1) % this.patrolNodes.length;
+                    this.targetPos = this.patrolNodes[this.currentNodeIndex].copy();
+                }
+
+                // Scan for sheep in vision cone
+                if (this.canSeeSheep(sheep)) {
+                    this.checkSightProvocation(sheep);
+                }
+            }
+
+            inspectBehavior(dt, sheep) {
+                // Walk to inspected noise/spot
+                const distanceToTarget = this.pos.dist(this.targetPos);
+                if (distanceToTarget < 20 || this.stateTimer <= 0) {
+                    this.state = 'patrol'; // give up inspection
+                }
+
+                // Continual vision scan
+                if (this.canSeeSheep(sheep)) {
+                    this.checkSightProvocation(sheep);
+                }
+            }
+
+            chaseBehavior(dt, sheep, addParticles, triggerShear, triggerClean) {
+                // Focus target coordinates directly on player
+                this.targetPos = sheep.pos.copy();
+
+                // If sheeps escapes vision range completely for too long, farmer loses tracking
+                const distToSheep = this.pos.dist(sheep.pos);
+                if (distToSheep > this.visionRange * 1.5) {
+                    this.state = 'inspect';
+                    this.targetPos = sheep.pos.copy(); // walk to last seen spot
+                    this.stateTimer = 120; // inspect for 2 seconds
+                    return;
+                }
+
+                // If close enough to catch
+                if (distToSheep < (this.radius + sheep.radius + 5)) {
+                    // Action check on contact: Shearing or Washing
+                    if (sheep.fluffiness >= 100) {
+                        triggerShear();
+                        this.state = 'patrol';
+                    } else if (sheep.isMuddy) {
+                        triggerClean();
+                        this.state = 'patrol';
+                    } else {
+                        // Mischievous capture - put Barnaby back in the center pen
+                        triggerShear(); // resets stats anyway
+                        this.state = 'patrol';
+                    }
+                }
+            }
+
+            repairBehavior(dt, fences, addParticles) {
+                // Wait on spot and spark hammer particles
+                if (Math.random() < 0.25) {
+                    const sparkX = this.pos.x + (Math.random() - 0.5) * 30;
+                    const sparkY = this.pos.y + (Math.random() - 0.5) * 30;
+                    addParticles(new Particle(sparkX, sparkY, '#eab308', 'star'));
+                }
+
+                if (this.stateTimer <= 0) {
+                    // Repair complete! Restore fence
+                    if (this.repairTarget) {
+                        this.repairTarget.health = 100;
+                        this.repairTarget.isDestroyed = false;
+                        this.repairTarget = null;
+                    }
+                    this.state = 'patrol';
+                    this.targetPos = this.patrolNodes[this.currentNodeIndex].copy(); // return to patrol loop
+                }
+            }
+
+            stunnedBehavior(dt, addParticles) {
+                // Stand still, render spinning stars
+                if (Math.random() < 0.35) {
+                    addParticles(new Particle(this.pos.x, this.pos.y - 30, '#fca5a5', 'star'));
+                }
+
+                if (this.stateTimer <= 0) {
+                    this.state = 'patrol';
+                    this.targetPos = this.patrolNodes[this.currentNodeIndex].copy(); // recover
+                }
+            }
+
+            stun(duration) {
+                this.state = 'stunned';
+                this.stateTimer = duration;
+                sound.playStun();
+            }
+
+            checkSightProvocation(sheep) {
+                // Sight check triggers chase state
+                let triggerChase = false;
+                let triggerReason = "";
+
+                if (sheep.fluffiness >= 100) {
+                    triggerChase = true;
+                    triggerReason = "Time for shearing, Barnaby!";
+                } else if (sheep.isMuddy) {
+                    triggerChase = true;
+                    triggerReason = "Get back here! You're muddy!";
+                } else if (sheep.pos.x > 840 || sheep.pos.y > 660 || sheep.pos.x < 80 || sheep.pos.y < 80) {
+                    // Escape detection
+                    triggerChase = true;
+                    triggerReason = "Hey! No escaping!";
+                }
+
+                if (triggerChase) {
+                    this.state = 'chase';
+                    sound.playAlert();
+                    return true;
+                }
+                return false;
+            }
+
+            canSeeSheep(sheep) {
+                const dist = this.pos.dist(sheep.pos);
+                if (dist > this.visionRange) return false;
+
+                // Angle check
+                const dirToSheep = sheep.pos.copy().sub(this.pos).normalize();
+                const faceDir = new Vector2D(Math.cos(this.angle), Math.sin(this.angle));
+                const dot = dirToSheep.x * faceDir.x + dirToSheep.y * faceDir.y;
+                const angleBetween = Math.acos(dot);
+
+                if (angleBetween < this.visionAngle) {
+                    // Vision cone matches. Perform a quick line of sight check against Hay Bales (Barnaby hiding)
+                    return true; 
+                }
+                return false;
+            }
+
+            alertToNoise(noisePos) {
+                // Only alert if patrolling or inspecting
+                if (this.state === 'patrol' || this.state === 'inspect') {
+                    this.state = 'inspect';
+                    this.targetPos = noisePos.copy();
+                    this.stateTimer = 150; // Inspect target location for 2.5s
+                    sound.playAlert();
+                }
+            }
+
+            resolveFenceCollision(fence) {
+                const bounds = fence.getBounds();
+                const sLeft = this.pos.x - this.radius;
+                const sRight = this.pos.x + this.radius;
+                const sTop = this.pos.y - this.radius;
+                const sBottom = this.pos.y + this.radius;
+
+                if (sRight > bounds.left && sLeft < bounds.right &&
+                    sBottom > bounds.top && sTop < bounds.bottom) {
+                    
+                    const overlapX1 = sRight - bounds.left;
+                    const overlapX2 = bounds.right - sLeft;
+                    const overlapY1 = sBottom - bounds.top;
+                    const overlapY2 = bounds.bottom - sTop;
+
+                    const minOverlap = Math.min(overlapX1, overlapX2, overlapY1, overlapY2);
+
+                    if (minOverlap === overlapX1) this.pos.x -= overlapX1;
+                    else if (minOverlap === overlapX2) this.pos.x += overlapX2;
+                    else if (minOverlap === overlapY1) this.pos.y -= overlapY1;
+                    else if (minOverlap === overlapY2) this.pos.y += overlapY2;
+                    this.vel.set(0, 0);
+                }
+            }
+
+            resolveHayCollision(hay) {
+                const dist = this.pos.dist(hay.pos);
+                const minDist = this.radius + hay.radius;
+                if (dist < minDist) {
+                    const pushVec = hay.pos.copy().sub(this.pos).normalize();
+                    const overlap = minDist - dist;
+                    this.pos.sub(pushVec.mult(overlap * 0.5));
+                    
+                    // Farmer pushes hay out of his path
+                    hay.vel.add(pushVec.mult(overlap * 0.15));
+                }
+            }
+
+            draw(ctx, isNight) {
+                // Draw Vision Cone when active
+                if (this.state !== 'stunned' && this.state !== 'repair') {
+                    ctx.save();
+                    ctx.translate(this.pos.x, this.pos.y);
+                    ctx.rotate(this.angle);
+
+                    // Vision gradient cone polygon
+                    const coneGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, this.visionRange);
+                    coneGrad.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
+                    coneGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.05)');
+                    coneGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+                    ctx.fillStyle = coneGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, this.visionRange, -this.visionAngle, this.visionAngle);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.save();
+                ctx.translate(this.pos.x, this.pos.y);
+                ctx.rotate(this.angle);
+
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, 4, this.radius * 1.0, this.radius * 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Overalls color mapping
+                ctx.fillStyle = '#166534'; // Green Overalls
+                
+                // Walking legs animation
+                const legSwing = Math.sin(this.walkCycle) * 7;
+                ctx.fillStyle = '#78350f'; // Boots
+                ctx.fillRect(-6, legSwing - 2, 4, 8);
+                ctx.fillRect(2, -legSwing - 2, 4, 8);
+
+                // Body structure
+                ctx.fillStyle = '#1e3a8a'; // Blue shirt sleeves
+                ctx.beginPath();
+                ctx.arc(-4, 0, 10, 0, Math.PI*2);
+                ctx.arc(4, 0, 10, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.fillStyle = '#166534'; // Overalls middle chest
+                ctx.fillRect(-8, -6, 16, 12);
+                
+                // Farmer Head
+                ctx.fillStyle = '#fbcfe8'; // Peach skin tone
+                ctx.beginPath();
+                ctx.arc(0, 0, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Farmer Straw Hat
+                ctx.fillStyle = '#f59e0b'; // Amber-gold straw color
+                ctx.beginPath();
+                ctx.arc(0, 0, 15, 0, Math.PI * 2); // Brim
+                ctx.fill();
+                ctx.fillStyle = '#d97706'; // darker core
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Carrying item graphic representation
+                ctx.save();
+                ctx.translate(8, 6);
+                ctx.rotate(Math.PI / 4);
+                ctx.fillStyle = '#475569';
+                if (this.state === 'chase') {
+                    // Shear Scissors
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.arc(-2, 0, 4, 0, Math.PI*2);
+                    ctx.arc(2, 0, 4, 0, Math.PI*2);
+                    ctx.moveTo(0, 0); ctx.lineTo(-4, -14);
+                    ctx.moveTo(0, 0); ctx.lineTo(4, -14);
+                    ctx.stroke();
+                } else {
+                    // Broom shaft
+                    ctx.fillStyle = '#78350f';
+                    ctx.fillRect(-1.5, -12, 3, 22);
+                    // Broom bristles
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(-6, -18, 12, 6);
+                }
+                ctx.restore();
+
+                ctx.restore();
+
+                // Overlay Status Icons above Farmer
+                if (this.state === 'stunned') {
+                    ctx.fillStyle = '#fbbf24';
+                    // Draw mini stars orbiting above head
+                    const t = Date.now() * 0.01;
+                    const sx = this.pos.x + Math.sin(t) * 16;
+                    const sy = this.pos.y - 28 + Math.cos(t) * 6;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 3, 0, Math.PI*2);
+                    ctx.fill();
+
+                    const sx2 = this.pos.x + Math.sin(t + Math.PI) * 16;
+                    const sy2 = this.pos.y - 28 + Math.cos(t + Math.PI) * 6;
+                    ctx.beginPath();
+                    ctx.arc(sx2, sy2, 3, 0, Math.PI*2);
+                    ctx.fill();
+                } 
+                else if (this.state === 'chase') {
+                    // Red Exclamation bubble
+                    ctx.save();
+                    ctx.fillStyle = '#ef4444';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y - 32, 8, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 11px Outfit';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('!', this.pos.x, this.pos.y - 28);
+                    ctx.restore();
+                }
+                else if (this.state === 'repair') {
+                    // Hammer symbol bubble
+                    ctx.save();
+                    ctx.fillStyle = '#eab308';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y - 32, 8, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 9px Outfit';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🛠️', this.pos.x, this.pos.y - 29);
+                    ctx.restore();
+                }
+            }
+        }
+
+
+        // --- MAIN SIMULATOR SYSTEM COORDINATOR ---
+        class GameSimulator {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.keys = {};
+                this.particles = [];
+                this.fences = [];
+                this.interactiveObjects = [];
+
+                // Entities
+                this.sheep = null;
+                this.farmer = null;
+
+                // State tracker
+                this.gameTime = 0; // seconds elapsed
+                this.mischiefScore = 0;
+                
+                // Sandbox time parameters (Day/Night)
+                this.dayProgress = 0.3; // 0.0 to 1.0 cycle
+                this.dayDuration = 90; // seconds for complete cycle
+                this.timeSetting = 'normal'; // normal, fast, alwaysDay, alwaysNight
+
+                this.isGameOver = false;
+                this.isVictory = false;
+                this.isRunning = false;
+
+                this.setupControls();
+            }
+
+            setupControls() {
+                window.addEventListener('keydown', (e) => {
+                    const k = e.key.toLowerCase();
+                    this.keys[k] = true;
+
+                    // Spacebar triggers Soundwave Bleat
+                    if (k === ' ' && this.isRunning && !this.isGameOver && !this.isVictory) {
+                        e.preventDefault();
+                        this.triggerSheepBaa();
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    const k = e.key.toLowerCase();
+                    this.keys[k] = false;
+                });
+
+                // Avoid scrolling keys default response
+                window.addEventListener('keydown', (e) => {
+                    if (["space", "arrowup", "arrowdown", "arrowleft", "arrowright"].indexOf(e.key.toLowerCase()) > -1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+
+            initWorld() {
+                this.particles = [];
+                this.fences = [];
+                this.interactiveObjects = [];
+                this.gameTime = 0;
+                this.mischiefScore = 0;
+                this.dayProgress = 0.3;
+
+                // Spawn player
+                this.sheep = new Sheep(480, 360);
+
+                // Spawn farmer AI
+                this.farmer = new Farmer(150, 150);
+
+                // Build boundaries
+                // Canvas is 950 x 750
+                // Outer wall margins
+                const margin = 30;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+
+                // Outer impenetrable Fences
+                this.fences.push(new Fence(margin, margin, width - margin * 2, 10)); // Top
+                this.fences.push(new Fence(margin, margin, 10, height - margin * 2)); // Left
+                this.fences.push(new Fence(margin, height - margin - 10, width - margin * 2, 10)); // Bottom
+                this.fences.push(new Fence(width - margin - 10, margin, 10, height - margin * 2)); // Right
+
+                // Inner divider fence separating pen from garden (left side)
+                this.fences.push(new Fence(margin, 520, 260, 10)); // bottom left garden top wall
+                this.fences.push(new Fence(290, 520, 10, height - 520 - margin)); // garden right wall
+
+                // Breakable Gate (Weak Fence) on the right side
+                // Break this fence to escape
+                this.fences.push(new Fence(width - margin - 10, 320, 12, 110, true)); // Breakable Right Gate!
+
+                // Spawn Sandbox Interactive Elements
+                // 1. Water Trough
+                this.interactiveObjects.push(new InteractiveObject(480, 500, 'trough', 35));
+
+                // 2. Mud Puddle
+                this.interactiveObjects.push(new InteractiveObject(700, 200, 'mud', 50));
+                this.interactiveObjects.push(new InteractiveObject(240, 220, 'mud', 40));
+
+                // 3. Hay Bales (pushable physics blocks)
+                this.interactiveObjects.push(new InteractiveObject(380, 300, 'hay'));
+                this.interactiveObjects.push(new InteractiveObject(580, 260, 'hay'));
+                this.interactiveObjects.push(new InteractiveObject(580, 420, 'hay'));
+                this.interactiveObjects.push(new InteractiveObject(200, 400, 'hay'));
+
+                // 4. Grass Patches
+                for (let i = 0; i < 28; i++) {
+                    let rx, ry;
+                    // Ensure grass doesn't overlap extensively with troughs or mud
+                    do {
+                        rx = Math.random() * (width - 160) + 80;
+                        ry = Math.random() * (height - 160) + 80;
+                    } while (
+                        (rx < 300 && ry > 500) || // inside garden
+                        (rx > 650 && rx < 750 && ry > 150 && ry < 250) || // mud puddle
+                        (rx > 440 && rx < 520 && ry > 460 && ry < 540) // trough
+                    );
+                    this.interactiveObjects.push(new InteractiveObject(rx, ry, 'grass', 18));
+                }
+
+                // 5. Clive's Prize Flowers in the protected Garden
+                this.interactiveObjects.push(new InteractiveObject(80, 620, 'flowers', 15));
+                this.interactiveObjects.push(new InteractiveObject(140, 660, 'flowers', 15));
+                this.interactiveObjects.push(new InteractiveObject(200, 600, 'flowers', 15));
+                this.interactiveObjects.push(new InteractiveObject(240, 650, 'flowers', 15));
+
+                // Reset overlay systems
+                document.getElementById('gameOverOverlay').classList.add('hidden');
+                document.getElementById('victoryOverlay').classList.add('hidden');
+
+                // Trigger UI syncs
+                this.updateHUDBars();
+            }
+
+            triggerSheepBaa() {
+                const pitch = 1.3 - (this.sheep.fluffiness / 100) * 0.6; // deeper bleat if bigger fluff
+                sound.playBaa(pitch);
+
+                // Spawn concentric circle soundwave particle ripples
+                const rippleCount = 3;
+                for (let i = 0; i < rippleCount; i++) {
+                    setTimeout(() => {
+                        if (this.isGameOver || this.isVictory) return;
+                        this.addVisualBaaRipple(this.sheep.pos.x, this.sheep.pos.y, 80 * (i + 1));
+                    }, i * 150);
+                }
+
+                // Alert farmer to sound source location if in distance
+                const distToFarmer = this.sheep.pos.dist(this.farmer.pos);
+                if (distToFarmer < 280) {
+                    this.farmer.alertToNoise(this.sheep.pos);
+                }
+
+                this.addNotification("Barnaby bleated loudly!");
+            }
+
+            addVisualBaaRipple(x, y, radius) {
+                // custom particle representing expanding soundwave
+                const soundwave = {
+                    pos: new Vector2D(x, y),
+                    radius: 10,
+                    targetRadius: radius,
+                    alpha: 0.6,
+                    update: function() {
+                        this.radius += (this.targetRadius - this.radius) * 0.15;
+                        this.alpha -= 0.04;
+                    },
+                    draw: function(ctx) {
+                        ctx.save();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI*2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                };
+
+                // Inject soundwave directly to particles list
+                this.particles.push(soundwave);
+            }
+
+            addParticles(particle) {
+                this.particles.push(particle);
+            }
+
+            addMischiefScore(amount, label) {
+                this.mischiefScore += amount;
+                this.sheep.mischief = this.mischiefScore;
+                this.updateHUDBars();
+                this.addNotification(`+${amount} Mischief: ${label}`, false, true);
+            }
+
+            addNotification(text, alert = false, mischief = false) {
+                const container = document.getElementById('hudNotifications');
+                const notif = document.createElement('div');
+                notif.className = `notification ${alert ? 'alert' : ''} ${mischief ? 'mischief' : ''}`;
+                
+                let icon = '🔔';
+                if (alert) icon = '⚠️';
+                else if (mischief) icon = '⭐';
+
+                notif.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+                container.appendChild(notif);
+
+                // slide out and delete after 3.2s
+                setTimeout(() => {
+                    notif.style.animation = 'slideIn 0.3s reverse forwards';
+                    setTimeout(() => notif.remove(), 300);
+                }, 2800);
+            }
+
+            update(dt) {
+                if (this.isGameOver || this.isVictory || !this.isRunning) return;
+
+                this.gameTime += dt / 60; // dt is frame ticks ~1/60s
+
+                // Manage Day/Night Cycle Speed
+                const speedSetting = document.getElementById('timeSpeedSelect').value;
+                this.timeSetting = speedSetting;
+                
+                if (speedSetting === 'normal') {
+                    this.dayProgress += (dt / (60 * this.dayDuration));
+                } else if (speedSetting === 'fast') {
+                    this.dayProgress += (dt / (60 * (this.dayDuration * 0.2)));
+                } else if (speedSetting === 'alwaysDay') {
+                    this.dayProgress = 0.3; // Noonish
+                } else if (speedSetting === 'alwaysNight') {
+                    this.dayProgress = 0.85; // Midnight
+                }
+
+                if (this.dayProgress > 1.0) this.dayProgress -= 1.0;
+
+                // Update Sheep Player
+                this.sheep.update(
+                    this.keys, 
+                    dt, 
+                    this.interactiveObjects, 
+                    this.fences, 
+                    (p) => this.addParticles(p),
+                    (score, lbl) => this.addMischiefScore(score, lbl)
+                );
+
+                // Check sheep starvation
+                if (this.sheep.hunger <= 0) {
+                    this.triggerGameOver("Hunger Faint", "Barnaby ran out of stamina and collapsed in the dirt. Clive brought you back to bed and locked the gate.");
+                    return;
+                }
+
+                // Update Farmer AI
+                this.farmer.update(
+                    dt, 
+                    this.sheep, 
+                    this.fences, 
+                    this.interactiveObjects,
+                    (p) => this.addParticles(p),
+                    () => this.triggerShearEvents(),
+                    () => this.triggerCleanEvents(),
+                    (msg, alert) => this.addNotification(msg, alert)
+                );
+
+                // Check Headbutt Sprint Collisions against Farmer
+                if (this.sheep.isDashing && this.farmer.state !== 'stunned') {
+                    const dist = this.sheep.pos.dist(this.farmer.pos);
+                    if (dist < (this.sheep.radius + this.farmer.radius + 6)) {
+                        // Stun Farmer!
+                        this.farmer.stun(240); // 4 seconds stun
+                        this.sheep.isDashing = false;
+                        this.addMischiefScore(150, "Stunned Clive!");
+                        
+                        // Spawn impact sparks
+                        for (let i = 0; i < 15; i++) {
+                            this.addParticles(new Particle(this.farmer.pos.x, this.farmer.pos.y, '#f59e0b', 'star'));
+                        }
+                    }
+                }
+
+                // Update interactive objects
+                this.interactiveObjects.forEach(obj => {
+                    obj.update(dt);
+                    
+                    // Interaction calculations if Barnaby collides
+                    if (obj.type === 'grass' && !obj.isEaten) {
+                        const dist = this.sheep.pos.dist(obj.pos);
+                        if (dist < (this.sheep.radius + obj.radius - 2)) {
+                            obj.isEaten = true;
+                            obj.cooldown = 400; // ~6.5 seconds respawn
+                            this.sheep.hunger = Math.min(100, this.sheep.hunger + 15);
+                            this.sheep.fluffiness = Math.min(100, this.sheep.fluffiness + 4.5);
+                            sound.playMunch();
+
+                            // Eat particles
+                            for (let i = 0; i < 6; i++) {
+                                this.addParticles(new Particle(obj.pos.x, obj.pos.y, '#22c55e', 'leaf'));
+                            }
+                            this.updateHUDBars();
+                        }
+                    }
+                    else if (obj.type === 'flowers' && !obj.isEaten) {
+                        const dist = this.sheep.pos.dist(obj.pos);
+                        if (dist < (this.sheep.radius + obj.radius)) {
+                            obj.isEaten = true;
+                            obj.cooldown = 600; // longer regrowth
+                            this.sheep.hunger = Math.min(100, this.sheep.hunger + 25);
+                            this.sheep.fluffiness = Math.min(100, this.sheep.fluffiness + 8);
+                            sound.playMunch();
+                            
+                            this.addMischiefScore(200, "Ate Clive's prized flowers!");
+
+                            // Flower leaf burst
+                            for (let i = 0; i < 8; i++) {
+                                this.addParticles(new Particle(obj.pos.x, obj.pos.y, '#f43f5e', 'leaf'));
+                            }
+
+                            // Alerts the farmer instantly!
+                            this.farmer.alertToNoise(obj.pos);
+                            this.updateHUDBars();
+                        }
+                    }
+                    else if (obj.type === 'mud') {
+                        const dist = this.sheep.pos.dist(obj.pos);
+                        if (dist < (this.sheep.radius + obj.radius * 0.95)) {
+                            if (!this.sheep.isMuddy && this.sheep.rollTime > 0) {
+                                this.sheep.isMuddy = true;
+                                this.addMischiefScore(100, "Became Filthy!");
+                                sound.playSplash();
+                                this.updateHUDBars();
+                            }
+                        }
+                    }
+                    else if (obj.type === 'trough') {
+                        const dist = this.sheep.pos.dist(obj.pos);
+                        if (dist < (this.sheep.radius + obj.radius)) {
+                            // Drink and clean mud off
+                            if (this.sheep.isMuddy) {
+                                this.sheep.isMuddy = false;
+                                this.addNotification("Washed mud off in the water trough.");
+                                sound.playSplash();
+                                
+                                for (let i = 0; i < 10; i++) {
+                                    this.addParticles(new Particle(this.sheep.pos.x, this.sheep.pos.y, '#38bdf8'));
+                                }
+                                this.updateHUDBars();
+                            }
+                        }
+                    }
+                });
+
+                // Update particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.update();
+                    if (p.alpha <= 0 || p.radius <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+
+                // Victory Check: Has Barnaby crossed the boundary escape gate?
+                // Escape coordinates: right edge outer meadow
+                if (this.sheep.pos.x > (this.canvas.width - 25)) {
+                    this.triggerVictory();
+                }
+
+                this.checkQuestCompletion();
+            }
+
+            triggerShearEvents() {
+                sound.playShear();
+                
+                if (this.sheep.fluffiness >= 100) {
+                    this.addMischiefScore(-100, "Lost all your gorgeous fluff!");
+                    this.triggerGameOver("Caught & Sheared!", `Clive caught you with 100% fluffiness and gave you a nice trim. You're clean and bald now, but your escape dreams live on!`);
+                } else {
+                    // Chased down normally
+                    this.triggerGameOver("Captured!", "Clive cornered you, locked the pen gates tighter, and brought you back to the stable.");
+                }
+            }
+
+            triggerCleanEvents() {
+                sound.playSplash();
+                
+                // Wash off mud splats
+                this.sheep.isMuddy = false;
+                this.addNotification("Clive sprayed water and scrubbed you clean!");
+                this.updateHUDBars();
+
+                // Stun Clive with dynamic slip in water puddle
+                this.farmer.stun(120); // stunned shortly
+            }
+
+            checkQuestCompletion() {
+                // 1. Grow Fluffy
+                const qFluffy = document.getElementById('qFluffy');
+                if (this.sheep.fluffiness >= 100) {
+                    if (!qFluffy.classList.contains('completed')) {
+                        qFluffy.classList.add('completed');
+                        this.addMischiefScore(150, "Objective: Fluffy Cloud!");
+                    }
+                }
+
+                // 2. Eat Clive's prize flowers
+                const eatenFlower = this.interactiveObjects.find(obj => obj.type === 'flowers' && obj.isEaten);
+                const qFlowers = document.getElementById('qFlowers');
+                if (eatenFlower) {
+                    if (!qFlowers.classList.contains('completed')) {
+                        qFlowers.classList.add('completed');
+                    }
+                }
+
+                // 3. Get muddy!
+                const qDirty = document.getElementById('qDirty');
+                if (this.sheep.isMuddy) {
+                    if (!qDirty.classList.contains('completed')) {
+                        qDirty.classList.add('completed');
+                    }
+                }
+
+                // 4. Headbutt Clive
+                const qStun = document.getElementById('qStun');
+                if (this.farmer.state === 'stunned' && this.farmer.stateTimer > 200) {
+                    if (!qStun.classList.contains('completed')) {
+                        qStun.classList.add('completed');
+                    }
+                }
+
+                // 5. Escape the Pen
+                const escapedGate = this.fences.find(f => f.isBreakable && f.isDestroyed);
+                const qEscape = document.getElementById('qEscape');
+                if (escapedGate) {
+                    if (!qEscape.classList.contains('completed')) {
+                        qEscape.classList.add('completed');
+                        this.addMischiefScore(300, "Objective: Fence Demolished!");
+                    }
+                }
+            }
+
+            updateHUDBars() {
+                // Hunger update
+                const hungerBar = document.getElementById('hudHungerBar');
+                const hungerVal = document.getElementById('hudHungerVal');
+                hungerBar.style.width = `${Math.round(this.sheep.hunger)}%`;
+                hungerVal.innerText = `${Math.round(this.sheep.hunger)}%`;
+
+                // Fluff update
+                const fluffBar = document.getElementById('hudFluffBar');
+                const fluffVal = document.getElementById('hudFluffVal');
+                fluffBar.style.width = `${Math.round(this.sheep.fluffiness)}%`;
+                fluffVal.innerText = `${Math.round(this.sheep.fluffiness)}%`;
+
+                // Mischief update
+                const mischiefBar = document.getElementById('hudMischiefBar');
+                const mischiefVal = document.getElementById('hudMischiefVal');
+                
+                // cap visuals at 1000 max score
+                const visualPercent = Math.min(100, (this.mischiefScore / 1000) * 100);
+                mischiefBar.style.width = `${visualPercent}%`;
+                mischiefVal.innerText = this.mischiefScore;
+
+                // Status Tag
+                const tag = document.getElementById('hudStatusTag');
+                if (this.sheep.isMuddy) {
+                    tag.innerText = "Filthy / Muddy";
+                    tag.style.color = "#b45309";
+                    tag.style.background = "rgba(180, 83, 9, 0.15)";
+                } else {
+                    tag.innerText = "Clean";
+                    tag.style.color = "var(--primary)";
+                    tag.style.background = "rgba(74, 222, 128, 0.15)";
+                }
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // 1. Draw Ground Texture Grid Lines
+                this.ctx.strokeStyle = 'rgba(34, 197, 94, 0.04)';
+                this.ctx.lineWidth = 1;
+                const gridSize = 40;
+                for (let x = 0; x < this.canvas.width; x += gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                for (let y = 0; y < this.canvas.height; y += gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+
+                // 2. Draw Interactive Elements (Mud puddle, Water Trough, Hay bales)
+                this.interactiveObjects.forEach(obj => {
+                    obj.draw(this.ctx);
+                });
+
+                // 3. Draw Player Sheep
+                this.sheep.draw(this.ctx);
+
+                // 4. Draw Farmer
+                const isNight = this.dayProgress > 0.55 && this.dayProgress < 0.95;
+                this.farmer.draw(this.ctx, isNight);
+
+                // 5. Draw Fences
+                this.fences.forEach(fence => {
+                    fence.draw(this.ctx);
+                });
+
+                // 6. Draw Particles
+                this.particles.forEach(p => {
+                    p.draw(this.ctx);
+                });
+
+                // 7. Day/Night Ambient Filter overlay
+                this.drawAmbientLighting();
+            }
+
+            drawAmbientLighting() {
+                // Calculate ambient light alpha based on dayProgress
+                // Cycle: Day (0.0 - 0.5), Twilight (0.5 - 0.6), Night (0.6 - 0.9), Sunrise (0.9 - 1.0)
+                let filterColor = 'rgba(0, 0, 0, 0)';
+                let opacity = 0;
+
+                if (this.dayProgress > 0.5 && this.dayProgress <= 0.6) {
+                    // Sunset / Golden hour transition
+                    opacity = (this.dayProgress - 0.5) / 0.1;
+                    filterColor = `rgba(245, 158, 11, ${opacity * 0.2})`; // orange tint
+                } 
+                else if (this.dayProgress > 0.6 && this.dayProgress <= 0.65) {
+                    // Twilight dark-blue transition
+                    opacity = (this.dayProgress - 0.6) / 0.05;
+                    filterColor = `rgba(15, 23, 42, ${0.2 + opacity * 0.4})`;
+                }
+                else if (this.dayProgress > 0.65 && this.dayProgress <= 0.9) {
+                    // Deep Night
+                    filterColor = 'rgba(15, 23, 42, 0.65)'; // deep night overlay
+                }
+                else if (this.dayProgress > 0.9 && this.dayProgress <= 1.0) {
+                    // Sunrise glow transition
+                    opacity = 1 - (this.dayProgress - 0.9) / 0.1;
+                    filterColor = `rgba(244, 63, 94, ${opacity * 0.3})`; // pinkish sunrise tint
+                }
+
+                if (filterColor !== 'rgba(0, 0, 0, 0)') {
+                    this.ctx.save();
+                    
+                    // Render dark mask
+                    if (this.dayProgress > 0.6 && this.dayProgress <= 0.9) {
+                        // Nighttime dynamic lanterns! We mask the darkness with the light cone of the Farmer.
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = this.canvas.width;
+                        tempCanvas.height = this.canvas.height;
+                        const tempCtx = tempCanvas.getContext('2d');
+
+                        // Fill canvas with deep blue darkness
+                        tempCtx.fillStyle = filterColor;
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                        // Carve out a light circle around Farmer Clive (Lantern)
+                        if (this.farmer.state !== 'stunned') {
+                            tempCtx.globalCompositeOperation = 'destination-out';
+                            const lanternGrad = tempCtx.createRadialGradient(
+                                this.farmer.pos.x, this.farmer.pos.y, 10,
+                                this.farmer.pos.x, this.farmer.pos.y, 120
+                            );
+                            lanternGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+                            lanternGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.4)');
+                            lanternGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                            
+                            tempCtx.fillStyle = lanternGrad;
+                            tempCtx.beginPath();
+                            tempCtx.arc(this.farmer.pos.x, this.farmer.pos.y, 120, 0, Math.PI*2);
+                            tempCtx.fill();
+                        }
+
+                        // Carve out a tiny soft light circle around Barnaby
+                        tempCtx.globalCompositeOperation = 'destination-out';
+                        const sheepLight = tempCtx.createRadialGradient(
+                            this.sheep.pos.x, this.sheep.pos.y, 5,
+                            this.sheep.pos.x, this.sheep.pos.y, 45
+                        );
+                        sheepLight.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                        sheepLight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                        tempCtx.fillStyle = sheepLight;
+                        tempCtx.beginPath();
+                        tempCtx.arc(this.sheep.pos.x, this.sheep.pos.y, 45, 0, Math.PI*2);
+                        tempCtx.fill();
+
+                        // Draw mask back onto game canvas
+                        this.ctx.drawImage(tempCanvas, 0, 0);
+                    } else {
+                        // Flat tint overlay
+                        this.ctx.fillStyle = filterColor;
+                        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+
+            triggerGameOver(title, description) {
+                this.isGameOver = true;
+                
+                // Set text outputs
+                document.getElementById('gameOverTitle').innerText = title;
+                document.getElementById('gameOverDesc').innerText = description;
+                document.getElementById('statMischief').innerText = this.mischiefScore;
+                
+                // Count eaten grass patches
+                const eatenGrass = this.interactiveObjects.filter(obj => obj.type === 'grass' && obj.isEaten).length;
+                document.getElementById('statGrass').innerText = eatenGrass;
+                
+                document.getElementById('statTime').innerText = `${Math.round(this.gameTime)}s`;
+
+                // Reveal screen
+                document.getElementById('gameOverOverlay').classList.remove('hidden');
+            }
+
+            triggerVictory() {
+                this.isVictory = true;
+                
+                document.getElementById('vicTime').innerText = `${Math.round(this.gameTime)}s`;
+                
+                // Count stuns
+                const stunCount = document.getElementById('qStun').classList.contains('completed') ? 1 : 0;
+                document.getElementById('vicStun').innerText = stunCount;
+                
+                const eatenFlowers = this.interactiveObjects.filter(obj => obj.type === 'flowers' && obj.isEaten).length;
+                document.getElementById('vicFlowers').innerText = eatenFlowers;
+
+                // Reveal screen
+                document.getElementById('victoryOverlay').classList.remove('hidden');
+            }
+        }
+
+        // Global instances
+        let simulator = null;
+        let animationFrameId = null;
+
+        function startGame() {
+            // Initialize sound
+            sound.init();
+
+            document.getElementById('startOverlay').classList.add('hidden');
+            
+            if (!simulator) {
+                simulator = new GameSimulator();
+            }
+            simulator.initWorld();
+            simulator.isRunning = true;
+            
+            // Start rendering cycle loop
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            runLoop();
+        }
+
+        function restartGame() {
+            if (simulator) {
+                simulator.initWorld();
+                simulator.isGameOver = false;
+                simulator.isVictory = false;
+                simulator.isRunning = true;
+            }
+        }
+
+        function runLoop() {
+            if (simulator && simulator.isRunning) {
+                // dt frame step is ~1 tick (roughly 60fps equivalent)
+                simulator.update(1.0);
+                simulator.draw();
+            }
+            animationFrameId = requestAnimationFrame(runLoop);
+        }
+    </script>
+</body>
+</html>

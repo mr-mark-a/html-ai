@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoGloss - Premium Car Wash Services</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-glow: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            --accent-glow: linear-gradient(135deg, #38bdf8 0%, #0369a1 100%);
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success-color: #10b981;
+            --card-surcharge: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 540px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Glow Header Border */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-glow);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #f8fafc, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Flow steps tracker */
+        .steps-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .steps-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .steps-line-progress {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-glow);
+            transform: translateY(-50%);
+            z-index: 1;
+            transition: width 0.4s ease;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            background: #1e293b;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            border-color: #0ea5e9;
+            color: #0ea5e9;
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+            background: #0f172a;
+        }
+
+        .step-dot.completed {
+            background: #0ea5e9;
+            border-color: #0ea5e9;
+            color: #ffffff;
+        }
+
+        /* Screens container */
+        .step-screen {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .step-screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2.section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        /* Option items & Service selections */
+        .service-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .service-option:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .service-option.selected {
+            background: rgba(14, 165, 233, 0.08);
+            border-color: #0ea5e9;
+            box-shadow: inset 0 0 12px rgba(14, 165, 233, 0.1);
+        }
+
+        .option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-details {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .checkbox-custom {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .service-option.selected .checkbox-custom {
+            border-color: #0ea5e9;
+            background: #0ea5e9;
+        }
+
+        .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        .service-option.selected .checkbox-custom::after {
+            display: block;
+        }
+
+        .option-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .option-price {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #38bdf8;
+        }
+
+        /* Vacuum sub-options wrapper */
+        .sub-options {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: none;
+            flex-direction: column;
+            gap: 0.75rem;
+            animation: slideDown 0.25s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sub-option-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-option-item:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sub-option-item.active {
+            border-color: rgba(14, 165, 233, 0.5);
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        /* Payment Buttons layout */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .payment-card:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .payment-card.selected {
+            background: rgba(14, 165, 233, 0.08);
+            border-color: #0ea5e9;
+            box-shadow: inset 0 0 12px rgba(14, 165, 233, 0.1);
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .payment-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .payment-surcharge {
+            font-size: 0.85rem;
+            color: var(--card-surcharge);
+            font-weight: 500;
+        }
+
+        /* Tips layout */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tip-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tip-btn:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tip-btn.selected {
+            background: #0ea5e9;
+            border-color: #0ea5e9;
+            color: white;
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
+        }
+
+        /* Bold NO TIPS request */
+        .tip-btn.no-tip {
+            font-weight: 800;
+            grid-column: span 2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .tip-btn.no-tip.selected {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Custom tip entry container */
+        .custom-tip-container {
+            display: none;
+            grid-column: span 2;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .custom-tip-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-tip-symbol {
+            position: absolute;
+            left: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .custom-tip-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem 1rem 1rem 2rem;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .custom-tip-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 8px rgba(14, 165, 233, 0.2);
+        }
+
+        /* Receipt block styling */
+        .receipt-summary {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .receipt-row.total-row {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Dynamic primary action buttons */
+        .action-button {
+            width: 100%;
+            background: var(--primary-glow);
+            border: none;
+            border-radius: 14px;
+            padding: 1.1rem;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-button:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .action-button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+            box-shadow: none;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: none;
+        }
+
+        /* Final checkout screen aesthetics */
+        .success-illustration {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(16, 185, 129, 0.15);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--success-color);
+            font-size: 2.25rem;
+            animation: pulseSuccess 2s infinite;
+        }
+
+        @keyframes pulseSuccess {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .success-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-text {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>AutoGloss</h1>
+        <p>Premium Vehicle Wash & Care</p>
+    </header>
+
+    <!-- Progress Indicator -->
+    <div class="steps-indicator">
+        <div class="steps-line"></div>
+        <div class="steps-line-progress" id="progressLine"></div>
+        <div class="step-dot active" id="dot1">1</div>
+        <div class="step-dot" id="dot2">2</div>
+        <div class="step-dot" id="dot3">3</div>
+        <div class="step-dot" id="dot4">4</div>
+    </div>
+
+    <!-- STEP 1: SELECT SERVICES -->
+    <div class="step-screen active" id="step1">
+        <h2 class="section-title">Select Services</h2>
+        
+        <!-- Car Wash ($4.35) -->
+        <div class="service-option" id="optWash" onclick="toggleService('wash')">
+            <div class="option-header">
+                <div class="option-details">
+                    <div class="checkbox-custom"></div>
+                    <div>
+                        <span class="option-name">Car Wash</span>
+                    </div>
+                </div>
+                <span class="option-price">$4.35</span>
+            </div>
+        </div>
+
+        <!-- Car Vacuum ($1.00) -->
+        <div class="service-option" id="optVac" onclick="toggleService('vac')">
+            <div class="option-header">
+                <div class="option-details">
+                    <div class="checkbox-custom"></div>
+                    <div>
+                        <span class="option-name">Car Vacuum</span>
+                    </div>
+                </div>
+                <span class="option-price">$1.00</span>
+            </div>
+            
+            <!-- Sub Options: Trunk & Frunk -->
+            <div class="sub-options" id="vacSubOptions" onclick="event.stopPropagation()">
+                <div class="sub-option-item" id="subTrunk" onclick="toggleSubOption('trunk')">
+                    <span>Include Trunk (+ $0.30)</span>
+                    <div class="checkbox-custom" style="width: 18px; height: 18px; border-radius: 4px;"></div>
+                </div>
+                <div class="sub-option-item" id="subFrunk" onclick="toggleSubOption('frunk')">
+                    <span>Include Frunk (+ $0.30)</span>
+                    <div class="checkbox-custom" style="width: 18px; height: 18px; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inline Live Receipt Preview -->
+        <div class="receipt-summary">
+            <div id="receiptItems">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="receipt-row total-row">
+                <span>Subtotal</span>
+                <span id="liveSubtotal">$0.00</span>
+            </div>
+        </div>
+
+        <button class="action-button" onclick="goToStep(2)">
+            Continue to Payment
+        </button>
+    </div>
+
+    <!-- STEP 2: PAYMENT METHOD -->
+    <div class="step-screen" id="step2">
+        <h2 class="section-title">Payment Method</h2>
+        
+        <div class="payment-grid">
+            <!-- Cash -->
+            <div class="payment-card" id="payCash" onclick="selectPayment('Cash')">
+                <span class="payment-icon">💵</span>
+                <span class="payment-title">Cash</span>
+                <span class="payment-surcharge">No Surcharge</span>
+            </div>
+            
+            <!-- Card -->
+            <div class="payment-card" id="payCard" onclick="selectPayment('Card')">
+                <span class="payment-icon">💳</span>
+                <span class="payment-title">Card</span>
+                <span class="payment-surcharge">+ ¢10</span>
+            </div>
+        </div>
+
+        <button class="action-button" onclick="goToStep(3)" id="paymentNextBtn" disabled style="opacity: 0.6; cursor: not-allowed;">
+            Proceed with Selection
+        </button>
+        <button class="action-button btn-secondary" onclick="goToStep(1)">
+            Back
+        </button>
+    </div>
+
+    <!-- STEP 3: SELECT TIPS -->
+    <div class="step-screen" id="step3">
+        <h2 class="section-title">Select Tips</h2>
+        
+        <div class="tips-grid">
+            <button class="tip-btn" id="tip50" onclick="selectTip(0.50, 'tip50')">¢50</button>
+            <button class="tip-btn" id="tip100" onclick="selectTip(1.00, 'tip100')">$1.00</button>
+            <button class="tip-btn" id="tip150" onclick="selectTip(1.50, 'tip150')">$1.50</button>
+            <button class="tip-btn" id="tip200" onclick="selectTip(2.00, 'tip200')">$2.00</button>
+            <button class="tip-btn" id="tipCustom" onclick="showCustomTipInput()">Custom</button>
+            <button class="tip-btn no-tip" id="tipNone" onclick="selectTip(0.00, 'tipNone')"><strong>NO TIPS</strong></button>
+            
+            <!-- Custom input field -->
+            <div class="custom-tip-container" id="customTipContainer">
+                <div class="custom-tip-input-wrapper">
+                    <span class="custom-tip-symbol">$</span>
+                    <input type="number" step="0.01" min="0" placeholder="0.00" class="custom-tip-input" id="customTipField" oninput="calculateCustomTip()">
+                </div>
+            </div>
+        </div>
+
+        <button class="action-button" onclick="goToStep(4)">
+            Finish & Pay
+        </button>
+        <button class="action-button btn-secondary" onclick="goToStep(2)">
+            Back
+        </button>
+    </div>
+
+    <!-- STEP 4: FINAL RECEIPT & SUCCESS -->
+    <div class="step-screen" id="step4">
+        <div class="success-illustration">
+            <div class="success-icon">✓</div>
+        </div>
+        <h2 class="success-title" id="successTitle">Payment Successful!</h2>
+        <p class="success-text">Thank you for your business. Your receipt details are shown below.</p>
+
+        <!-- Final Receipt Details -->
+        <div class="receipt-summary">
+            <div id="finalReceiptItems">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="receipt-row total-row" style="color: #10b981;">
+                <span>Total Paid</span>
+                <span id="finalTotal">$0.00</span>
+            </div>
+        </div>
+
+        <button class="action-button" onclick="resetApp()">
+            New Wash Service
+        </button>
+    </div>
+</div>
+
+<script>
+    // State management
+    const state = {
+        currentStep: 1,
+        services: {
+            wash: false,
+            vac: false
+        },
+        extras: {
+            trunk: false,
+            frunk: false
+        },
+        paymentMethod: null, // 'Cash' or 'Card'
+        tipAmount: 0.00,
+        selectedTipId: null
+    };
+
+    const prices = {
+        wash: 4.35,
+        vac: 1.00,
+        trunk: 0.30,
+        frunk: 0.30,
+        cardSurcharge: 0.10
+    };
+
+    // Toggle service options
+    function toggleService(type) {
+        state.services[type] = !state.services[type];
+        
+        const card = document.getElementById(type === 'wash' ? 'optWash' : 'optVac');
+        if (state.services[type]) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+            // If vacuum deselected, reset sub-options
+            if (type === 'vac') {
+                state.extras.trunk = false;
+                state.extras.frunk = false;
+                document.getElementById('subTrunk').classList.remove('active');
+                document.getElementById('subFrunk').classList.remove('active');
+            }
+        }
+
+        // Show/hide suboptions for vacuum
+        const subOptionsWrapper = document.getElementById('vacSubOptions');
+        if (state.services.vac) {
+            subOptionsWrapper.style.display = 'flex';
+        } else {
+            subOptionsWrapper.style.display = 'none';
+        }
+
+        updateLiveReceipt();
+    }
+
+    // Toggle sub-options
+    function toggleSubOption(type) {
+        state.extras[type] = !state.extras[type];
+        const el = document.getElementById(type === 'trunk' ? 'subTrunk' : 'subFrunk');
+        if (state.extras[type]) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+        updateLiveReceipt();
+    }
+
+    // Select payment method
+    function selectPayment(method) {
+        state.paymentMethod = method;
+        document.getElementById('payCash').classList.remove('selected');
+        document.getElementById('payCard').classList.remove('selected');
+
+        if (method === 'Cash') {
+            document.getElementById('payCash').classList.add('selected');
+        } else if (method === 'Card') {
+            document.getElementById('payCard').classList.add('selected');
+        }
+
+        const nextBtn = document.getElementById('paymentNextBtn');
+        nextBtn.removeAttribute('disabled');
+        nextBtn.style.opacity = '1';
+        nextBtn.style.cursor = 'pointer';
+    }
+
+    // Clear tip selection styles
+    function clearTipSelections() {
+        const ids = ['tip50', 'tip100', 'tip150', 'tip200', 'tipCustom', 'tipNone'];
+        ids.forEach(id => document.getElementById(id).classList.remove('selected'));
+        document.getElementById('customTipContainer').style.display = 'none';
+    }
+
+    // Select tip preset
+    function selectTip(amount, elementId) {
+        clearTipSelections();
+        state.tipAmount = amount;
+        state.selectedTipId = elementId;
+        document.getElementById(elementId).classList.add('selected');
+    }
+
+    // Show Custom Tip Entry
+    function showCustomTipInput() {
+        clearTipSelections();
+        state.selectedTipId = 'tipCustom';
+        document.getElementById('tipCustom').classList.add('selected');
+        document.getElementById('customTipContainer').style.display = 'block';
+        document.getElementById('customTipField').focus();
+        calculateCustomTip();
+    }
+
+    // Calculate Custom Tip from input field
+    function calculateCustomTip() {
+        const val = parseFloat(document.getElementById('customTipField').value);
+        state.tipAmount = isNaN(val) || val < 0 ? 0.00 : val;
+    }
+
+    // Calculation helper
+    function getSubtotal() {
+        let total = 0;
+        if (state.services.wash) total += prices.wash;
+        if (state.services.vac) {
+            total += prices.vac;
+            if (state.extras.trunk) total += prices.trunk;
+            if (state.extras.frunk) total += prices.frunk;
+        }
+        return total;
+    }
+
+    // Update receipt preview
+    function updateLiveReceipt() {
+        const itemsContainer = document.getElementById('receiptItems');
+        itemsContainer.innerHTML = '';
+        
+        let subtotal = 0;
+
+        if (state.services.wash) {
+            subtotal += prices.wash;
+            itemsContainer.innerHTML += `
+                <div class="receipt-row">
+                    <span>Car Wash</span>
+                    <span>$4.35</span>
+                </div>
+            `;
+        }
+
+        if (state.services.vac) {
+            subtotal += prices.vac;
+            itemsContainer.innerHTML += `
+                <div class="receipt-row">
+                    <span>Car Vacuum</span>
+                    <span>$1.00</span>
+                </div>
+            `;
+            if (state.extras.trunk) {
+                subtotal += prices.trunk;
+                itemsContainer.innerHTML += `
+                    <div class="receipt-row" style="padding-left: 1rem; font-size: 0.85rem;">
+                        <span>+ Trunk vacuuming</span>
+                        <span>$0.30</span>
+                    </div>
+                `;
+            }
+            if (state.extras.frunk) {
+                subtotal += prices.frunk;
+                itemsContainer.innerHTML += `
+                    <div class="receipt-row" style="padding-left: 1rem; font-size: 0.85rem;">
+                        <span>+ Frunk vacuuming</span>
+                        <span>$0.30</span>
+                    </div>
+                `;
+            }
+        }
+
+        if (!state.services.wash && !state.services.vac) {
+            itemsContainer.innerHTML = `
+                <div class="receipt-row" style="justify-content: center; font-style: italic; color: var(--text-secondary);">
+                    No services selected
+                </div>
+            `;
+        }
+
+        document.getElementById('liveSubtotal').innerText = `$${subtotal.toFixed(2)}`;
+    }
+
+    // Generate final receipt screen details
+    function renderFinalReceipt() {
+        const container = document.getElementById('finalReceiptItems');
+        container.innerHTML = '';
+
+        let subtotal = getSubtotal();
+
+        // Service Items
+        if (state.services.wash) {
+            container.innerHTML += `
+                <div class="receipt-row">
+                    <span>Car Wash</span>
+                    <span>$4.35</span>
+                </div>
+            `;
+        }
+        if (state.services.vac) {
+            container.innerHTML += `
+                <div class="receipt-row">
+                    <span>Car Vacuum</span>
+                    <span>$1.00</span>
+                </div>
+            `;
+            if (state.extras.trunk) {
+                container.innerHTML += `
+                    <div class="receipt-row" style="padding-left: 1rem; font-size: 0.85rem;">
+                        <span>+ Trunk Surcharge</span>
+                        <span>$0.30</span>
+                    </div>
+                `;
+            }
+            if (state.extras.frunk) {
+                container.innerHTML += `
+                    <div class="receipt-row" style="padding-left: 1rem; font-size: 0.85rem;">
+                        <span>+ Frunk Surcharge</span>
+                        <span>$0.30</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Subtotal row
+        container.innerHTML += `
+            <div class="receipt-row" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.5rem; margin-top: 0.5rem;">
+                <span>Subtotal</span>
+                <span>$${subtotal.toFixed(2)}</span>
+            </div>
+        `;
+
+        // Payment Fee Row
+        let paymentFee = 0.00;
+        if (state.paymentMethod === 'Card') {
+            paymentFee = prices.cardSurcharge;
+            container.innerHTML += `
+                <div class="receipt-row">
+                    <span>Payment Fee (Card Surcharge)</span>
+                    <span>$${paymentFee.toFixed(2)}</span>
+                </div>
+            `;
+        } else {
+            container.innerHTML += `
+                <div class="receipt-row">
+                    <span>Payment Mode</span>
+                    <span>Cash (No fee)</span>
+                </div>
+            `;
+        }
+
+        // Tips Row
+        container.innerHTML += `
+            <div class="receipt-row">
+                <span>Tip</span>
+                <span>$${state.tipAmount.toFixed(2)}</span>
+            </div>
+        `;
+
+        // Final Total
+        let grandTotal = subtotal + paymentFee + state.tipAmount;
+        document.getElementById('finalTotal').innerText = `$${grandTotal.toFixed(2)}`;
+    }
+
+    // Step-by-step navigation logic
+    function goToStep(stepNum) {
+        // Validation check for Step 1 -> Step 2
+        if (state.currentStep === 1 && stepNum === 2) {
+            if (!state.services.wash && !state.services.vac) {
+                alert('Please select at least one service to continue.');
+                return;
+            }
+        }
+
+        // Hide current screen
+        document.getElementById(`step${state.currentStep}`).classList.remove('active');
+        document.getElementById(`dot${state.currentStep}`).classList.remove('active');
+        if (state.currentStep < stepNum) {
+            document.getElementById(`dot${state.currentStep}`).classList.add('completed');
+        } else {
+            document.getElementById(`dot${stepNum}`).classList.remove('completed');
+        }
+
+        // Show new screen
+        document.getElementById(`step${stepNum}`).classList.add('active');
+        document.getElementById(`dot${stepNum}`).classList.add('active');
+        state.currentStep = stepNum;
+
+        // Update progress bar width
+        const progressPercentage = ((stepNum - 1) / 3) * 100;
+        document.getElementById('progressLine').style.width = `${progressPercentage}%`;
+
+        // Action when rendering final step
+        if (stepNum === 4) {
+            renderFinalReceipt();
+            // Update success message based on payment method
+            const titleEl = document.getElementById('successTitle');
+            if (state.paymentMethod === 'Cash') {
+                titleEl.innerText = 'Give Cash To Mark';
+            } else {
+                titleEl.innerText = 'Payment Successful!';
+            }
+        }
+    }
+
+    // App State reset helper
+    function resetApp() {
+        state.currentStep = 1;
+        state.services.wash = false;
+        state.services.vac = false;
+        state.extras.trunk = false;
+        state.extras.frunk = false;
+        state.paymentMethod = null;
+        state.tipAmount = 0.00;
+        state.selectedTipId = null;
+
+        // Reset inputs and classes
+        document.getElementById('optWash').classList.remove('selected');
+        document.getElementById('optVac').classList.remove('selected');
+        document.getElementById('vacSubOptions').style.display = 'none';
+        document.getElementById('subTrunk').classList.remove('active');
+        document.getElementById('subFrunk').classList.remove('active');
+        
+        document.getElementById('payCash').classList.remove('selected');
+        document.getElementById('payCard').classList.remove('selected');
+        const nextBtn = document.getElementById('paymentNextBtn');
+        nextBtn.setAttribute('disabled', 'true');
+        nextBtn.style.opacity = '0.6';
+        nextBtn.style.cursor = 'not-allowed';
+
+        clearTipSelections();
+        document.getElementById('customTipField').value = '';
+
+        // UI Reset
+        updateLiveReceipt();
+        goToStep(1);
+    }
+
+    // Initial load receipt update
+    updateLiveReceipt();
+</script>
+
+</body>
+</html>
