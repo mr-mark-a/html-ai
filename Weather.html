@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+    <!-- Favicon / Logo -->
+    <link rel="icon" type="image/x-icon" href="images on webpage/weather logo.jfif">
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --font-main: 'Outfit', sans-serif;
+            --glass-bg: rgba(255, 255, 255, 0.11);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.45);
+            --accent-glow: 0px 8px 32px 0px rgba(31, 38, 135, 0.15);
+            --transition-speed: 0.3s;
+            --touch-target: 44px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background-color: #0f172a;
+            min-height: 100vh;
+        }
+
+        /* Dynamic Weather Themes Backgrounds */
+        .app-background-container {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1rem;
+            transition: all 0.8s ease-in-out;
+        }
+
+        .theme-sunny {
+            background: linear-gradient(135deg, #f59e0b, #d97706, #1e293b);
+            background-size: 400% 400%;
+            animation: GradientAnim 15s ease infinite;
+        }
+
+        .theme-cloudy {
+            background: linear-gradient(135deg, #64748b, #475569, #0f172a);
+            background-size: 400% 400%;
+            animation: GradientAnim 15s ease infinite;
+        }
+
+        .theme-rainy {
+            background: linear-gradient(135deg, #1e3a8a, #0f172a, #1e1b4b);
+            background-size: 400% 400%;
+            animation: GradientAnim 15s ease infinite;
+        }
+
+        .theme-snowy {
+            background: linear-gradient(135deg, #38bdf8, #0284c7, #0f172a);
+            background-size: 400% 400%;
+            animation: GradientAnim 15s ease infinite;
+        }
+
+        .theme-thunderstorm {
+            background: linear-gradient(135deg, #581c87, #1e1b4b, #020617);
+            background-size: 400% 400%;
+            animation: GradientAnim 15s ease infinite;
+        }
+
+        @keyframes GradientAnim {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 600px; /* Constrained width for premium mobile experience */
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.25rem;
+            box-shadow: var(--accent-glow);
+        }
+
+        /* Header / Search Controls */
+        .search-row {
+            display: flex;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-input {
+            width: 100%;
+            height: var(--touch-target);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 0 1rem 0 2.5rem;
+            color: #fff;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-icon-inside {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .action-btn {
+            height: var(--touch-target);
+            padding: 0 1rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-family: var(--font-main);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: background var(--transition-speed);
+        }
+
+        .action-btn:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Suggestions box */
+        .suggestions-box {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            z-index: 100;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .suggestions-box.hidden {
+            display: none;
+        }
+
+        /* Presets Panel (Home/Work) */
+        .presets-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .preset-btn {
+            height: var(--touch-target);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            padding: 0 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .preset-btn:active {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .preset-empty {
+            color: var(--text-secondary);
+            border-style: dashed;
+        }
+
+        /* Current Weather Card */
+        .current-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 2.2rem 1.25rem 1.8rem 1.25rem;
+        }
+
+        .current-header-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preset-set-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .preset-set-btn {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-family: var(--font-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .preset-set-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .utility-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .round-action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .round-action-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .temp-display {
+            font-size: 4.8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 1.8rem 0 0.3rem 0;
+            letter-spacing: -2px;
+        }
+
+        .city-display {
+            font-size: 1.7rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .country-display {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+
+        .condition-display {
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 0.8rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-icon {
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            width: 18px;
+            height: 18px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            margin-bottom: 0.1rem;
+        }
+
+        .stat-val {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Hourly Forecast Row */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .hourly-track {
+            display: flex;
+            gap: 0.6rem;
+            overflow-x: auto;
+            padding-bottom: 0.4rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .hourly-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hourly-card {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 0.75rem;
+            width: 64px;
+            text-align: center;
+        }
+
+        .hourly-time {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .hourly-icon i {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        .hourly-temp {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.4rem;
+        }
+
+        /* Weekly Row Layout */
+        .weekly-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .weekly-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .weekly-row:last-child {
+            border-bottom: none;
+        }
+
+        .weekly-day {
+            font-size: 0.85rem;
+            font-weight: 500;
+            width: 80px;
+        }
+
+        .weekly-desc {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex: 1;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .weekly-desc i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .weekly-temp {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .weekly-temp .temp-min {
+            color: var(--text-muted);
+            margin-left: 0.4rem;
+            font-weight: 400;
+        }
+
+        /* Favorites list */
+        .fav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .fav-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .fav-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .fav-delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .fav-delete-btn i {
+            width: 14px;
+            height: 14px;
+        }
+
+        .fav-empty-msg {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        /* Loading Indicator */
+        .loader-overlay {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+        }
+
+        .spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-left-color: #38bdf8;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .opacity-50 {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-background" class="app-background-container theme-cloudy">
+        <div class="main-container">
+            <!-- Search & Locate Header -->
+            <div class="glass-panel" style="padding: 0.8rem 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <img src="images on webpage/weather logo.jfif" alt="Weather Logo" style="width: 56px; height: 26px; object-fit: cover; border-radius: 50%; transform: scaleY(0.7); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                    <span style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px;">Weather</span>
+                </div>
+                <div class="search-row">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon-inside"></i>
+                        <input type="text" id="city-search" class="search-input" placeholder="Search city name..." autocomplete="off">
+                        <div id="search-suggestions" class="suggestions-box hidden"></div>
+                    </div>
+                    <button id="locate-btn" class="action-btn" title="Locate Me">
+                        <i data-lucide="map-pin"></i>
+                    </button>
+                    <button id="search-btn" class="action-btn">Search</button>
+                </div>
+            </div>
+
+            <!-- Home / Work Quick Presets -->
+            <div class="presets-row">
+                <button id="home-btn" class="preset-btn preset-empty">
+                    <i data-lucide="home" class="w-4 h-4"></i> Setup Home
+                </button>
+                <button id="work-btn" class="preset-btn preset-empty">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Setup Work
+                </button>
+            </div>
+
+            <!-- Content Panel -->
+            <div id="weather-content" class="main-container" style="gap: 1rem;">
+                <!-- Current Weather Card -->
+                <div class="glass-panel current-card">
+                    <!-- Actions inside Current Card -->
+                    <div class="current-header-actions">
+                        <div class="preset-set-actions">
+                            <button id="set-home-btn" class="preset-set-btn"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Set Home</button>
+                            <button id="set-work-btn" class="preset-set-btn"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Set Work</button>
+                        </div>
+                        <div class="utility-actions">
+                            <button id="toggle-unit-btn" class="round-action-btn" title="Toggle °C / °F">°F</button>
+                            <button id="add-favorite-btn" class="round-action-btn" title="Save Favorite">
+                                <i data-lucide="star" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="current-weather-icon" style="margin-top: 1rem;">
+                        <i data-lucide="cloud" class="w-20 h-20 text-white drop-shadow-lg animate-pulse"></i>
+                    </div>
+                    
+                    <div id="current-temp" class="temp-display">--°C</div>
+                    <div id="current-city" class="city-display">Loading...</div>
+                    <div id="current-country" class="country-display">Acquiring position</div>
+                    <div id="current-condition-text" class="condition-display">Initializing...</div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i data-lucide="thermometer" class="stat-icon"></i>
+                        <span class="stat-label">Feels</span>
+                        <span id="feels-like-val" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="droplets" class="stat-icon"></i>
+                        <span class="stat-label">Humidity</span>
+                        <span id="humidity-val" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="wind" class="stat-icon"></i>
+                        <span class="stat-label">Wind</span>
+                        <span id="wind-val" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="cloud-rain" class="stat-icon"></i>
+                        <span class="stat-label">Precip</span>
+                        <span id="precipitation-val" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="sunrise" class="stat-icon"></i>
+                        <span class="stat-label">Sunrise</span>
+                        <span id="sunrise-val" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-card">
+                        <i data-lucide="sunset" class="stat-icon"></i>
+                        <span class="stat-label">Sunset</span>
+                        <span id="sunset-val" class="stat-val">--</span>
+                    </div>
+                </div>
+
+                <!-- Hourly Forecast -->
+                <div class="glass-panel">
+                    <h3 class="section-title"><i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> Hourly</h3>
+                    <div id="hourly-track" class="hourly-track">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Weekly Forecast -->
+                <div class="glass-panel">
+                    <h3 class="section-title"><i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i> 7-Day Forecast</h3>
+                    <div id="weekly-forecast-list" class="weekly-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Bookmarked Cities -->
+                <div class="glass-panel">
+                    <h3 class="section-title"><i data-lucide="star" class="w-4 h-4 text-yellow-400"></i> Favorites</h3>
+                    <div id="favorites-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link JS Logic -->
+    <script src="weather.js"></script>
+</body>
+</html>
