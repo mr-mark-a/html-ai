@@ -141,7 +141,7 @@ function renderTabContent(tab) {
     if (tab.url === "about:newtab") {
         contentEl.innerHTML = `
             <div class="newtab-container">
-                <div class="newtab-logo">Moskar Browser</div>
+                <div class="newtab-logo"><img src="../images on webpage/MOSKAR19473279854676457.JPG" alt="Moskar Logo"></div>
                 <div class="newtab-subtitle">Experience a fluid, simulated environment built with precision</div>
                 
                 <div class="newtab-search">
@@ -343,8 +343,7 @@ function navigateTo(target) {
 
 }
 
-// Embeds a real URL inside the emulator using an iframe.
-// Shows a friendly fallback card if the site blocks embedding.
+// Opens the URL in the user's current browser (new tab) and shows a status card inside the emulator.
 function renderIframePage(tab, url) {
     const contentEl = document.getElementById(`content-${tab.id}`);
     if (!contentEl) return;
@@ -359,90 +358,66 @@ function renderIframePage(tab, url) {
     let domain = url;
     try { domain = new URL(url).hostname; } catch(e) {}
 
-    // Build the iframe container with an overlay fallback card
+    const isSearch = url.includes('/search?q=') || url.includes('bing.com/search') || url.includes('duckduckgo.com/?q=');
+    const searchQuery = isSearch ? decodeURIComponent((url.match(/[?&]q=([^&]+)/) || ['',''])[1]) : '';
+    const label = isSearch ? `Searching “${searchQuery}”` : domain;
+    const icon = isSearch ? '🔍' : '🌐';
+
+    // Open the page in the user's current browser
+    window.open(url, '_blank');
+    logToConsole(`${icon} Opened in browser: ${url}`, 'success');
+
+    // Show a clean confirmation card inside the emulator viewport
     contentEl.innerHTML = `
-        <div style="position: relative; width: 100%; height: 100%; background: #fff;">
+        <div style="
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 25% 25%, #101624 0%, #080b10 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 22px; text-align: center; padding: 40px;
+            font-family: var(--font-display);
+        ">
+            <img src="../images on webpage/MOSKAR19473279854676457.JPG"
+                style="width: 64px; height: 64px; border-radius: 12px;
+                       box-shadow: 0 0 24px rgba(30,136,229,0.5);
+                       animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">
 
-            <!-- Loading bar -->
-            <div id="load-bar-${tab.id}" style="
-                position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 10;
-                background: linear-gradient(90deg, #4f46e5, #a855f7);
-                animation: loadBar 1.5s ease forwards;
-            "></div>
-
-            <!-- Blocked site fallback overlay (hidden initially, shown by JS timer) -->
-            <div id="iframe-blocked-${tab.id}" style="
-                display: none;
-                position: absolute; inset: 0; z-index: 20;
-                background: radial-gradient(circle at 30% 30%, #1b2030 0%, #0d0f14 100%);
-                flex-direction: column; align-items: center; justify-content: center;
-                gap: 20px; font-family: var(--font-display); text-align: center; padding: 40px;
-            ">
-                <div style="font-size: 3rem;">🚫</div>
-                <div style="display: flex; flex-direction: column; gap: 8px; max-width: 460px;">
-                    <h2 style="font-size: 1.4rem; font-weight: 700; color: #f5f6f9;">Can't open this page here</h2>
-                    <p style="color: #6b7280; font-size: 0.95rem; line-height: 1.5;">
-                        <strong style="color: #a5b4fc;">${domain}</strong> blocks embedding inside other pages
-                        (X-Frame-Options / CSP). Open it directly in your browser instead.
-                    </p>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px;
-                    border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;
-                    background: rgba(255,255,255,0.03); color: #8b949e; font-size: 0.8rem; max-width: 520px; word-break: break-all;">
-                    <span>🔗</span><span style="color: #a5b4fc;">${url}</span>
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="window.open('${url.replace(/'/g, '\\&apos;')}', '_blank')" style="
-                        padding: 10px 22px; border-radius: 10px; border: none;
-                        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-                        color: white; cursor: pointer; font-size: 0.9rem; font-weight: 600;
-                        box-shadow: 0 4px 16px rgba(79,70,229,0.3); font-family: inherit;
-                    ">Open in Browser ↗</button>
-                    <button onclick="goHome()" style="
-                        padding: 10px 22px; border-radius: 10px;
-                        border: 1px solid rgba(255,255,255,0.1);
-                        background: rgba(255,255,255,0.04);
-                        color: #c9d1d9; cursor: pointer; font-size: 0.9rem; font-weight: 500; font-family: inherit;
-                    ">🏠 Home</button>
-                </div>
+            <div style="display:flex; flex-direction:column; gap:6px; max-width: 460px;">
+                <h2 style="font-size: 1.4rem; font-weight: 700; color: #f0f4fa;">${label}</h2>
+                <p style="color: #6b7280; font-size: 0.95rem; line-height: 1.5;">
+                    Opened in your browser. Switch to the new tab to view it.
+                </p>
             </div>
 
-            <!-- The real iframe -->
-            <iframe
-                id="iframe-${tab.id}"
-                src="${url}"
-                style="width: 100%; height: 100%; border: none; display: block;"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-            ></iframe>
+            <div style="display:flex; align-items:center; gap:8px; padding: 8px 16px;
+                border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;
+                background: rgba(255,255,255,0.03); color: #6b7280;
+                font-size: 0.78rem; max-width: 520px; word-break: break-all;">
+                <span>🔗</span><span style="color: #60a5fa;">${url}</span>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.open('${url.replace(/'/g,'\\&apos;')}','_blank')" style="
+                    padding: 9px 20px; border-radius: 9px; border: none;
+                    background: #1e88e5; color: white; cursor: pointer;
+                    font-size: 0.88rem; font-weight: 600; font-family: inherit;
+                    box-shadow: 0 4px 14px rgba(30,136,229,0.35);
+                ">Open Again ↗</button>
+                <button onclick="goHome()" style="
+                    padding: 9px 20px; border-radius: 9px;
+                    border: 1px solid rgba(255,255,255,0.09);
+                    background: rgba(255,255,255,0.04);
+                    color: #c9d1d9; cursor: pointer; font-size: 0.88rem; font-family: inherit;
+                ">🏠 Home</button>
+            </div>
 
             <style>
-                @keyframes loadBar {
-                    from { width: 0%; opacity: 1; }
-                    to   { width: 100%; opacity: 0; }
+                @keyframes popIn {
+                    from { transform: scale(0.5); opacity: 0; }
+                    to   { transform: scale(1); opacity: 1; }
                 }
             </style>
         </div>
     `;
-
-    // Detect if the iframe was blocked by checking if it loaded anything.
-    // Browsers don't fire a reliable error event for X-Frame-Options blocks,
-    // so we check after a short delay whether the iframe contentDocument is accessible.
-    setTimeout(() => {
-        const iframe = document.getElementById(`iframe-${tab.id}`);
-        const blockedOverlay = document.getElementById(`iframe-blocked-${tab.id}`);
-        if (!iframe || !blockedOverlay) return;
-        try {
-            // If blocked, iframe.contentDocument is null or throws
-            const doc = iframe.contentDocument;
-            if (!doc || doc.location.href === 'about:blank') {
-                // Likely blocked — show the fallback
-                blockedOverlay.style.display = 'flex';
-            }
-        } catch (e) {
-            // Cross-origin access denied = page loaded fine (it's real content)
-            // Don't show the fallback.
-        }
-    }, 3000);
 }
 
 function goBack() {
