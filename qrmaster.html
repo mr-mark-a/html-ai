@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Master</title>
+  <meta name="description"
+    content="Upload any QR code image to decode and extract links instantly with this sleek web utility.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <!-- jsQR Library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #15102a 50%, #06020f 100%);
+      --accent-color: #7c4dff;
+      --accent-glow: rgba(124, 77, 255, 0.4);
+      --accent-light: #b388ff;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f3effa;
+      --text-muted: #9e97b2;
+      --success-color: #00e676;
+      --error-color: #ff1744;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glows */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      filter: blur(150px);
+      opacity: 0.15;
+      z-index: -1;
+    }
+
+    body::before {
+      top: 10%;
+      left: 15%;
+    }
+
+    body::after {
+      bottom: 10%;
+      right: 15%;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .app-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 54px;
+      height: 54px;
+      background: rgba(124, 77, 255, 0.1);
+      border: 1px solid rgba(124, 77, 255, 0.3);
+      border-radius: 14px;
+      margin: 0 auto 0.75rem auto;
+      color: var(--accent-light);
+      box-shadow: 0 0 20px rgba(124, 77, 255, 0.15);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* States Control */
+    .app-state {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .app-state.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* STATE 1: Dropzone */
+    .dropzone-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .dropzone {
+      border: 2px dashed rgba(124, 77, 255, 0.3);
+      border-radius: 16px;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.01);
+      transition: all var(--transition-speed) ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent-color);
+      background: rgba(124, 77, 255, 0.03);
+      box-shadow: 0 0 25px rgba(124, 77, 255, 0.1);
+    }
+
+    .dropzone-icon {
+      color: var(--text-muted);
+      transition: transform var(--transition-speed) ease;
+    }
+
+    .dropzone:hover .dropzone-icon {
+      transform: translateY(-5px);
+      color: var(--accent-light);
+    }
+
+    .dropzone-text {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .dropzone-text strong {
+      color: var(--accent-light);
+      font-weight: 500;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* Preview Box */
+    .preview-container {
+      display: none;
+      position: relative;
+      width: 100%;
+      max-height: 240px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .preview-image {
+      width: 100%;
+      height: 100%;
+      max-height: 240px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      transition: all 0.2s ease;
+    }
+
+    .remove-btn:hover {
+      background: var(--error-color);
+      transform: scale(1.05);
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.95rem 1.5rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      outline: none;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--accent-color);
+      color: white;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #8c60ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 77, 255, 0.5);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* STATE 2: Loading & Progress */
+    .loading-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem 0;
+    }
+
+    .scanner-preview-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .scanner-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.6;
+    }
+
+    /* Laser Line Animation */
+    .laser-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--success-color);
+      box-shadow: 0 0 12px var(--success-color);
+      animation: scan 2s infinite ease-in-out;
+    }
+
+    @keyframes scan {
+
+      0%,
+      100% {
+        top: 0%;
+      }
+
+      50% {
+        top: 100%;
+      }
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, var(--accent-color), var(--success-color));
+      border-radius: 10px;
+      transition: width 0.1s linear;
+    }
+
+    .loading-status {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    /* STATE 3: Results */
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .result-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-success {
+      background: rgba(0, 230, 118, 0.1);
+      color: var(--success-color);
+      border: 1px solid rgba(0, 230, 118, 0.2);
+    }
+
+    .badge-error {
+      background: rgba(255, 23, 68, 0.1);
+      color: var(--error-color);
+      border: 1px solid rgba(255, 23, 68, 0.2);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .result-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      word-break: break-all;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 400px) {
+      .button-group {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Footer info */
+    .app-footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <rect x="7" y="7" width="3" height="3" />
+          <rect x="14" y="7" width="3" height="3" />
+          <rect x="7" y="14" width="3" height="3" />
+          <rect x="14" y="14" width="3" height="3" />
+        </svg>
+      </div>
+      <h1>QR Master</h1>
+      <p class="subtitle">Extract URLs from QR codes instantly</p>
+    </header>
+
+    <!-- STATE 1: Select Image -->
+    <div id="stateInput" class="app-state active">
+      <div class="dropzone-container">
+        <div id="dropzone" class="dropzone">
+          <div class="dropzone-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <p class="dropzone-text">
+            Drag & drop your QR image here or<br>
+            <strong>browse files</strong> to upload
+          </p>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+      </div>
+
+      <div id="previewContainer" class="preview-container">
+        <img id="previewImage" class="preview-image" src="" alt="QR Preview">
+        <button id="removeBtn" class="remove-btn" title="Remove image">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <button id="extractBtn" class="btn btn-primary" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+        Extract Link
+      </button>
+    </div>
+
+    <!-- STATE 2: Progress -->
+    <div id="stateLoading" class="app-state">
+      <div class="loading-wrapper">
+        <div class="scanner-preview-wrapper">
+          <img id="scannerImg" class="scanner-img" src="" alt="Scanning Preview">
+          <div class="laser-line"></div>
+        </div>
+
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 0.5rem;">
+          <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <div class="loading-status">
+            <span id="loadingMessage">Scanning QR pixels...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE 3: Results -->
+    <div id="stateResult" class="app-state">
+      <div class="result-container">
+        <div class="result-card">
+          <div class="result-header">
+            <span id="resultBadge" class="result-badge badge-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Success
+            </span>
+            <button id="copyBtn" class="copy-btn" title="Copy text">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          </div>
+          <div id="resultValue" class="result-value"></div>
+        </div>
+
+        <div class="button-group">
+          <button id="openLinkBtn" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            Open Link
+          </button>
+          <button id="resetBtn" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+            Extract Another Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas (Hidden, used for decoding) -->
+    <canvas id="qrCanvas" style="display: none;"></canvas>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      Pure client-side extraction. Your image is never uploaded to any server.
+    </footer>
+  </div>
+
+  <script>
+    // State management
+    const stateInput = document.getElementById('stateInput');
+    const stateLoading = document.getElementById('stateLoading');
+    const stateResult = document.getElementById('stateResult');
+
+    // UI Elements
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const removeBtn = document.getElementById('removeBtn');
+    const extractBtn = document.getElementById('extractBtn');
+
+    const scannerImg = document.getElementById('scannerImg');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const loadingMessage = document.getElementById('loadingMessage');
+
+    const resultBadge = document.getElementById('resultBadge');
+    const resultValue = document.getElementById('resultValue');
+    const copyBtn = document.getElementById('copyBtn');
+    const openLinkBtn = document.getElementById('openLinkBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const qrCanvas = document.getElementById('qrCanvas');
+    const ctx = qrCanvas.getContext('2d');
+
+    let selectedImageSrc = null;
+    let extractedText = '';
+
+    // Switch between states
+    function showState(state) {
+      stateInput.classList.remove('active');
+      stateLoading.classList.remove('active');
+      stateResult.classList.remove('active');
+
+      if (state === 'input') {
+        stateInput.classList.add('active');
+      } else if (state === 'loading') {
+        stateLoading.classList.add('active');
+      } else if (state === 'result') {
+        stateResult.classList.add('active');
+      }
+    }
+
+    // Handle Drag & Drop / Selection
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFile(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedImageSrc = e.target.result;
+        previewImage.src = selectedImageSrc;
+        scannerImg.src = selectedImageSrc;
+
+        dropzone.style.display = 'none';
+        previewContainer.style.display = 'block';
+        extractBtn.removeAttribute('disabled');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetInputState();
+    });
+
+    function resetInputState() {
+      selectedImageSrc = null;
+      previewImage.src = '';
+      scannerImg.src = '';
+      fileInput.value = '';
+      dropzone.style.display = 'flex';
+      previewContainer.style.display = 'none';
+      extractBtn.setAttribute('disabled', 'true');
+    }
+
+    // Extract QR Code Link
+    extractBtn.addEventListener('click', () => {
+      if (!selectedImageSrc) return;
+
+      showState('loading');
+      simulateProgress(0);
+    });
+
+    function simulateProgress(progress) {
+      progressBar.style.width = progress + '%';
+      progressPercent.textContent = progress + '%';
+
+      if (progress < 40) {
+        loadingMessage.textContent = 'Analyzing image colors...';
+      } else if (progress < 80) {
+        loadingMessage.textContent = 'Locating QR markers...';
+      } else {
+        loadingMessage.textContent = 'Decoding QR grid...';
+      }
+
+      if (progress < 100) {
+        setTimeout(() => simulateProgress(progress + 5), 80);
+      } else {
+        // Finished simulation, run extraction
+        decodeQR();
+      }
+    }
+
+    function decodeQR() {
+      const img = new Image();
+      img.onload = function () {
+        qrCanvas.width = img.width;
+        qrCanvas.height = img.height;
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        try {
+          const imageData = ctx.getImageData(0, 0, img.width, img.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+          if (code && code.data.trim() !== '') {
+            showSuccess(code.data);
+          } else {
+            showError('No QR code found in the image. Please make sure the QR is clear and well-lit.');
+          }
+        } catch (e) {
+          showError('Failed to read image data. Try a different format.');
+        }
+      };
+      img.src = selectedImageSrc;
+    }
+
+    function showSuccess(text) {
+      extractedText = text;
+      resultBadge.className = 'result-badge badge-success';
+      resultBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Success`;
+      resultValue.textContent = text;
+
+      // Check if text is a URL
+      const isUrl = isValidUrl(text);
+      if (isUrl) {
+        openLinkBtn.style.display = 'inline-flex';
+      } else {
+        openLinkBtn.style.display = 'none';
+      }
+
+      showState('result');
+    }
+
+    function showError(message) {
+      extractedText = '';
+      resultBadge.className = 'result-badge badge-error';
+      resultBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Failed`;
+      resultValue.textContent = message;
+      openLinkBtn.style.display = 'none';
+
+      showState('result');
+    }
+
+    function isValidUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Action buttons
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(resultValue.textContent).then(() => {
+        const originalIcon = copyBtn.innerHTML;
+        copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success-color);"><polyline points="20 6 9 17 4 12"/></svg>`;
+        setTimeout(() => {
+          copyBtn.innerHTML = originalIcon;
+        }, 1500);
+      });
+    });
+
+    openLinkBtn.addEventListener('click', () => {
+      if (extractedText) {
+        window.open(extractedText, '_blank');
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      resetInputState();
+      showState('input');
+    });
+  </script>
+</body>
+
+</html>
