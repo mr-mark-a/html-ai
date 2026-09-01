@@ -154,6 +154,159 @@
             background: #0f172a;
         }
 
+        .btn-download {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: white;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-download:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Download Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: modalFadeIn 0.25s ease-out;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 480px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .modal-close:hover {
+            color: #f1f5f9;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-question {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        .platform-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .platform-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #0f172a;
+            border: 2px solid #06b6d4;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
+            border-color: #38bdf8;
+        }
+
+        .platform-info {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .platform-icon {
+            font-size: 1.8rem;
+        }
+
+        .platform-logo-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .platform-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .platform-name {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #38bdf8;
+        }
+
+        .platform-desc {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .platform-btn {
+            background: linear-gradient(135deg, #06b6d4, #a855f7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
         /* Main Layout */
         .main-layout {
             display: flex;
@@ -766,6 +919,7 @@
                 <input type="text" class="search-input" id="searchInput" placeholder="Search library...">
             </div>
             <div class="header-right">
+                <button class="btn btn-download" onclick="openDownloadModal()">📥 Download App</button>
                 <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Load MP3</button>
                 <input type="file" id="fileInput" multiple accept="audio/*,video/*">
                 <button class="btn btn-icon" onclick="toggleSidebar()">☰</button>
@@ -914,10 +1068,37 @@
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
     <video id="videoPlayer" crossorigin="anonymous" style="display: none;"></video>
 
-    <!-- Drag Overlay -->
-    <div class="drag-overlay" id="dragOverlay">
-        <div class="drag-icon">🎵</div>
-        <div class="drag-text">DROP AUDIO FILES</div>
+    <!-- Download Platform Modal -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title"><span>📦</span> Download Mmusic App</div>
+                <button class="modal-close" onclick="closeDownloadModal()">✕</button>
+            </div>
+            <div class="modal-question">What platform are you downloading for?</div>
+            <div class="platform-options">
+                <div class="platform-card" onclick="window.location.href='Appsetup.html'">
+                    <div class="platform-info">
+                        <img src="images on webpage/applelogo.JPG" alt="iOS" class="platform-logo-img">
+                        <div class="platform-details">
+                            <span class="platform-name">iOS</span>
+                            <span class="platform-desc">iPhone & iPad Web App (Safari Installation)</span>
+                        </div>
+                    </div>
+                    <button class="platform-btn" onclick="event.stopPropagation(); window.location.href='Appsetup.html'">Open</button>
+                </div>
+                <div class="platform-card" onclick="downloadPlatform('TRIMUI Smart Pro S')">
+                    <div class="platform-info">
+                        <span class="platform-icon">🎮</span>
+                        <div class="platform-details">
+                            <span class="platform-name">TRIMUI Smart Pro S</span>
+                            <span class="platform-desc">16:9 Landscape Package (M_Music_Player.zip)</span>
+                        </div>
+                    </div>
+                    <button class="platform-btn">Download</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1217,6 +1398,25 @@
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('closed');
+        }
+
+        function openDownloadModal() {
+            document.getElementById('downloadModal').classList.add('show');
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').classList.remove('show');
+        }
+
+        function downloadPlatform(platform) {
+            closeDownloadModal();
+            showToast(`Downloading M_Music_Player.zip for ${platform}...`);
+            const a = document.createElement('a');
+            a.href = 'M_Music_Player.zip';
+            a.download = 'M_Music_Player.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function toggleEq() {

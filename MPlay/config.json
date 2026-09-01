@@ -1,0 +1,8 @@
+{
+  "label": "Mmusic Player",
+  "icon": "icon.png",
+  "launch": "launch.sh",
+  "description": "Premium Music & Media Player for TRIMUI Smart Pro S",
+  "target": "TRIMUI Smart Pro S",
+  "orientation": "landscape"
+}
