@@ -318,14 +318,10 @@
 
 <body>
   <hr class="blue-line">
+  <div id="welcomeMessage" style="text-align: center; font-size: 1.5em; font-weight: bold; margin-top: 10px; color: #333;"></div>
   <div class="syncnow" id="syncNow"></div>
   <button class="rate-fixed" onclick="window.location.href='happyornot.html'">Rate The Web</button>
-  <button class="profile-fixed" id="profileBtn" onclick="window.location.href='profilemenu/profile.html'"
-    title="Settings">👤</button>
-  <button class="tokens-fixed" id="tokenDisplay" onclick="showTokenDetails()">
-    <img src="token.png" alt="token">
-    <span id="tokenCount">0</span>
-  </button>
+
 
   <div style="width:100%;text-align:center;margin-top:18px;margin-bottom:10px;">
     <img src="logos/snowtail-logo.jpg" alt="Snowtail Logo" style="max-width:180px;max-height:80px;object-fit:contain;">
@@ -601,6 +597,12 @@
       // Set member since date if not exists
       if (!localStorage.getItem('memberSince')) {
         localStorage.setItem('memberSince', new Date().toLocaleDateString());
+      }
+      const user = localStorage.getItem('currentUser');
+      if (user) {
+        let firstName = user.split(/[.@]/)[0];
+        firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+        document.getElementById('welcomeMessage').textContent = 'Welcome, ' + firstName + '!';
       }
     });
 
