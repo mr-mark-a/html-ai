@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>暗号化ペット名データベース（猫・犬・うさぎ 各1,000件）</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="コンテナ">
+    <header>
+      <div>
+        <h1>暗号化ペット名保管庫</h1>
+        <p class="サブタイトル">猫・犬・うさぎ 各1,000件（合計3,000件・数字なし・重複なし）</p>
+      </div>
+      <button class="ダウンロードボタン" id="保存ボタン">「petnames」ファイルを保存</button>
+    </header>
+
+    <div class="操作パネル">
+      <input type="text" id="検索入力" placeholder="名前またはBase64暗号文で検索..." />
+      <select id="種類選択">
+        <option value="すべて">すべて表示 (3,000件)</option>
+        <option value="猫">猫のみ (1,000件)</option>
+        <option value="犬">犬のみ (1,000件)</option>
+        <option value="うさぎ">うさぎのみ (1,000件)</option>
+      </select>
+      <button class="補助ボタン" id="表示切替ボタン">表示: 名前 ＋ 暗号文</button>
+    </div>
+
+    <div class="ステータスバー">
+      <span id="件数表示">データを生成中...</span>
+      <span id="検索時間表示">検索速度: 0.00ミリ秒</span>
+      <span id="ページ表示">1ページ目</span>
+    </div>
+
+    <div class="グリッド" id="一覧グリッド"></div>
+
+    <div class="ページ送り">
+      <button class="補助ボタン" id="前ページボタン">前のページ</button>
+      <button class="補助ボタン" id="次ページボタン">次のページ</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

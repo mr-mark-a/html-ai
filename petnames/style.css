@@ -1,0 +1,185 @@
+:root {
+  --背景: #0f172a;
+  --表面: #1e293b;
+  --表面ホバー: #334155;
+  --文字: #f8fafc;
+  --補助文字: #94a3b8;
+  --強調: #38bdf8;
+  --強調ホバー: #0284c7;
+  --境界線: #334155;
+  --猫色: #f472b6;
+  --犬色: #fbbf24;
+  --兎色: #34d399;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+}
+
+body {
+  background-color: var(--背景);
+  color: var(--文字);
+  line-height: 1.5;
+  padding: 2rem 1rem;
+}
+
+.コンテナ {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--境界線);
+}
+
+h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.サブタイトル {
+  color: var(--補助文字);
+  font-size: 0.88rem;
+}
+
+.ダウンロードボタン {
+  background-color: var(--強調);
+  color: #0f172a;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ダウンロードボタン:hover {
+  background-color: var(--強調ホバー);
+  color: #fff;
+}
+
+.操作パネル {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .操作パネル {
+    grid-template-columns: 1fr;
+  }
+}
+
+input, select, button.補助ボタン {
+  background-color: var(--表面);
+  color: var(--文字);
+  border: 1px solid var(--境界線);
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+button.補助ボタン {
+  cursor: pointer;
+}
+
+button.補助ボタン:hover {
+  background-color: var(--表面ホバー);
+}
+
+.ステータスバー {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--補助文字);
+  margin-bottom: 1rem;
+}
+
+.グリッド {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.カード {
+  background-color: var(--表面);
+  border: 1px solid var(--境界線);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.カード上部 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.バッジ {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  color: #0f172a;
+}
+
+.バッジ.猫 { background-color: var(--猫色); }
+.バッジ.犬 { background-color: var(--犬色); }
+.バッジ.うさぎ { background-color: var(--兎色); }
+
+.復号名 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.暗号行 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f172a;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--補助文字);
+}
+
+.暗号文字列 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 170px;
+}
+
+.コピー小ボタン {
+  background: transparent;
+  border: none;
+  color: var(--強調);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ページ送り {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
